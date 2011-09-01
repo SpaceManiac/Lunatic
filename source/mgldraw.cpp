@@ -52,7 +52,7 @@ MGLDraw::MGLDraw(char *name,int xRes,int yRes,int bpp,bool window,HINSTANCE hIns
 	//GM_setSuspendAppCallback(MGLDraw_Suspend);
 
 	/*
-	//------------------------------- CRAAZY DEBUGGING
+	//------------------------------- CRAAZY DEBUGGING STUFF
 	{
 		FILE *f;
 		int i;
