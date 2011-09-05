@@ -1073,6 +1073,12 @@ while ( display.open() )
 			else
 				return 0;
 		}
+        
+        // Shenanigans
+        DisplayInterface * _internal() const
+        {
+            return internal;
+        }
 
 		void wrapper( class DisplayInterface * wrapper ) 
 		{

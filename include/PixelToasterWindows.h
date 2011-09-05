@@ -1,5 +1,5 @@
 // Windows Platform
-// Copyright © 2006-2007 Glenn Fiedler
+// Copyright ï¿½ 2006-2007 Glenn Fiedler
 // Part of the PixelToaster Framebuffer Library - http://www.pixeltoaster.com
 
 #define VC_EXTRALEAN 
@@ -7,6 +7,7 @@
 
 #include <windows.h>
 #include <windowsx.h>
+#include <stdio.h>
 
 #include <d3d9.h>
 
@@ -23,7 +24,8 @@
 #endif
 
 namespace PixelToaster
-{
+{    
+    
 	/// smart pointer for COM interfaces
 	
 	template <typename I>
@@ -1293,6 +1295,7 @@ namespace PixelToaster
 		WindowsDisplay()
 		{
 			direct3d = Direct3DCreate9( D3D_SDK_VERSION );
+            printf("WindowsDisplay()\n");
 			defaults();
 		}
 
@@ -1393,6 +1396,11 @@ namespace PixelToaster
 			if ( window )
 				window->listener( listener );
 		}
+        
+        // Shenanigans
+        HWND handle() {
+            return window->handle();
+        }
 
 		// implement adapter interface for interoperability with window class
 
@@ -1561,5 +1569,6 @@ namespace PixelToaster
 		__int64 _deltaCounter;      ///< raw 64bit timer counter for delta
 		__int64 _frequency;         ///< raw 64bit timer frequency
 	};
+    
 }
 
