@@ -44,6 +44,9 @@ run: release
 	
 run-debug: debug
 	@cd game/ && ./lunatic_debug.exe "window"
+	
+gdb-debug: debug
+	@cd game/ && gdb lunatic_debug.exe
 
 run-demo: demo
 	@cd game/ && ./lunatic_demo.exe window
