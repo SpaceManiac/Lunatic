@@ -38,6 +38,8 @@ class MGLDraw
 	public:
 		MGLDraw(const char *name,int xRes,int yRes,int bpp,bool window,HINSTANCE hInst);
 		~MGLDraw(void);
+        
+        void ReopenWindow();
 
 		void FatalError(char *msg);
 
