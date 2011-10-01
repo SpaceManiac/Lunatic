@@ -796,8 +796,6 @@ void sprite_t::DrawShadow(int x,int y,MGLDraw *mgl)
 	y-=ofsy/2;
 	if(x>constrainX2 || y>constrainY2)
 		return;	// whole sprite is offscreen
-    
-    //return; // shadows are crashy right now!
 
     pitch = mgl->GetWidth();
 	src=data;
@@ -815,7 +813,6 @@ void sprite_t::DrawShadow(int x,int y,MGLDraw *mgl)
     
 	while(srcy<height/2+y)
 	{
-        //alternate = 1;
 		if((*src)&128)	// transparent run
 		{
 			b=(*src)&127;
