@@ -4,6 +4,7 @@
 #include "jamulfmv.h"
 #include "pause.h"
 #include "options.h"
+#include "sockets/sockets.h"
 
 #ifdef VERSION_
 #define STRINGIFY(X) #X
@@ -219,6 +220,8 @@ typedef struct title_t
 	byte savecursor;
 	float percent[3];
 } title_t;
+
+sockets::HttpConnection *updateCheck;
 
 sprite_set_t *planetSpr;
 static int numRunsToMakeUp;
@@ -835,8 +838,13 @@ void CommonMenuDisplay(MGLDraw* mgl, title_t title) {
     CenterPrint(320,170,"By SpaceManiac",0,1);
     
     // Update status:
-	Print(3,452,"Checking for updates...",1,1);
-	Print(2,451,"Checking for updates...",0,1);
+    if (!updateCheck || !updateCheck->done()) {
+        Print(3,452,"Checking for updates...",1,1);
+        Print(2,451,"Checking for updates...",0,1);
+    } else {
+        Print(3,452,updateCheck->data().c_str(),1,1);
+        Print(2,451,updateCheck->data().c_str(),0,1);
+    }
 	// Version number:
 	Print(3,467,"LoonyMod " VERSION,1,1);
 	Print(2,466,"LoonyMod " VERSION,0,1);
@@ -862,6 +870,10 @@ byte MainMenuUpdate(MGLDraw *mgl,title_t *title)
 {
 	byte c;
 	static byte reptCounter=0;
+    
+    if (updateCheck && !updateCheck->done()) {
+        updateCheck->update();
+    }
 
 	// update graphics
 	title->titleBright+=title->titleDir;
@@ -945,6 +957,14 @@ byte MainMenu(MGLDraw *mgl)
 {
 	dword startTime,now;
 	dword runStart,runEnd;
+    
+    if (updateCheck == NULL) {
+        sockets::init();
+        updateCheck = new sockets::HttpConnection();
+        updateCheck->open("wombat.platymuus.com", "80");
+        updateCheck->setUrl("/loonymod/updatechk.php?version=" VERSION);
+        updateCheck->get();
+    }
 
 	byte b=0;
 	title_t title;
@@ -1042,9 +1062,13 @@ void GameSlotPickerDisplay(MGLDraw *mgl,title_t title)
 }
 
 byte GameSlotPickerUpdate(MGLDraw *mgl,title_t *title)
-{
+{    
 	byte c;
 	static byte reptCounter=0;
+    
+    if (updateCheck && !updateCheck->done()) {
+        updateCheck->update();
+    }
 
 	// update graphics
 	title->titleBright+=title->titleDir;
