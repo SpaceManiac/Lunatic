@@ -5,7 +5,14 @@
 #include "pause.h"
 #include "options.h"
 
-#define VERSION "Version 3.0"
+#ifdef VERSION_
+#define STRINGIFY(X) #X
+#define STRINGIFY2(X) STRINGIFY(X)
+#define VERSION STRINGIFY2(VERSION_)
+#else
+#define VERSION "dev-unknown"
+#endif
+
 #define COPYRIGHT "Copyright 1998-2011, Hamumu Software"
 
 // special codes in the credits:
@@ -797,8 +804,7 @@ void ReScanWorldNames(void)
 	}
 }
 
-void MainMenuDisplay(MGLDraw *mgl,title_t title)
-{
+void CommonMenuDisplay(MGLDraw* mgl, title_t title) {
 	int i,color,deltaColor;
 	byte *scrn;
 
@@ -814,29 +820,31 @@ void MainMenuDisplay(MGLDraw *mgl,title_t title)
 		scrn+=640;
 		color+=deltaColor;
 	}
+    
 	// draw Dr. L & Bouapha
 	planetSpr->GetSprite(0)->Draw(640-title.doctorX,480,mgl);
 	planetSpr->GetSprite(1)->Draw(title.bouaphaX,480,mgl);
 
 	// draw the title parts
-	// SPISPOPD II:
-	planetSpr->GetSprite(2)->DrawBright(240,30,mgl,title.titleBright);
-	// DR. LUNATIC:
-	planetSpr->GetSprite(3)->DrawBright(290,125,mgl,title.titleBright);
-	// version #:
-	Print(536,146,VERSION,1,1);
-	Print(535,145,VERSION,0,1);
-	// Copyright:
-	Print(3,467,COPYRIGHT,1,1);
-	Print(2,466,COPYRIGHT,0,1);
-#ifdef DEMO
-	// DEMO!! message
-	planetSpr->GetSprite(23)->DrawBright(280,190+title.titleBright*5-79*2+title.expando*2,mgl,title.titleBright);
-#elif defined(EXPANDO)
-	// expandopak
-	planetSpr->GetSprite(4+title.expando/16)->DrawBright(270,180,mgl,title.titleBright);
-	planetSpr->GetSprite(24)->DrawBright(190,185,mgl,title.titleBright);
-#endif
+	planetSpr->GetSprite(2)->DrawBright(240,30,mgl,title.titleBright); // SPISPOPD II:
+	planetSpr->GetSprite(3)->DrawBright(290,125,mgl,title.titleBright); // DR. LUNATIC
+    
+    // LoonyMod, by SpaceManiac
+    CenterPrint(320,120,"LoonyMod",0,0);
+    CenterPrint(321,171,"By SpaceManiac",1,1);
+    CenterPrint(320,170,"By SpaceManiac",0,1);
+    
+    // Update status:
+	Print(3,452,"Checking for updates...",1,1);
+	Print(2,451,"Checking for updates...",0,1);
+	// Version number:
+	Print(3,467,"LoonyMod " VERSION,1,1);
+	Print(2,466,"LoonyMod " VERSION,0,1);
+}
+
+void MainMenuDisplay(MGLDraw *mgl,title_t title)
+{
+    CommonMenuDisplay(mgl, title);
 
 	// now the menu options
 	planetSpr->GetSprite( 9+(title.cursor==0))->Draw(240,270,mgl);
@@ -1016,45 +1024,10 @@ byte MainMenu(MGLDraw *mgl)
 
 void GameSlotPickerDisplay(MGLDraw *mgl,title_t title)
 {
-	int i,color,deltaColor;
-	byte *scrn;
+    int i;
 	char txt[18];
-
-	color=0;
-	deltaColor=(12*65536)/(480-title.blueY);
-	scrn=mgl->GetScreen();
-	if(title.blueY>0)
-		memset(scrn,0,640*title.blueY);
-	scrn+=640*title.blueY;
-	for(i=title.blueY;i<480;i++)
-	{
-		memset(scrn,color/65536+96,640);
-		scrn+=640;
-		color+=deltaColor;
-	}
-	// draw Dr. L & Bouapha
-	planetSpr->GetSprite(0)->Draw(640-title.doctorX,480,mgl);
-	planetSpr->GetSprite(1)->Draw(title.bouaphaX,480,mgl);
-
-	// draw the title parts
-	// SPISPOPD II:
-	planetSpr->GetSprite(2)->DrawBright(240,30,mgl,title.titleBright);
-	// DR. LUNATIC:
-	planetSpr->GetSprite(3)->DrawBright(290,125,mgl,title.titleBright);
-	// version #:
-	Print(536,146,VERSION,1,1);
-	Print(535,145,VERSION,0,1);
-	// Copyright:
-	Print(3,467,COPYRIGHT,1,1);
-	Print(2,466,COPYRIGHT,0,1);
-#ifdef DEMO
-	// DEMO!! message
-	planetSpr->GetSprite(23)->DrawBright(280,190+title.titleBright*5-79*2+title.expando*2,mgl,title.titleBright);
-#elif defined(EXPANDO)
-	// expandopak
-	planetSpr->GetSprite(4+title.expando/16)->DrawBright(270,180,mgl,title.titleBright);
-	planetSpr->GetSprite(24)->DrawBright(190,185,mgl,title.titleBright);
-#endif
+    
+    CommonMenuDisplay(mgl, title);
 
 	// now the game slots
 	for(i=0;i<3;i++)
