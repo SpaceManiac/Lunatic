@@ -3,8 +3,8 @@
 
 # Configuration
 DIRECTX=D:\\libraries\\directx-sdk
-LIBS=-lwinmm -ldsound -lalleg44 -llogg -lvorbisfile -lvorbis -logg -lvorbisenc -lws2_32
-COMPILER_OPTIONS=-std=c++0x -Iinclude -Wall -I${DIRECTX}/Include/ -DALLEGRO_MINGW32 -DEXPANDO 
+LIBS=-lwinmm -ldsound -lalleg44 -llogg -lvorbisfile -lvorbis -logg -lvorbisenc -ltcl85s -lws2_32
+COMPILER_OPTIONS=-std=c++0x -Iinclude -Wall -I${DIRECTX}/Include/ -DALLEGRO_MINGW32 -DEXPANDO -DSTATIC_BUILD
 LINKER_OPTIONS=-static-libgcc -static-libstdc++ -Linclude -L${DIRECTX}/Lib/x86/ ${LIBS} 
 
 VERSION_DEF=-DVERSION_=`git describe`
