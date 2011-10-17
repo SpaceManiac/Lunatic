@@ -85,11 +85,9 @@ void Socket::_close() {
 
 void Socket::_send(const char* data, int len) {
     int sent = ::send(sockfd, data, len, 0);
-    //printf("Sending: %d/%d\n", sent, len);
     if (sent == -1) return;
     while (sent < len) {
         int s = ::send(sockfd, data + sent, len - sent, 0);
-        //printf("  Resending: %d/%d", s, len - sent);
         if (s == -1) return;
         sent += s;
     }
