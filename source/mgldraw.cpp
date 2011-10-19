@@ -154,21 +154,24 @@ bool MGLDraw::Process(void)
 {
 	blit(buffer, screen, 0, 0, 0, 0, xRes, yRes);
 
+	byte ignoreKeys = 0;
 	while (keypressed())
 	{
 		int k = readkey();
-		if (!ScriptKeyPressed(k)) {
+		ignoreKeys = ScriptKeyPressed(k);
+		if (!ignoreKeys)
+		{
 			SetLastKey((char) (k & 0xff));
 		}
 	}
 
 	for (int i = 0; i < KEY_MAX; ++i)
 	{
-		if (key[i] && !prevKey[i])
+		if (key[i] && !prevKey[i] && !ignoreKeys)
 		{
 			ControlKeyDown(i);
 		}
-		else if (!key[i] && prevKey[i])
+		else if (!key[i] && prevKey[i] && !ignoreKeys)
 		{
 			ControlKeyUp(i);
 		}

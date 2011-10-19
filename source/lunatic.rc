@@ -1,1 +1,2 @@
 allegro_icon	ICON	"lunatic.ico"
+init_tcl        SCRIPT  "init.tcl"
