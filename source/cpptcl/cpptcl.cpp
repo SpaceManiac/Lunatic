@@ -1017,6 +1017,17 @@ void interpreter::add_constructor(string const &name,
      call_policies[interp_][name] = p;
 }
 
+unsigned char tcl_cast<unsigned char>::from(Tcl_Interp *interp, Tcl_Obj *obj)
+{
+     int res;
+     int cc = Tcl_GetIntFromObj(interp, obj, &res);
+     if (cc != TCL_OK)
+     {
+          throw tcl_error(interp);
+     }
+     
+     return res & 0xff;
+}
 
 int tcl_cast<int>::from(Tcl_Interp *interp, Tcl_Obj *obj)
 {

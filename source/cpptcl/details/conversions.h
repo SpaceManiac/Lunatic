@@ -59,6 +59,12 @@ struct tcl_cast<T const &>
 // the following specializations are implemented
 
 template <>
+struct tcl_cast<unsigned char>
+{
+     static unsigned char from(Tcl_Interp *, Tcl_Obj *);
+};
+
+template <>
 struct tcl_cast<int>
 {
      static int from(Tcl_Interp *, Tcl_Obj *);

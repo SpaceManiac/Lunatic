@@ -18,6 +18,7 @@
 #include "ctype.h"
 #include "twister.h"
 #include "shlobj.h" // for SHGetFolderPath
+#include "scripting.h" // for ScriptKeyPressed
 #include <stdio.h>
 
 // Appdata shenanigans
@@ -156,7 +157,9 @@ bool MGLDraw::Process(void)
 	while (keypressed())
 	{
 		int k = readkey();
-		SetLastKey((char) (k & 0xff));
+		if (!ScriptKeyPressed(k)) {
+			SetLastKey((char) (k & 0xff));
+		}
 	}
 
 	for (int i = 0; i < KEY_MAX; ++i)

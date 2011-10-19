@@ -3,6 +3,7 @@
 #include "jamulfmv.h"
 #include "rage.h"
 #include "options.h"
+#include "scripting.h" // for RenderConsole
 
 byte showStats = 0;
 dword gameStartTime, visFrameCount, updFrameCount;
@@ -45,6 +46,7 @@ void LunaticInit(MGLDraw *mgl)
 	gamemgl = mgl;
 
 	logFile = AppdataOpen("loonylog.txt", "wt");
+	InitScripting();
 	InitCosSin();
 	InitDisplay(gamemgl);
 	InitSound();
@@ -71,6 +73,7 @@ void LunaticExit(void)
 	ExitMonsters();
 	ExitPlayer();
 	ExitInterface();
+	ExitScripting();
 	fclose(logFile);
 }
 
@@ -411,6 +414,7 @@ void LunaticDraw(void)
 			RenderPauseMenu();
 		if (gameMode == GAMEMODE_RAGE)
 			ShowRage(gamemgl);
+		RenderConsole(gamemgl);
 	}
 	else
 	{
