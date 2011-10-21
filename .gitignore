@@ -1,4 +1,5 @@
 Thumbs.db
+*.pyc
 /bin
 /game
 /build
