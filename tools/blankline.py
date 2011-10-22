@@ -18,14 +18,22 @@ def getFileList(dir, ext):
 				result += [file]
 	return result
 
-files = getFileList('source', '.cpp') + getFileList('source', '.h')
+files = getFileList('source', '.cpp') + getFileList('source', '.h') + getFileList('tools', '.py')
 
 for path in files:
 	f = file(path)
 	data = f.read()
 	f.close()
 
-	if data[-1] != '\n':
+	lines = 0
+	while len(data) > lines and data[-1 - lines] == '\n':
+		lines += 1
+	
+	if lines != 1:
+		if lines > 0:
+			data = data[:-lines] + '\n'
+		else:
+			data = data + '\n'
 		f = file(path, 'w')
 		f.write(data)
 		f.write('\n')
