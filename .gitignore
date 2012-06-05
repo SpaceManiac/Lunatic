@@ -4,3 +4,5 @@ Thumbs.db
 /game
 /build
 /nbproject
+/Lunatic.*
+/.sconsign.dblite
