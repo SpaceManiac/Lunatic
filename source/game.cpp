@@ -42,8 +42,7 @@ Map* GameCurrentMap() {
 void LunaticInit(MGLDraw *mgl)
 {
 	gamemgl=mgl;
-
-	logFile=AppdataOpen("loonylog.txt","wt");
+    
 	InitCosSin();
 	InitDisplay(gamemgl);
 	InitSound();
@@ -70,6 +69,8 @@ void LunaticExit(void)
 	ExitMonsters();
 	ExitPlayer();
 	ExitInterface();
+    
+    logprintf("Closing log.");
 	fclose(logFile);
 }
 

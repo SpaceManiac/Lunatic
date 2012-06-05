@@ -26,18 +26,26 @@ int *soundHandle;
 
 bool JamulSoundInit(HINSTANCE hInst,const char *wndName, int numBuffers)
 {
-	int i;
+	int i, r;
+    logprintf("Preparing to initialize sound (%p,\"%s\",%d)\n", hInst, wndName, numBuffers);
 	
     // Used to have to make another window, now we just steal Allegro's
     dsoundHwnd = win_get_window();
 
 	if(!dsoundHwnd)
+    {
+        logprintf("Failed to init sound: no window available\n");
 		return FALSE;
+    }
 
-	if(DirectSoundCreate(NULL,&dsound,NULL)!=DS_OK)
+	if((r = DirectSoundCreate(NULL,&dsound,NULL))!=DS_OK)
+    {
+        logprintf("Failed to init sound: DirectSoundCreate returned %d, expected DS_OK(%d)\n", r, DS_OK);
 		return FALSE;
-	if(dsound->SetCooperativeLevel(dsoundHwnd, DSSCL_NORMAL)!=DS_OK)
+    }
+	if((r = dsound->SetCooperativeLevel(dsoundHwnd, DSSCL_NORMAL))!=DS_OK)
 	{
+        logprintf("Failed to init sound: SetCooperativeLevel returned %d, expected DS_OK(%d)\n", r, DS_OK);
 		dsound->Release();
 		return FALSE;
 	}
@@ -45,12 +53,14 @@ bool JamulSoundInit(HINSTANCE hInst,const char *wndName, int numBuffers)
 	soundbuf=(soundbuf_t*)calloc(sizeof(soundbuf_t)*(numBuffers+MAX_SOUNDS_AT_ONCE),1);
 	if(soundbuf==NULL)
 	{
+        logprintf("Failed to init sound: could not allocate soundbuf\n");
 		dsound->Release();
 		return FALSE;
 	}
 	soundHandle=(int *)malloc(sizeof(int)*numBuffers);
 	if(soundHandle==NULL)
 	{
+        logprintf("Failed to init sound: could not allocate soundHandle\n");
 		dsound->Release();
 		free(soundbuf);
 		return FALSE;
@@ -66,6 +76,7 @@ bool JamulSoundInit(HINSTANCE hInst,const char *wndName, int numBuffers)
 		playBuffer[i].dsHandle=-1;
 		playBuffer[i].flags=0;
 	}
+    logprintf("Successfully initialized sound.\n");
 	return TRUE;
 }
 

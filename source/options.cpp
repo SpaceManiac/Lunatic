@@ -339,9 +339,11 @@ void LoadOptions(void)
 {
 	FILE *f;
 
+    logprintf("Loading options... ");
 	f=AppdataOpen("lunatic.cfg","rb");
 	if(!f)
 	{
+        logprintf("using defaults.\n");
 		opt.sound=1;
 		opt.music=MUSIC_ON;
 		opt.playAs=PLAYAS_BOUAPHA;
@@ -368,6 +370,7 @@ void LoadOptions(void)
 	}
 	else
 	{
+        logprintf("success.\n");
 		fread(&opt,sizeof(options_t),1,f);
 		fclose(f);
 	}

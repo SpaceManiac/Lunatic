@@ -49,6 +49,12 @@ _CrtSetDbgFlag(flag); // Set flag to the new value
 
 #endif*/
 
+	logFile=AppdataOpen("loonylog.txt","wt");
+    time_t now;
+    time(&now);
+    fprintf(logFile, "Opening log at %s\n", ctime(&now));
+    fflush(logFile);
+
 	parseCmdLine(cmdLine);
 	mainmgl=new MGLDraw("Dr. Lunatic",640,480,8,windowedGame,hInstance);
 	if(!mainmgl)

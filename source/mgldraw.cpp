@@ -21,7 +21,8 @@
 #include <stdio.h>
 
 // Appdata shenanigans
-FILE* AppdataOpen(const char* file, const char* mode) {
+FILE* AppdataOpen(const char* file, const char* mode)
+{
     char buffer[MAX_PATH];
     SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, buffer);
     sprintf(buffer + strlen(buffer), "\\Hamumu");
@@ -30,6 +31,30 @@ FILE* AppdataOpen(const char* file, const char* mode) {
     mkdir(buffer);
     sprintf(buffer + strlen(buffer), "\\%s", file);
     return fopen(buffer, mode);
+}
+
+// Logging!
+void logprintf(const char* format, ...)
+{
+    va_list a;
+    va_start(a, format);
+    vfprintf(logFile, format, a);
+    fflush(logFile);
+    va_end(a);
+}
+
+int AttemptInit(const char* message, int value)
+{
+    logprintf("%s... ", message);
+    if (value == 0)
+    {
+        logprintf("success.\n");
+    }
+    else
+    {
+        logprintf("failure: %d: \"%s\"\n", value, allegro_error);
+    }
+    return value;
 }
 
 // Allegro shenanigans
@@ -57,23 +82,24 @@ void MGL_fatalError(const char* txt) {
 }
 
 MGLDraw::MGLDraw(const char *name,int xRes,int yRes,int bpp,bool window,HINSTANCE hInst)
-{    
-    allegro_init();
-    install_keyboard();
-    install_mouse();
-    install_sound(DIGI_AUTODETECT, MIDI_AUTODETECT, "donotuse.cfg");
+{
+    logprintf("Preparing to initialize MGLDraw(\"%s\",%d,%d,%d,%s,%p)\n", name, xRes, yRes, bpp, window?"win":"full", hInst);
+    AttemptInit("Initializing Allegro", allegro_init());
+    AttemptInit("Installing keyboard", install_keyboard());
+    logprintf("Installing mouse... ");
+    logprintf("found %d buttons\n", install_mouse());
+    AttemptInit("Installing sound", install_sound(DIGI_AUTODETECT, MIDI_AUTODETECT, "donotuse.cfg"));
+    logprintf("Setting color depth.\n");
     set_color_depth(32);
     
-    if (set_gfx_mode(window ? GFX_AUTODETECT_WINDOWED : GFX_AUTODETECT_FULLSCREEN, xRes, yRes, 0, 0) != 0) {
-        char buf[256];
-        sprintf(buf, "Unable to set graphics mode: %s", allegro_error);
-        MGL_fatalError(buf);
+    if (AttemptInit("Setting graphics mode", set_gfx_mode(window ? GFX_AUTODETECT_WINDOWED : GFX_AUTODETECT_FULLSCREEN, xRes, yRes, 0, 0)) != 0) {
+        MGL_fatalError("Unable to set graphics mode!");
     }
     set_window_title(name);
-    set_close_button_callback(&closeButtonCallback);
-    set_display_switch_mode(SWITCH_BACKGROUND);
-    set_display_switch_callback(SWITCH_IN, switchInCallback);
-    set_display_switch_callback(SWITCH_OUT, switchOutCallback);
+    AttemptInit("Setting close button callback", set_close_button_callback(&closeButtonCallback));
+    AttemptInit("Setting display switch mode", set_display_switch_mode(SWITCH_BACKGROUND));
+    AttemptInit("Setting switch in callback", set_display_switch_callback(SWITCH_IN, switchInCallback));
+    AttemptInit("Setting switch out callback", set_display_switch_callback(SWITCH_OUT, switchOutCallback));
     
 	// this used to have to be in a very specific place but now it doesn't, hooray!
 	if(JamulSoundInit(hInst,name,512))

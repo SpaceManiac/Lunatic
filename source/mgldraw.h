@@ -25,6 +25,9 @@
 // For appdata storage of stuff
 FILE* AppdataOpen(const char* filename, const char* mode);
 
+// For fancy logging
+void logprintf(const char* format, ...);
+
 // Replacement for missing palette_t
 typedef struct palette_t {
     byte alpha, red, green, blue;

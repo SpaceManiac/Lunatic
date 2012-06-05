@@ -928,20 +928,22 @@ bool sprite_set_t::Load(const char *fname)
 
 	if(spr)
 		Free();
+    
+    logprintf("Loading sprite_set_t(\"%s\")... ", fname);
 
 	f=fopen(fname,"rb");
 	if(!f)
+    {
+        logprintf("unable to open file.\n");
 		return FALSE;
+    }
 	// read the count
 	fread(&count,2,1,f);
-    
-#ifndef NDEBUG
-    printf("loading %s, count = %d\n", fname, count);
-#endif
 	
 	spr=(sprite_t **)malloc(sizeof(sprite_t *)*count);
 	if(!spr)
-	{
+    {
+        logprintf("unable to allocate memory.\n");
 		fclose(f);
 		return FALSE;
 	}
@@ -950,6 +952,7 @@ bool sprite_set_t::Load(const char *fname)
 	buffer=(byte *)malloc(SPRITE_INFO_SIZE*count);
 	if(!buffer)
 	{
+        logprintf("unable to allocate buffer.\n");
 		fclose(f);
 		free(spr);
 		return FALSE;
@@ -957,7 +960,8 @@ bool sprite_set_t::Load(const char *fname)
 
 	// read in the sprite headers
 	if(fread(buffer,SPRITE_INFO_SIZE,count,f)!=count)
-	{
+	{   
+        logprintf("unable to read headers.\n");
 		fclose(f);
 		free(spr);
 		free(buffer);
@@ -970,11 +974,13 @@ bool sprite_set_t::Load(const char *fname)
 		spr[i]=new sprite_t(&buffer[i*SPRITE_INFO_SIZE]);
 		if(!spr[i])
 		{
+            logprintf("unable to allocate sprite %d.\n", i);
 			fclose(f);
 			return FALSE;
 		}
 		if(!spr[i]->LoadData(f))
 		{
+            logprintf("unable to read sprite %d.\n", i);
 			fclose(f);
 			return FALSE;
 		}
@@ -982,9 +988,7 @@ bool sprite_set_t::Load(const char *fname)
 	free(buffer);
 	fclose(f);
     
-    //printf("strcpy(%p,%s)\n", loadName, fname);
-    //strcpy(loadName, fname); // save filename for debugging
-    //printf(" = %s\n", loadName);
+    logprintf("success.\n");
     
 	return TRUE;
 }

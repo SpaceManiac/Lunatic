@@ -22,25 +22,44 @@ MGLDraw *GetDisplayMGL(void)
 
 bool InitDisplay(MGLDraw *mainmgl)
 {
+    logprintf("Initializing display(%p)...\n", mgl);
 	mgl=mainmgl;
 	if(!mgl)
+    {
+        logprintf("Failed to init display, mgl was null.\n");
 		return false;
+    }
 	gameFont[0]=(mfont_t *)malloc(sizeof(mfont_t));
 	if(!gameFont[0])
+    {
+        logprintf("Failed to allocate memory for font 1\n");
 		return false;
+    }
 	FontInit(mgl);
-	if(FontLoad("graphics\\girlsrweird.jft",gameFont[0])!=FONT_OK)
+    int load = FontLoad("graphics\\girlsrweird.jft",gameFont[0]);
+	if(load!=FONT_OK)
+    {
+        logprintf("Failed to load font 1: %d\n", load);
 		return false;
+    }
 
 	gameFont[1]=(mfont_t *)malloc(sizeof(mfont_t));
 	if(!gameFont[1])
+    {
+        logprintf("Failed to allocate memory for font 2\n");
 		return false;
+    }
 
-	if(FontLoad("graphics\\verdana.jft",gameFont[1])!=FONT_OK)
+    load = FontLoad("graphics\\verdana.jft",gameFont[1]);
+	if(load!=FONT_OK)
+    {
+        logprintf("Failed to load font 2: %d\n", load);
 		return false;
+    }
 
 	dispList=new DisplayList();
 
+    logprintf("Initialized display.\n");
 	return true;
 }
 
