@@ -5,12 +5,9 @@
 #include "pause.h"
 #include "options.h"
 #include "sockets/sockets.h"
+#include "version.h"
 
-#ifdef VERSION_
-#define STRINGIFY(X) #X
-#define STRINGIFY2(X) STRINGIFY(X)
-#define VERSION STRINGIFY2(VERSION_)
-#else
+#ifndef VERSION
 #define VERSION "dev-unknown"
 #endif
 
