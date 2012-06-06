@@ -7,12 +7,6 @@
 #include "sockets/sockets.h"
 #include "version.h"
 
-#ifndef VERSION
-#define VERSION "dev-unknown"
-#endif
-
-#define COPYRIGHT "Copyright 1998-2011, Hamumu Software"
-
 // special codes in the credits:
 // @ = use GirlsRWeird font
 // # = draw a major horizontal line
@@ -23,7 +17,7 @@ char credits[][48] = {
 	"@DR. LUNATIC",
 	"",
 	"",
-	COPYRIGHT,
+	"Copyright 1998-2011, Hamumu Software",
 	"#",
 	"Original Concept",
 	"Mike Hommel",
@@ -198,11 +192,11 @@ char victoryTxt[][64] = {
 #endif
 
 // once the credits have scrolled to END_OF_CREDITS pixels, they end
-#define END_OF_CREDITS 480*4+180
+const int END_OF_CREDITS = 480 * 4 + 180;
 #ifndef DEMO
-#define END_OF_VICTORY 480*2
+const int END_OF_VICTORY = 480 * 2;
 #else
-#define END_OF_VICTORY 480*2-100
+const int END_OF_VICTORY = 480 * 2 - 100;
 #endif
 
 typedef struct title_t
