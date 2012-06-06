@@ -21,8 +21,6 @@ typedef uint8_t byte;
 #   include <string.h>
 #endif // WIN32
 
-typedef struct addrinfo addrinfo;
-
 namespace sockets {
     inline std::string packNetShort(short i) { i = htons(i); return std::string((char*)(&i), 2); }
     inline short unpackNetShort(const std::string &s, int i = 0) { return ntohs(*((short*)(s.substr(i, 2).c_str()))); }
