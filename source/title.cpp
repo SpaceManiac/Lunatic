@@ -103,7 +103,6 @@ char credits[][48] = {
 	"$"
 };
 
-#ifndef DEMO
 char victoryTxt[][64] = {
 	"@With Dr. Lunatic vanquished, the",
 	"",
@@ -149,55 +148,10 @@ char victoryTxt[][64] = {
 	"#",
 	"$"
 };
-#else
-char victoryTxt[][64] = {
-	"@You've completed the Demo version of",
-	"",
-	"",
-	"@Dr. Lunatic!  Order the full version",
-	"",
-	"",
-	"@today for 5 times the action and",
-	"",
-	"",
-	"@adventure, and even a built-in editor",
-	"",
-	"",
-	"@you can use to create your own worlds!",
-	"",
-	"",
-	"@Select \"How to Order\" from the main",
-	"",
-	"",
-	"@menu!",
-	"",
-	"",
-	"@If that's not enough, order the",
-	"",
-	"",
-	"@Expando-Pak too, to add 3 more huge",
-	"",
-	"",
-	"@worlds filled with new monsters and",
-	"",
-	"",
-	"@weapons. Unleash your inner Lunatic!!",
-	"",
-	"",
-	"",
-	"",
-	"#",
-	"$"
-};
-#endif
 
 // once the credits have scrolled to END_OF_CREDITS pixels, they end
 const int END_OF_CREDITS = 480 * 4 + 180;
-#ifndef DEMO
 const int END_OF_VICTORY = 480 * 2;
-#else
-const int END_OF_VICTORY = 480 * 2 - 100;
-#endif
 
 struct title_t
 {
@@ -432,18 +386,6 @@ byte PickerRun(int *lastTime, MGLDraw *mgl)
 		if (((c & CONTROL_B1) && (!(oldc & CONTROL_B1))) ||
 				((c & CONTROL_B2) && (!(oldc & CONTROL_B2))))
 		{
-#ifdef DEMO
-			if (pickerpos == 2)
-			{
-				MakeNormalSound(SND_WORLDPICK);
-				return pickerpos;
-			}
-			else
-			{
-				MakeNormalSound(SND_BOUAPHAOUCH);
-				demoTextCounter = 60;
-			}
-#else
 			MakeNormalSound(SND_WORLDPICK);
 			if (pickerpos < 5)
 				return pickerpos;
@@ -454,7 +396,6 @@ byte PickerRun(int *lastTime, MGLDraw *mgl)
 				else // can't pick a nonexistent level
 					MakeNormalSound(SND_BOUAPHAOUCH);
 			}
-#endif
 		}
 		oldc = c;
 
@@ -555,11 +496,6 @@ void PickerDraw(MGLDraw *mgl)
 			break;
 	}
 
-#ifdef DEMO
-	if (demoTextCounter & 1)
-		FontPrintString(180, 330, "** NOT IN DEMO! **", &pickerFont);
-#endif
-
 	switch (pickerpos) {
 		case 0:
 			FontPrintString(2, 460, "Cavernous Caves", &pickerFont);
@@ -641,11 +577,7 @@ byte WorldPicker(MGLDraw *mgl)
 	mgl->LoadBMP("graphics\\picker.bmp");
 	FontLoad("graphics\\gillsans4.jft", &pickerFont);
 
-#ifndef DEMO
 	pickerpos = 0;
-#else
-	pickerpos = 2;
-#endif
 	pickeroffset = 0;
 	offsetdir = 0;
 	curCustom = 5;
@@ -852,9 +784,6 @@ void MainMenuDisplay(MGLDraw *mgl, title_t title)
 	planetSpr->GetSprite(11 + (title.cursor == 1))->Draw(260, 300, mgl);
 	planetSpr->GetSprite(13 + (title.cursor == 2))->Draw(280, 330, mgl);
 	planetSpr->GetSprite(15 + (title.cursor == 3))->Draw(300, 360, mgl);
-#ifdef DEMO
-	planetSpr->GetSprite(17 + (title.cursor == 4))->Draw(320, 390, mgl);
-#endif
 	planetSpr->GetSprite(19 + (title.cursor == 5))->Draw(340, 420, mgl);
 	planetSpr->GetSprite(21 + (title.cursor == 6))->Draw(360, 450, mgl);
 }
