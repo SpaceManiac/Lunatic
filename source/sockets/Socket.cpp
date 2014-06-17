@@ -76,7 +76,7 @@ bool Socket::_connect(const SAddress& addr) {
 
 void Socket::_close() {
     if (!valid()) return;
-#ifdef WIN32
+#ifdef _WIN32
     ::closesocket(sockfd);
 #else
     ::close(sockfd);

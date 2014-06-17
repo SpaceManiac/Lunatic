@@ -1,6 +1,6 @@
 #include "sockets.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 
 namespace sockets {
     void cleanup();
