@@ -3,22 +3,19 @@
 # Ensures every file in source has a blank line at the end
 # usage: 'python tools/blankline.py'
 
-from glob import glob
-from sys import argv
-from os import path
-import os, re
+import os
+import itertools
 
 def getFileList(dir, ext):
-	result = []
-	for file in map(lambda(x): x.replace('\\', '/'), glob(dir + '/*')):
-		if path.isdir(file):
-			result += getFileList(file, ext)
-		else:
-			if file.find("old/") < 0 and file.endswith(ext):
-				result += [file]
-	return result
+	for dirpath, dirnames, filenames in os.walk(dir):
+		for name in filenames:
+			if 'old/' not in name and name.endswith(ext):
+				yield os.path.join(dirpath, name)
 
-files = getFileList('source', '.cpp') + getFileList('source', '.h') + getFileList('tools', '.py')
+files = itertools.chain(
+	getFileList('source', '.cpp'),
+	getFileList('source', '.h'),
+	getFileList('tools', '.py'))
 
 for path in files:
 	f = file(path)
@@ -28,7 +25,7 @@ for path in files:
 	lines = 0
 	while len(data) > lines and data[-1 - lines] == '\n':
 		lines += 1
-	
+
 	if lines != 1:
 		if lines > 0:
 			data = data[:-lines] + '\n'
