@@ -166,8 +166,6 @@ struct title_t
 	float percent[3];
 };
 
-sockets::HttpConnection *updateCheck;
-
 sprite_set_t *planetSpr;
 static int numRunsToMakeUp;
 byte pickerpos;
@@ -793,11 +791,6 @@ byte MainMenuUpdate(MGLDraw *mgl, title_t *title)
 	byte c;
 	static byte reptCounter = 0;
 
-	if (updateCheck && !updateCheck->done())
-	{
-		updateCheck->update();
-	}
-
 	// update graphics
 	title->titleBright += title->titleDir;
 	if (title->titleBright > 31)
@@ -880,15 +873,6 @@ byte MainMenu(MGLDraw *mgl)
 {
 	dword startTime, now;
 	dword runStart, runEnd;
-
-	if (updateCheck == NULL)
-	{
-		sockets::init();
-		updateCheck = new sockets::HttpConnection();
-		updateCheck->open("wombat.platymuus.com", "80");
-		updateCheck->setUrl("/loonymod/updatechk.php?version=" VERSION);
-		updateCheck->get();
-	}
 
 	byte b = 0;
 	title_t title;
@@ -989,11 +973,6 @@ byte GameSlotPickerUpdate(MGLDraw *mgl, title_t *title)
 {
 	byte c;
 	static byte reptCounter = 0;
-
-	if (updateCheck && !updateCheck->done())
-	{
-		updateCheck->update();
-	}
 
 	// update graphics
 	title->titleBright += title->titleDir;
