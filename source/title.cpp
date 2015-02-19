@@ -4,8 +4,9 @@
 #include "jamulfmv.h"
 #include "pause.h"
 #include "options.h"
-#include "sockets/sockets.h"
-#include "version.h"
+
+#define VERSION "3.1"
+#define COPYRIGHT "Copyright 1998-2011, Hamumu Software"
 
 // special codes in the credits:
 // @ = use GirlsRWeird font
@@ -752,25 +753,14 @@ void CommonMenuDisplay(MGLDraw* mgl, title_t title)
 	planetSpr->GetSprite(2)->DrawBright(240, 30, mgl, title.titleBright); // SPISPOPD II:
 	planetSpr->GetSprite(3)->DrawBright(290, 125, mgl, title.titleBright); // DR. LUNATIC
 
-	// LoonyMod, by SpaceManiac
+	// LoonyMod and version number
 	CenterPrint(320, 120, "LoonyMod", 0, 0);
-	CenterPrint(321, 171, "By SpaceManiac", 1, 1);
-	CenterPrint(320, 170, "By SpaceManiac", 0, 1);
+	CenterPrint(321, 171, "Version " VERSION, 1, 1);
+	CenterPrint(320, 170, "Version " VERSION, 0, 1);
 
-	// Update status:
-	if (!updateCheck || !updateCheck->done())
-	{
-		Print(3, 452, "Checking for updates...", 1, 1);
-		Print(2, 451, "Checking for updates...", 0, 1);
-	}
-	else
-	{
-		Print(3, 452, updateCheck->data().c_str(), 1, 1);
-		Print(2, 451, updateCheck->data().c_str(), 0, 1);
-	}
-	// Version number:
-	Print(3, 467, "LoonyMod " VERSION, 1, 1);
-	Print(2, 466, "LoonyMod " VERSION, 0, 1);
+	// Copyright
+	Print(3, 467, COPYRIGHT, 1, 1);
+	Print(2, 466, COPYRIGHT, 0, 1);
 }
 
 void MainMenuDisplay(MGLDraw *mgl, title_t title)
