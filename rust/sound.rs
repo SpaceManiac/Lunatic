@@ -1,13 +1,6 @@
+use jamulsound::*;
+use display::GetCamera;
 use libc::c_int;
-
-cpp! {{
-    #include "options.h"
-}}
-
-extern {
-    fn GoPlaySound(snd: c_int, pan: c_int, vol: c_int, flags: u8, priority: c_int);
-    fn GetCamera(cx: *mut c_int, cy: *mut c_int);
-}
 
 static mut SOUND_AVAILABLE: bool = false;
 
@@ -28,8 +21,7 @@ pub unsafe extern fn ExitSound() {
 
 #[no_mangle]
 pub unsafe extern fn MakeSound(snd: c_int, mut x: c_int, mut y: c_int, flags: c_int, priority: c_int) {
-    if !SOUND_AVAILABLE { return }
-    if !cpp!([] -> bool as "bool" { return opt.sound; }) { return }
+    if !SOUND_AVAILABLE || !::options::sound() { return }
 
     x >>= ::FIXSHIFT;
     y >>= ::FIXSHIFT;
@@ -46,8 +38,7 @@ pub unsafe extern fn MakeSound(snd: c_int, mut x: c_int, mut y: c_int, flags: c_
 
 #[no_mangle]
 pub unsafe extern fn MakeNormalSound(snd: c_int) {
-    if !SOUND_AVAILABLE { return }
-    if !cpp!([] -> bool as "bool" { return opt.sound; /**/ }) { return }
+    if !SOUND_AVAILABLE || !::options::sound() { return }
 
-    GoPlaySound(snd, 128, 255, ::SND_MAXPRIORITY | ::SND_CUTOFF | ::SND_ONE, ::MAX_SNDPRIORITY);
+    GoPlaySound(snd, 128, 255, SND_MAXPRIORITY | SND_CUTOFF | SND_ONE, MAX_SNDPRIORITY);
 }
