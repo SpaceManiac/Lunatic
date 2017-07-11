@@ -12,6 +12,19 @@ macro_rules! cstr {
     () => { "\0".as_ptr() as *const _ };
 }
 
+macro_rules! sprintf {
+    ($buf:expr, $text:expr, $($rest:tt)*) => {{
+        use std::io::Write;
+        match write!(&mut $buf[..], concat!($text, "\0"), $($rest)*) {
+            Err(ref e) if e.kind() == ::std::io::ErrorKind::WriteZero => {
+                let len = $buf.len();
+                $buf[len - 1] = 0;
+            }
+            other => other.unwrap(),
+        }
+    }}
+}
+
 // imports
 pub mod logg_sys;
 

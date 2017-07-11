@@ -36,14 +36,12 @@ pub unsafe extern fn MusicExit() {
 
 #[no_mangle]
 pub unsafe extern fn CDPlay(track: c_int) {
-    use std::io::Write;
-
     if trackNum == track && !stream.is_null() && isPlaying {
         return; // Already playing that track
     }
 
     let mut buf = [0u8; 32];
-    let _ = write!(&mut buf[..], "sound/mus{:03}.ogg\0", track);
+    sprintf!(buf, "sound/mus{:03}.ogg", track);
 
     trackNum = track;
     if !stream.is_null() { logg_destroy_stream(stream); }
