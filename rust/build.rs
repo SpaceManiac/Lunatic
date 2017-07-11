@@ -6,5 +6,6 @@ fn main() {
     cpp_build::Config::new()
         .include(root.join("include"))
         .include(root.join("source"))
+        .define("ALLEGRO_MINGW32", None)
         .build("lib.rs");
 }

@@ -30,6 +30,6 @@ void JamulSoundUpdate(void);
 void JamulSoundPurge(void);
 
 // call this a lot, it plays sounds
-void GoPlaySound(int num, long pan, long vol, byte flags, int priority);
+extern "C" void GoPlaySound(int num, long pan, long vol, byte flags, int priority);
 
 #endif

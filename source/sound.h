@@ -299,10 +299,12 @@ enum {
 
 // --------------------------------
 
-void InitSound(void);
-void ExitSound(void);
-void MakeSound(int snd, int x, int y, int flags, int priority);
-void MakeNormalSound(int snd);
-void SoundSystemExists(void);
+extern "C" {
+    void InitSound(void);
+    void ExitSound(void);
+    void MakeNormalSound(int snd);
+    void MakeSound(int snd, int x, int y, int flags, int priority);
+    void SoundSystemExists(void);
+}
 
 #endif

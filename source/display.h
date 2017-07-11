@@ -68,7 +68,7 @@ byte *GetDisplayScreen(void);
 void DrawMouseCursor(int x, int y);
 
 void PutCamera(int x, int y);
-void GetCamera(int *x, int *y);
+extern "C" void GetCamera(int *x, int *y);
 // call this once per gameloop, with the X and Y of the object you want the camera to track
 void UpdateCamera(int x, int y, byte facing, Map *map);
 void Print(int x, int y, const char *s, char bright, byte font);
