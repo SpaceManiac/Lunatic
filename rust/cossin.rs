@@ -17,7 +17,7 @@ pub unsafe extern fn InitCosSin() {
 
 #[no_mangle]
 pub unsafe extern fn Cosine(angle: c_int) -> c_int {
-	COSTAB[angle as usize]
+    COSTAB[angle as usize]
 }
 
 #[no_mangle]

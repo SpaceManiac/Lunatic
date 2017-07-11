@@ -88,7 +88,7 @@ void MakeItFlip(void);
 void DrawBox(int x, int y, int x2, int y2, byte c);
 void DrawFillBox(int x, int y, int x2, int y2, byte c);
 void DrawDebugBox(int x, int y, int x2, int y2);
-void ShakeScreen(byte howlong);
+extern "C" void ShakeScreen(byte howlong);
 void ShowVictoryAnim(byte world);
 void ShowImageOrFlic(char *str);
 

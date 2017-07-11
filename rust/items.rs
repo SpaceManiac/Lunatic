@@ -1,10 +1,7 @@
-#ifndef ITEMS_H
-#define ITEMS_H
+use libc::{c_int, c_char};
 
-#include "winpch.h"
-#include "jamulspr.h"
-
-enum {
+#[repr(C)]
+pub enum Item {
     ITM_NONE = 0,
     ITM_HAMMERUP = 1,
     ITM_PANTS = 2,
@@ -99,25 +96,25 @@ enum {
     ITM_UNPANTS = 98,
     ITM_SWAPGUN = 99,
     ITM_BADCHINESE = 100
-};
+}
 
-const int MAX_ITMS = 128;
+pub const MAX_ITMS: c_int = 128;
 
 // these defines are 1 greater than the highest item of that type
 // (that is, items 1 - X-1 are things the player can pick up, and items
 // X - Y-1 are walkable things that don't obstruct movement, and items
 // Y - Z-1 are not walkable but don't stop projectiles, and the remaining
 // items are obstacles.
-const int MAX_PICKUP_ITMS = 30;
-const int MAX_WALKABLE_ITMS = 50;
-const int MAX_SHOOTABLE_ITMS = 69;
-const int NEW_PICKUP_ITMS = 92;
+pub const MAX_PICKUP_ITMS: c_int = 30;
+pub const MAX_WALKABLE_ITMS: c_int = 50;
+pub const MAX_SHOOTABLE_ITMS: c_int = 69;
+pub const NEW_PICKUP_ITMS: c_int = 92;
 
-void InitItems(void);
-void ExitItems(void);
-void RenderItem(int x, int y, byte type, char bright);
-void InstaRenderItem(int x, int y, byte type, char bright, MGLDraw *mgl);
-void DrawRedX(int x, int y, MGLDraw *mgl);
-extern "C" void ItemLightUp(void);
-
-#endif
+extern {
+    pub fn InitItems();
+    pub fn ExitItems();
+    pub fn RenderItem(x: c_int, y: c_int, type_: u8, bright: c_char);
+    pub fn InstaRenderItem(x: c_int, y: c_int, type_: u8, bright: c_char, mgl: *mut ::mgldraw::MGLDraw);
+    pub fn DrawRedX(x: c_int, y: c_int, mgl: *mut ::mgldraw::MGLDraw);
+    pub fn ItemLightUp();
+}

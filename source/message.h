@@ -16,7 +16,7 @@ struct message_t
 };
 
 void InitMessage(void);
-void NewMessage(const char *txt, int time, byte priority);
+extern "C" void NewMessage(const char *txt, int time, byte priority);
 void NewBigMessage(const char *txt, int time);
 void UpdateMessage(void);
 void RenderMessage(void);

@@ -87,7 +87,7 @@ void RenderStinky(int x, int y, int z, char bright, byte frm);
 
 void QuadMissile(int x, int y, byte facing, byte friendly);
 void LaunchMegabeam(int x, int y, word owner);
-void FireBullet(int x, int y, byte facing, byte type, byte friendly);
+extern "C" void FireBullet(int x, int y, byte facing, byte type, byte friendly);
 void FireBulletAfter(int x, int y, byte facing, byte type, bullet_t *thisone, byte friendly);
 void FireExactBullet(int x, int y, int z, int dx, int dy, int dz, byte anim, byte timer, byte facing, byte type, byte friendly);
 void HammerLaunch(int x, int y, byte facing, byte count, byte flags);

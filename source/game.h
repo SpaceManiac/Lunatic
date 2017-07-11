@@ -92,7 +92,7 @@ byte LunaticWorld(byte world, const char *worldName);
 extern "C" void LunaticGame(MGLDraw *mgl, byte load);
 void TrainingGame(MGLDraw *mgl);
 
-void SendMessageToGame(byte msg, int content);
+extern "C" void SendMessageToGame(byte msg, int content);
 void AddGarbageTime(dword t);
 
 void SetGameIdle(byte b);

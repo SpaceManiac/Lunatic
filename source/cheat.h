@@ -8,8 +8,10 @@
 #include "message.h"
 #include "bullet.h"
 
-void InitCheater(void);
-void CheatKey(char c);
-void DoCheat(byte w);
+extern "C" {
+    void InitCheater(void);
+    void CheatKey(char c);
+    void DoCheat(byte w);
+}
 
 #endif

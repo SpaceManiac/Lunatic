@@ -20,15 +20,20 @@ pub const FIXSHIFT: c_int = 16;
 pub const FIXAMT: c_int = 65536;
 
 // modules
+pub mod bullet;
+pub mod cheat;
 pub mod clock;
 pub mod cossin;
 pub mod display;
 pub mod editor;
 pub mod game;
+pub mod items;
 pub mod jamulsound;
+pub mod message;
 pub mod mgldraw;
 pub mod music;
 pub mod options;
+pub mod player;
 pub mod sound;
 pub mod title;
 
