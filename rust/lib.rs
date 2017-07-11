@@ -25,8 +25,20 @@ macro_rules! sprintf {
     }}
 }
 
+struct PctS { ptr: *const c_char }
+unsafe fn PctS(ptr: *const c_char) -> PctS { PctS { ptr } }
+impl std::fmt::Display for PctS {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        unsafe {
+            let cstr = std::ffi::CStr::from_ptr(self.ptr);
+            fmt.write_str(&cstr.to_string_lossy())
+        }
+    }
+}
+
 // imports
 pub mod logg_sys;
+pub mod misc_sys;
 
 // jamultypes.h
 pub const FIXSHIFT: c_int = 16;
@@ -48,6 +60,7 @@ pub mod music;
 pub mod options;
 pub mod player;
 pub mod sound;
+pub mod tiledialog;
 pub mod title;
 
 // int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine, int nCmdShow)
