@@ -1,15 +1,20 @@
-use std::os::raw::c_char;
-use std::ffi::CStr;
+#![allow(non_snake_case)]
 
+extern crate libc;
+
+// jamultypes.h
+pub const FIXSHIFT: libc::c_int = 16;
+pub const FIXAMT: libc::c_int = 65536;
+
+// cossin.h
+pub mod cossin;
+
+// main.cpp
 #[no_mangle]
-#[allow(non_snake_case)]
-pub unsafe extern fn parseCmdLine(argv: *const c_char, windowed: *mut bool) {
-    let text = CStr::from_ptr(argv);
-    if let Ok(text) = text.to_str() {
-        for token in text.split(' ') {
-            if token == "window" {
-                *windowed = true;
-            }
+pub unsafe extern fn parseCmdLine(_argv: *const libc::c_char, windowed: *mut bool) {
+    for arg in std::env::args_os() {
+        if arg == std::ffi::OsStr::new("window") {
+            *windowed = true;
         }
     }
 }

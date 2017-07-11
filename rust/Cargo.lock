@@ -4,6 +4,7 @@ version = "0.1.0"
 dependencies = [
  "cpp 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cpp_build 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.26 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
