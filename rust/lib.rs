@@ -9,7 +9,7 @@ use libc::*;
 
 macro_rules! cstr {
     ($e:expr) => { concat!($e, "\0").as_ptr() as *const _ };
-	() => { "\0".as_ptr() as *const _ };
+    () => { "\0".as_ptr() as *const _ };
 }
 
 // imports
@@ -32,27 +32,22 @@ pub mod options;
 pub mod sound;
 pub mod title;
 
-// main.cpp
-#[no_mangle]
-pub unsafe extern fn parseCmdLine(_argv: *const c_char, windowed: *mut bool) {
-    for arg in std::env::args_os() {
-        if arg == std::ffi::OsStr::new("window") {
-            *windowed = true;
-        }
-    }
-}
-
 // int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine, int nCmdShow)
 #[no_mangle]
 pub unsafe extern "system" fn WinMain(_: *const c_void, _: *const c_void, _: *const c_char, _: c_int) -> c_int {
-	let mut windowedGame = false;
-	parseCmdLine(0 as *const _, &mut windowedGame);
-    let mainmgl = cpp!([windowedGame as "bool"] -> *mut mgldraw::MGLDraw as "MGLDraw*" {
-		return new MGLDraw("Dr. Lunatic", 640, 480, windowedGame);
-	});
+    let mut windowedGame = false;
+    for arg in std::env::args_os() {
+        if arg == std::ffi::OsStr::new("window") {
+            windowedGame = true;
+        }
+    }
 
-	game::LunaticInit(mainmgl);
-	title::SplashScreen(mainmgl, cstr!("graphics\\hamumu.bmp"), 128, 2);
+    let mainmgl = cpp!([windowedGame as "bool"] -> *mut mgldraw::MGLDraw as "MGLDraw*" {
+        return new MGLDraw("Dr. Lunatic", 640, 480, windowedGame);
+    });
+
+    game::LunaticInit(mainmgl);
+    title::SplashScreen(mainmgl, cstr!("graphics\\hamumu.bmp"), 128, 2);
 
     loop {
         match title::MainMenu(mainmgl) {
@@ -61,10 +56,10 @@ pub unsafe extern "system" fn WinMain(_: *const c_void, _: *const c_void, _: *co
             3 => { editor::LunaticEditor(mainmgl); } // editor
             4 | 255 => {
                 game::LunaticExit();
-				mgldraw::delete(mainmgl);
-				return 0;
+                mgldraw::delete(mainmgl);
+                return 0;
             }
-			_ => {}
+            _ => {}
         }
     }
 }
