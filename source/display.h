@@ -71,10 +71,10 @@ void PutCamera(int x, int y);
 extern "C" void GetCamera(int *x, int *y);
 // call this once per gameloop, with the X and Y of the object you want the camera to track
 void UpdateCamera(int x, int y, byte facing, Map *map);
-void Print(int x, int y, const char *s, char bright, byte font);
+extern "C" void Print(int x, int y, const char *s, char bright, byte font);
 void CenterPrint(int x, int y, const char *s, char bright, byte font);
 void RenderItAll(world_t *world, Map *map, byte flags);
-int GetStrLength(const char *s);
+extern "C" int GetStrLength(const char *s);
 
 void SprDraw(int x, int y, int z, byte hue, char bright, sprite_t *spr, word flags);
 void SprDrawOff(int x, int y, int z, byte fromHue, byte hue, char bright, sprite_t *spr, word flags);

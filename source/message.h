@@ -15,11 +15,13 @@ struct message_t
 	byte priority;
 };
 
-void InitMessage(void);
-extern "C" void NewMessage(const char *txt, int time, byte priority);
-void NewBigMessage(const char *txt, int time);
-void UpdateMessage(void);
-void RenderMessage(void);
-void NoRepeatNewMessage(const char *txt, int time, byte priority);
+extern "C" {
+	void InitMessage(void);
+	void NewMessage(const char *txt, int time, byte priority);
+	void NewBigMessage(const char *txt, int time);
+	void UpdateMessage(void);
+	void RenderMessage(void);
+	void NoRepeatNewMessage(const char *txt, int time, byte priority);
+}
 
 #endif
