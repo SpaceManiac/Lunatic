@@ -2,6 +2,7 @@
 #![allow(non_camel_case_types)]
 #![allow(non_upper_case_globals)]
 
+#[macro_use] extern crate enum_derive;
 #[macro_use] extern crate cpp;
 extern crate libc;
 use libc::*;

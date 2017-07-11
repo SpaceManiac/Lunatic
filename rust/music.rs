@@ -4,6 +4,7 @@ use logg_sys::*;
 
 /// these are CD audio modes for the CDPlayerUpdate
 #[repr(C)]
+#[derive(FromInt)]
 pub enum AudioMode {
 	CD_OFF = 0,
     /// continuously loop the current track
@@ -13,17 +14,13 @@ pub enum AudioMode {
     /// after current track, jump to any other at random
 	CD_RANDOM,
     /// just keep playing the tracks in order, loops at end of CD to beginning
-	CD_NORMAL
+	CD_NORMAL,
 }
 
-#[no_mangle]
-pub static mut currentMode: u8 = 0;
-#[no_mangle]
-pub static mut stream: *mut LOGG_Stream = 0 as *mut LOGG_Stream;
-#[no_mangle]
-pub static mut isPlaying: bool = false;
-#[no_mangle]
-pub static mut trackNum: c_int = 0;
+static mut currentMode: u8 = 0;
+static mut stream: *mut LOGG_Stream = 0 as *mut LOGG_Stream;
+static mut isPlaying: bool = false;
+static mut trackNum: c_int = 0;
 
 #[no_mangle]
 pub unsafe extern fn MusicInit() -> u8 {
@@ -65,15 +62,7 @@ pub unsafe extern fn CDPlayerUpdate(mode: u8) {
 
 	if !isPlaying || modeChanged {
         use self::AudioMode::*;
-        let currentMode2 = match currentMode {
-            0 => Some(CD_OFF),
-            1 => Some(CD_LOOPTRACK),
-            2 => Some(CD_INTROLOOP),
-            3 => Some(CD_RANDOM),
-            4 => Some(CD_NORMAL),
-            _ => None,
-        };
-        match currentMode2 {
+        match AudioMode::from_int(currentMode as usize) {
             Some(CD_LOOPTRACK) => { CDPlay(trackNum); }
             Some(CD_INTROLOOP) => {
                 CDPlay(trackNum + 1);

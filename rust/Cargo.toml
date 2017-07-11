@@ -11,6 +11,7 @@ crate-type = ["staticlib"]
 [dependencies]
 cpp = "0.3"
 libc = "0.2"
+enum-derive = { path = "enum-derive/" }
 
 [build-dependencies]
 cpp_build = "0.3"

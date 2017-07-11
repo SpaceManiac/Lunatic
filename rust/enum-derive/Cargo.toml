@@ -1,0 +1,13 @@
+[package]
+name = "enum-derive"
+version = "0.1.0"
+authors = ["Tad Hardesty <tad@platymuus.com>"]
+
+[lib]
+name = "enum_derive"
+path = "lib.rs"
+proc-macro = true
+
+[dependencies]
+quote = "0.3.15"
+syn = "0.11.11"
