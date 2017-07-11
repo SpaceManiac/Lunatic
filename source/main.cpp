@@ -1,5 +1,5 @@
 /* DR. LUNATIC (working title)
-   
+
    A HamumuSoft Production.
 
    v 0.04
@@ -20,26 +20,13 @@
 #include "monster.h"
 #include "title.h"
 
-bool windowedGame = FALSE;
-MGLDraw *mainmgl;
-
-void parseCmdLine(char *cmdLine)
-{
-	char *token;
-
-	token = strtok(cmdLine, " ");
-	while (token != NULL)
-	{
-		if (!strcmp(token, "window"))
-			windowedGame = TRUE;
-		token = strtok(NULL, " ");
-	}
-}
+extern "C" void parseCmdLine(char *cmdLine, bool *windowedGame);
 
 int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine, int nCmdShow)
 {
-	parseCmdLine(cmdLine);
-	mainmgl = new MGLDraw("Dr. Lunatic", 640, 480, windowedGame);
+	bool windowedGame = FALSE;
+	parseCmdLine(cmdLine, &windowedGame);
+	MGLDraw *mainmgl = new MGLDraw("Dr. Lunatic", 640, 480, windowedGame);
 	if (!mainmgl)
 		return 0;
 

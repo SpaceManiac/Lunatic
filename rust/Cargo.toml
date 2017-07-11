@@ -1,0 +1,15 @@
+[package]
+name = "lunatic"
+version = "0.1.0"
+authors = ["Tad Hardesty <tad@platymuus.com>"]
+
+[lib]
+name = "lunatic"
+path = "lib.rs"
+crate-type = ["staticlib"]
+
+[dependencies]
+cpp = "0.3"
+
+[build-dependencies]
+cpp_build = "0.3"
