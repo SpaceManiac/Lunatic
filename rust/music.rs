@@ -6,15 +6,15 @@ use logg_sys::*;
 #[repr(C)]
 #[derive(FromInt)]
 pub enum AudioMode {
-	CD_OFF = 0,
+    CD_OFF = 0,
     /// continuously loop the current track
-	CD_LOOPTRACK,
+    CD_LOOPTRACK,
     /// plays the chosen track, then loops the next one
-	CD_INTROLOOP,
+    CD_INTROLOOP,
     /// after current track, jump to any other at random
-	CD_RANDOM,
+    CD_RANDOM,
     /// just keep playing the tracks in order, loops at end of CD to beginning
-	CD_NORMAL,
+    CD_NORMAL,
 }
 
 static mut currentMode: u8 = 0;
@@ -45,22 +45,22 @@ pub unsafe extern fn CDPlay(track: c_int) {
     let mut buf = [0u8; 32];
     let _ = write!(&mut buf[..], "sound/mus{:03}.ogg\0", track);
 
-	trackNum = track;
-	if !stream.is_null() { logg_destroy_stream(stream); }
-	stream = logg_get_stream(buf.as_ptr() as *const _, 128, 128, 0);
+    trackNum = track;
+    if !stream.is_null() { logg_destroy_stream(stream); }
+    stream = logg_get_stream(buf.as_ptr() as *const _, 128, 128, 0);
 }
 
 #[no_mangle]
 pub unsafe extern fn CDPlayerUpdate(mode: u8) {
     isPlaying = false;
     if !stream.is_null() {
-		isPlaying = logg_update_stream(stream) != 0;
+        isPlaying = logg_update_stream(stream) != 0;
     }
 
     let modeChanged = currentMode != mode;
-	currentMode = mode;
+    currentMode = mode;
 
-	if !isPlaying || modeChanged {
+    if !isPlaying || modeChanged {
         use self::AudioMode::*;
         match AudioMode::from_int(currentMode as usize) {
             Some(CD_LOOPTRACK) => { CDPlay(trackNum); }
@@ -74,13 +74,13 @@ pub unsafe extern fn CDPlayerUpdate(mode: u8) {
             Some(CD_NORMAL) => {
                 if !isPlaying {
                     let mut newTrack = trackNum + 1;
-					if newTrack > 18 { newTrack = 3; }
-					CDPlay(newTrack);
+                    if newTrack > 18 { newTrack = 3; }
+                    CDPlay(newTrack);
                 }
             }
             Some(CD_OFF) | None => if isPlaying { CDStop() }
-		}
-	}
+        }
+    }
 }
 
 #[no_mangle]
