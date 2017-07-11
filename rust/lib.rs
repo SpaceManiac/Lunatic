@@ -6,6 +6,8 @@ extern crate libc;
 pub const FIXSHIFT: libc::c_int = 16;
 pub const FIXAMT: libc::c_int = 65536;
 
+// clock.h
+pub mod clock;
 // cossin.h
 pub mod cossin;
 

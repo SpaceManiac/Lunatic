@@ -3,8 +3,10 @@
 
 #include "winpch.h"
 
-void StartClock(void);
-void EndClock(void);
-dword TimeLength(void);
+extern "C" {
+    void StartClock(void);
+    void EndClock(void);
+    dword TimeLength(void);
+}
 
 #endif
