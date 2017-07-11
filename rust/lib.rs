@@ -1,9 +1,13 @@
 #![allow(non_snake_case)]
 #![allow(non_camel_case_types)]
+#![allow(non_upper_case_globals)]
 
 #[macro_use] extern crate cpp;
 extern crate libc;
 use libc::*;
+
+// imports
+pub mod logg_sys;
 
 // jamultypes.h
 pub const FIXSHIFT: c_int = 16;
@@ -14,6 +18,8 @@ pub mod clock;
 pub mod cossin;
 pub mod display;
 pub mod jamulsound;
+pub mod mgldraw;
+pub mod music;
 pub mod options;
 pub mod sound;
 

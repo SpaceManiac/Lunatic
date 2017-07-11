@@ -20,7 +20,7 @@ struct palette_t
 };
 
 // Replacement for missing MGL functions
-int MGL_random(int max);
+extern "C" int MGL_random(int max);
 void MGL_srand(int seed);
 long MGL_randoml(long max);
 void MGL_fatalError(const char* txt);

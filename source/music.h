@@ -12,14 +12,16 @@ enum {
 	CD_NORMAL		// just keep playing the tracks in order, loops at end of CD to beginning
 };
 
-byte MusicInit(void);
-void MusicExit(void);
+extern "C" {
+	byte MusicInit(void);
+	void MusicExit(void);
 
-// CD audio functions
-byte CDLoaded(void);
-void CDPlay(int track); // Play given track
-void CDStop(void);
-void CDPlayerUpdate(byte mode);
-void CDNeedsUpdating(void);
+	// CD audio functions
+	byte CDLoaded(void);
+	void CDPlay(int track); // Play given track
+	void CDStop(void);
+	void CDPlayerUpdate(byte mode);
+	void CDNeedsUpdating(void);
+}
 
 #endif
