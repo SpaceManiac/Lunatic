@@ -27,12 +27,12 @@ def program(output, debug):
 		env.Append(CCFLAGS = ['-g'])
 	else:
 		env.Append(CPPDEFINES = ['NDEBUG'])
-		env.Append(CCFLAGS = ['-O2', '-s', '-mwindows'])
-		env.Append(LINKFLAGS = ['-O2', '-s'])
+		env.Append(CCFLAGS = ['-O2', '-s'])
+		env.Append(LINKFLAGS = ['-O2', '-s', '-mwindows'])
 
 	# linker
 	env.Append(LINKFLAGS = ['-static-libgcc', '-static-libstdc++', '-std=c++11'])
-	env.Append(LIBPATH = ['include'])
+	env.Append(LIBPATH = ['lib/i686-pc-windows-gnu'])
 	env.Append(LIBS = LIBS)
 
 	# output files
