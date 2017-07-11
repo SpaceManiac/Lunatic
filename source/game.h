@@ -68,8 +68,8 @@ extern world_t curWorld;
 extern FILE *logFile;
 
 // these are the major inits, just at the beginning and ending of a whole game
-void LunaticInit(MGLDraw *mgl);
-void LunaticExit(void);
+extern "C" void LunaticInit(MGLDraw *mgl);
+extern "C" void LunaticExit(void);
 
 Map* GameCurrentMap(); // replaces extern Map *curMap
 
@@ -89,7 +89,7 @@ void LunaticDraw(void);
 byte PlayALevel(byte map);
 
 byte LunaticWorld(byte world, const char *worldName);
-void LunaticGame(MGLDraw *mgl, byte load);
+extern "C" void LunaticGame(MGLDraw *mgl, byte load);
 void TrainingGame(MGLDraw *mgl);
 
 void SendMessageToGame(byte msg, int content);
