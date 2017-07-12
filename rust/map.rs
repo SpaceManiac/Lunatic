@@ -130,7 +130,7 @@ cpp! {{
 
 impl Map {
     pub unsafe fn new(size: u8, name: *const c_char) -> *mut Map {
-        cpp!([size as "byte", name as "char*"] -> *mut Map as "Map*" {
+        cpp!([size as "byte", name as "const char*"] -> *mut Map as "Map*" {
             return new Map(size, name);
         })
     }
@@ -141,19 +141,19 @@ impl Map {
         })
     }
 
-    pub unsafe fn delete(mut me: *mut Map) {
-        cpp!([mut me as "Map*"] { delete me; });
+    pub unsafe fn delete(me: *mut Map) {
+        cpp!([me as "Map*"] { delete me; });
     }
 
-    pub unsafe fn flags(mut me: *mut Map) -> *mut u8 {
-        cpp!([mut me as "Map*"] -> *mut u8 as "byte*" {
+    pub unsafe fn flags(me: *mut Map) -> *mut u8 {
+        cpp!([me as "Map*"] -> *mut u8 as "byte*" {
             return &me->flags;
         })
     }
 
     pub unsafe fn Save(&mut self, mut f: *mut ::libc::FILE) {
-        let mut me = self;
-        cpp!([mut me as "Map*", mut f as "FILE*"] {
+        let me = self;
+        cpp!([me as "Map*", mut f as "FILE*"] {
             me->Save(f);
         })
     }

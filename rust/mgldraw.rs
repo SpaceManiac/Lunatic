@@ -8,7 +8,7 @@ extern {
 
 impl MGLDraw {
     pub unsafe fn new(name: *const c_char, xRes: c_int, yRes: c_int, window: bool) -> *mut MGLDraw {
-        cpp!([name as "char*", xRes as "int", yRes as "int", window as "bool"] -> *mut MGLDraw as "MGLDraw*" {
+        cpp!([name as "const char*", xRes as "int", yRes as "int", window as "bool"] -> *mut MGLDraw as "MGLDraw*" {
             return new MGLDraw(name, xRes, yRes, window);
         })
     }
@@ -18,29 +18,29 @@ impl MGLDraw {
     }
 
     pub unsafe fn Box(&mut self, x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) {
-        let mut mgl = self as *mut MGLDraw;
-        cpp!([mut mgl as "MGLDraw*", x as "int", y as "int", x2 as "int", y2 as "int", c as "byte"] {
+        let mgl = self;
+        cpp!([mgl as "MGLDraw*", x as "int", y as "int", x2 as "int", y2 as "int", c as "byte"] {
             mgl->Box(x, y, x2, y2, c);
         })
     }
 
     pub unsafe fn FillBox(&mut self, x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) {
-        let mut mgl = self as *mut MGLDraw;
-        cpp!([mut mgl as "MGLDraw*", x as "int", y as "int", x2 as "int", y2 as "int", c as "byte"] {
+        let mgl = self;
+        cpp!([mgl as "MGLDraw*", x as "int", y as "int", x2 as "int", y2 as "int", c as "byte"] {
             mgl->FillBox(x, y, x2, y2, c);
         })
     }
 
     pub unsafe fn LoadBMP(&mut self, name: *const c_char) -> bool {
-        let mut mgl = self as *mut MGLDraw;
-        cpp!([mut mgl as "MGLDraw*", name as "char*"] -> bool as "bool" {
+        let mgl = self;
+        cpp!([mgl as "MGLDraw*", name as "const char*"] -> bool as "bool" {
             return mgl->LoadBMP(name);
         })
     }
 
     pub unsafe fn GetScreen(&mut self) -> *mut u8 {
-        let mut mgl = self as *mut MGLDraw;
-        cpp!([mut mgl as "MGLDraw*"] -> *mut u8 as "byte*" {
+        let mgl = self;
+        cpp!([mgl as "MGLDraw*"] -> *mut u8 as "byte*" {
             return mgl->GetScreen();
         })
     }
