@@ -39,8 +39,6 @@ struct world_t
 };
 
 extern "C" {
-	void WorldLoadBMP(char *name, byte *dst);
-
 	byte NewWorld(world_t *world, MGLDraw *mgl);
 	byte LoadWorld(world_t *world, const char *fname);
 	byte SaveWorld(world_t *world, const char *fname);

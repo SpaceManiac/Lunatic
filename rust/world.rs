@@ -38,17 +38,11 @@ pub struct world_t {
     terrain: [terrain_t; 200],
 }
 
-extern {
-    pub fn WorldLoadBMP(name: *mut c_char, dst: *mut u8);
-}
-
 #[no_mangle]
-pub unsafe extern fn NewWorld(world: *mut world_t, mut mgl: *mut MGLDraw) -> u8 {
+pub unsafe extern fn NewWorld(world: *mut world_t, mgl: *mut MGLDraw) -> u8 {
     (*world).numMaps = 1;
-    cpp!([mut mgl as "MGLDraw*"] {
-        mgl->LoadBMP("graphics\\forestTiles.bmp");
-        SetTiles(mgl->GetScreen());
-    });
+    (*mgl).LoadBMP(cstr!("graphics\\forestTiles.bmp"));
+    ::tile::SetTiles((*mgl).GetScreen());
 
     // reset all the terrain
     (*world).terrain = mem::zeroed();

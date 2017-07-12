@@ -12,7 +12,7 @@ typedef byte tile_t[TILE_WIDTH*TILE_HEIGHT];
 
 void InitTiles(MGLDraw *mgl);
 void ExitTiles(void);
-void SetTiles(byte *scrn);
+extern "C" void SetTiles(byte *scrn);
 extern "C" void LoadTiles(FILE *f);
 extern "C" void SaveTiles(FILE *f);
 void RenderFloorTile(int x, int y, int t, char light);
