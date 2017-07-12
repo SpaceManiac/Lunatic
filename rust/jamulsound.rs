@@ -1,12 +1,13 @@
 //! here's the fun and easy sound manager
 //! it assumes there is a subdirectory "\sounds" that contains snd000.wav - sndXXX.wav,
 //! for as many sounds as you'll try to play.  It will load them if they aren't in memory already.
-use libc::{c_int, c_long};
+use libc::{c_int, c_long, c_char};
 use allegro_sys::*;
 use std::ptr;
 
 bitflags! {
     /// external fun sound playing flags for everyone to use
+    #[repr(C)]
     pub struct SoundFlags: u8 {
         /// cut off same sound if needed
         const SND_CUTOFF = 1;
@@ -24,11 +25,12 @@ bitflags! {
 pub const MAX_SNDPRIORITY: c_int = 65536;
 
 /// most copies of a SND_FEW sound that can play at once
-const MAX_FEW_SOUNDS: c_int = 2;
+const MAX_FEW_SOUNDS: usize = 2;
 const MAX_SOUNDS_AT_ONCE: usize = 16;
 
 bitflags! {
     /// internal sound playing flags
+    #[repr(C)]
     struct InternalFlags: u8 {
         /// loop the sound indefinitely (actually does nothing)
         const SOUND_LOOP = 1;
@@ -43,8 +45,8 @@ struct soundbuf_t {
     sample: *mut SAMPLE,
 }
 
-/*static mut soundbufSize: c_int = 0;
-static mut soundbuf: *mut soundbuf_t = 0 as *mut soundbuf_t;*/
+static mut soundbufSize: c_int = 0;
+static mut soundbuf: *mut soundbuf_t = 0 as *mut soundbuf_t;
 
 /// a sound currently playing
 #[derive(Copy, Clone)]
@@ -57,28 +59,17 @@ struct sound_t {
     priority: c_int,
     pan: c_long,
     vol: c_long,
-    flags: u8,
+    flags: SoundFlags,
 }
 
-/*static mut playBuffer: [sound_t; MAX_SOUNDS_AT_ONCE]  = [sound_t {
+static mut playBuffer: [sound_t; MAX_SOUNDS_AT_ONCE]  = [sound_t {
     voice: 0,
     soundNum: 0,
     priority: 0,
     pan: 0,
     vol: 0,
-    flags: 0,
-}; MAX_SOUNDS_AT_ONCE];*/
-
-extern {
-    static mut soundbufSize: c_int;
-    static mut soundbuf: *mut soundbuf_t;
-    static mut playBuffer: [sound_t; MAX_SOUNDS_AT_ONCE];
-
-    /// call this fairly often to free up unused buffers, otherwise no new sounds can be played
-    pub fn JamulSoundUpdate();
-    /// call this a lot, it plays sounds
-    pub fn GoPlaySound(snd: c_int, pan: c_int, vol: c_int, flags: u8, priority: c_int);
-}
+    flags: SoundFlags { bits: 0 },
+}; MAX_SOUNDS_AT_ONCE];
 
 cpp! {{
     #include <allegro.h>
@@ -97,7 +88,7 @@ pub unsafe extern fn JamulSoundInit(numBuffers: c_int) -> bool {
     for playing in playBuffer.iter_mut() {
         playing.soundNum = -1;
         playing.voice = -1;
-        playing.flags = 0;
+        playing.flags = SoundFlags::empty();
     }
     true
 }
@@ -128,4 +119,136 @@ pub unsafe extern fn JamulSoundPurge() {
     for i in 0..soundbufSize {
         JamulSoundDestroyBuffer(i);
     }
+}
+
+unsafe fn JamulSoundPlay(voice: c_int, pan: c_long, vol: c_long, playFlags: InternalFlags) -> bool {
+	// if this copy is in use, can't play it
+	if voice_get_position(voice) > 0 {
+		if playFlags.contains(SOUND_CUTOFF) {
+			voice_set_position(voice, 0);
+			// keep going to handle the rest of the stuff
+		} else {
+            return false;
+        }
+	}
+
+	// set the pan and volume and start the voice
+	voice_set_volume(voice, vol);
+	voice_set_pan(voice, pan);
+	voice_start(voice);
+    true
+}
+
+// now here is all the big sound manager stuff, that allows multiple sounds at once
+
+/// call this fairly often to free up unused buffers, otherwise no new sounds can be played
+#[no_mangle]
+pub unsafe extern fn JamulSoundUpdate() {
+    for buf in playBuffer.iter_mut() {
+        if buf.voice != -1
+            && buf.flags.contains(SND_PLAYING)
+            && voice_get_position(buf.voice) == -1
+        {
+            buf.flags -= SND_PLAYING;
+        }
+    }
+}
+
+/// call this a lot, it plays sounds
+#[no_mangle]
+pub unsafe extern fn GoPlaySound(num: c_int, pan: c_int, vol: c_int, flags: u8, mut priority: c_int) {
+    let flags = SoundFlags::from_bits_truncate(flags);
+
+	// load the sample if it isn't already
+    let sound = &mut *soundbuf.offset(num as isize);
+    if sound.sample.is_null() {
+        let mut txt = [0; 32];
+        sprintf!(txt, "sound\\snd{:03}.wav", num);
+        sound.sample = load_sample(txt.as_ptr() as *const c_char);
+        if sound.sample.is_null() {
+            return; // can't play the sound, it won't load for some reason
+        }
+    }
+
+    priority += vol; // the quieter a sound, the lower the priority
+    if flags.contains(SND_MAXPRIORITY) {
+        priority = MAX_SNDPRIORITY;
+    }
+
+    if flags.contains(SND_ONE) {
+        for buf in playBuffer.iter_mut() {
+            if buf.soundNum == num {
+                // if you want to cut it off, or it isn't playing, then start anew
+                if flags.contains(SND_CUTOFF) || !buf.flags.contains(SND_PLAYING) {
+                    buf.pan = pan;
+                    buf.vol = vol;
+                    buf.flags = flags | SND_PLAYING;
+                    buf.priority = priority;
+                    JamulSoundPlay(buf.voice, pan, vol, SOUND_CUTOFF);
+                    return; // good job
+                } else {
+                    return; // can't be played because can't cut it off
+                }
+            }
+        }
+        // if you fell through to here, it isn't playing, so go ahead as normal
+    }
+
+    if flags.contains(SND_FEW) {
+        let count = playBuffer.iter()
+            .filter(|buf| buf.soundNum == num && buf.flags.contains(SND_PLAYING))
+            .count();
+        if count >= MAX_FEW_SOUNDS {
+            for buf in playBuffer.iter_mut() {
+                if buf.soundNum == num
+                    && flags.contains(SND_CUTOFF)
+                    && buf.flags.contains(SND_PLAYING)
+                {
+                    buf.pan = pan;
+                    buf.vol = vol;
+                    buf.flags = flags | SND_PLAYING;
+                    buf.priority = priority;
+                    JamulSoundPlay(buf.voice, pan, vol, SOUND_CUTOFF);
+                    return; // good job
+                }
+            }
+            return; // failed for some reason
+        }
+    }
+
+    let mut best = usize::max_value();
+    for (i, buf) in playBuffer.iter().enumerate() {
+        if buf.soundNum == -1 || !buf.flags.contains(SND_PLAYING) {
+            best = i;
+            break; // can't beat that
+        }
+        if buf.priority < priority || (buf.soundNum == num && flags.contains(SND_CUTOFF)) {
+            if best == usize::max_value() || buf.priority < playBuffer[best].priority {
+                best = i;
+            }
+        }
+    }
+    if best == usize::max_value() {
+        return; // sound is not worthy to be played
+    }
+
+    let buf = &mut playBuffer[best];
+    if buf.soundNum != num { // if it was already playing that sound, don't waste time
+        buf.soundNum = num;
+        if buf.voice != -1 {
+            deallocate_voice(buf.voice); // slash & burn
+        }
+        buf.voice = allocate_voice((*soundbuf.offset(num as isize)).sample);
+    } else {
+        voice_set_position(buf.voice, 0);
+    }
+
+    if buf.voice == -1 {
+        return; // can't play it
+    }
+    buf.priority = priority;
+    buf.pan = pan;
+    buf.vol = vol;
+    buf.flags = flags | SND_PLAYING;
+    JamulSoundPlay(buf.voice, pan, vol, InternalFlags::empty());
 }
