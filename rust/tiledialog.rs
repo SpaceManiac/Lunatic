@@ -34,35 +34,31 @@ pub unsafe extern fn ExitTileDialog() {
 }
 
 #[no_mangle]
-pub unsafe extern fn RenderTileDialog(msx: c_int, msy: c_int, mut mgl: *mut MGLDraw) {
+pub unsafe extern fn RenderTileDialog(msx: c_int, msy: c_int, mgl: *mut MGLDraw) {
     use display::Print;
 
-    cpp!([
-        msx as "int", msy as "int", mut mgl as "MGLDraw*",
-        MAX_FILES as "int"
-    ] {
-        int i;
+    // box for the whole dialog
+    (*mgl).FillBox(100, 80, 430, 400, 8);
+    (*mgl).Box(100, 80, 430, 400, 16);
 
-        // box for the whole dialog
-        mgl->FillBox(100, 80, 430, 400, 8);
-        mgl->Box(100, 80, 430, 400, 16);
-        // the box that contains the file list
-        mgl->Box(102, 82, 362, 340, 16);
-        mgl->FillBox(103, 83, 361, 339, 0);
-        for (i = 0; i < MAX_FILES; i++)
-        {
-            if (msx > 104 && msx < 362 && msy > 85 + i * 14 && msy < 85 + (i + 1)*14)
-                mgl->Box(104, 84 + i * 14, 360, 84 + (i + 1)*14, 16); // hilite if the cursor is on it
+    // the box that contains the file list
+    (*mgl).Box(102, 82, 362, 340, 16);
+    (*mgl).FillBox(103, 83, 361, 339, 0);
+
+    for i in 0..(MAX_FILES as c_int) {
+        if msx > 104 && msx < 362 && msy > 85 + i * 14 && msy < 85 + (i + 1)*14 {
+            (*mgl).Box(104, 84 + i * 14, 360, 84 + (i + 1)*14, 16); // hilite if the cursor is on it
         }
-        // the box to enter a new filename
-        mgl->Box(102, 342, 362, 356, 16);
-        mgl->FillBox(103, 343, 361, 355, 0);
+    }
 
-        // now the buttons
-        mgl->Box(102, 358, 182, 372, 16);
-        mgl->Box(370, 180, 420, 180 + 14, 16);
-        mgl->Box(370, 370, 420, 370 + 14, 16);
-    });
+    // the box to enter a new filename
+    (*mgl).Box(102, 342, 362, 356, 16);
+    (*mgl).FillBox(103, 343, 361, 355, 0);
+
+    // now the buttons
+    (*mgl).Box(102, 358, 182, 372, 16);
+    (*mgl).Box(370, 180, 420, 180 + 14, 16);
+    (*mgl).Box(370, 370, 420, 370 + 14, 16);
 
     for i in 0..MAX_FILES {
         Print(107, (86 + i * 14) as i32, fnames[i].as_ptr(), 0, 1);

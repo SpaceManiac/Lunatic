@@ -12,6 +12,10 @@ macro_rules! cstr {
     () => { "\0".as_ptr() as *const _ };
 }
 
+macro_rules! opaque {
+    ($name:ident) => { #[repr(C)] pub struct $name { _opaque: [u8; 0] } };
+}
+
 macro_rules! sprintf {
     ($buf:expr, $text:expr, $($rest:tt)*) => {{
         use std::io::Write;

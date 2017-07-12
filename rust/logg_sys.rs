@@ -2,8 +2,8 @@ use libc::{c_char, c_int};
 
 pub const OGG_PAGES_TO_BUFFER: usize = 2;
 
-pub enum LOGG_Stream {}
-pub enum SAMPLE {}
+opaque!(LOGG_Stream);
+opaque!(SAMPLE);
 
 extern {
     pub fn logg_load(filename: *const c_char) -> *mut SAMPLE;
