@@ -123,3 +123,38 @@ pub struct mapBadguy_t {
 }
 
 opaque!(Map);
+
+cpp! {{
+    #include "map.h"
+}}
+
+impl Map {
+    pub unsafe fn new(size: u8, name: *const c_char) -> *mut Map {
+        cpp!([size as "byte", name as "char*"] -> *mut Map as "Map*" {
+            return new Map(size, name);
+        })
+    }
+
+    pub unsafe fn from_file(mut f: *mut ::libc::FILE) -> *mut Map {
+        cpp!([mut f as "FILE*"] -> *mut Map as "Map*" {
+            return new Map(f);
+        })
+    }
+
+    pub unsafe fn delete(mut me: *mut Map) {
+        cpp!([mut me as "Map*"] { delete me; });
+    }
+
+    pub unsafe fn flags(mut me: *mut Map) -> *mut u8 {
+        cpp!([mut me as "Map*"] -> *mut u8 as "byte*" {
+            return &me->flags;
+        })
+    }
+
+    pub unsafe fn Save(&mut self, mut f: *mut ::libc::FILE) {
+        let mut me = self;
+        cpp!([mut me as "Map*", mut f as "FILE*"] {
+            me->Save(f);
+        })
+    }
+}

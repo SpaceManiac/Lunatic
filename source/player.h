@@ -105,7 +105,7 @@ byte PlayerPassedLevel(byte world, byte map);
 byte PlayerKeyChain(byte w);
 byte PlayerKeys(byte w);
 void PlayerLoseKey(byte w);
-void PlayerSetWorldWorth(byte world, int amt);
+extern "C" void PlayerSetWorldWorth(byte world, int amt);
 float PlayerGetPercent(byte world);
 float PlayerGetGamePercent(void);
 void SetCustomName(const char *name);

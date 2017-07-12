@@ -29,6 +29,10 @@ macro_rules! sprintf {
     }}
 }
 
+macro_rules! szof {
+    ($t:ty) => { ::std::mem::size_of::<$t>() }
+}
+
 struct PctS { ptr: *const c_char }
 unsafe fn PctS(ptr: *const c_char) -> PctS { PctS { ptr } }
 impl std::fmt::Display for PctS {
@@ -68,6 +72,7 @@ pub mod options;
 pub mod player;
 pub mod rage;
 pub mod sound;
+pub mod tile;
 pub mod tiledialog;
 pub mod title;
 pub mod world;
