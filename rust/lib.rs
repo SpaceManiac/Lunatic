@@ -46,8 +46,9 @@ impl std::fmt::Display for PctS {
 }
 
 // imports
-pub mod logg_sys;
+pub mod allegro_sys;
 pub mod misc_sys;
+pub mod logg_sys;
 
 // jamultypes.h
 pub const FIXSHIFT: c_int = 16;

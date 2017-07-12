@@ -16,8 +16,8 @@ struct soundbuf_t
 	SAMPLE *sample;
 };
 
-static int soundbufSize = 0;
-static soundbuf_t *soundbuf = NULL;
+int soundbufSize = 0;
+soundbuf_t *soundbuf = NULL;
 
 // a sound currently playing
 struct sound_t
@@ -31,46 +31,7 @@ struct sound_t
 
 sound_t playBuffer[MAX_SOUNDS_AT_ONCE];
 
-bool JamulSoundInit(int numBuffers)
-{
-	int i;
-
-	soundbufSize = numBuffers;
-	soundbuf = new soundbuf_t[numBuffers];
-	for (i = 0; i < numBuffers; i++)
-	{
-		soundbuf[i].sample = NULL;
-	}
-
-	for (i = 0; i < MAX_SOUNDS_AT_ONCE; i++)
-	{
-		playBuffer[i].soundNum = -1;
-		playBuffer[i].voice = -1;
-		playBuffer[i].flags = 0;
-	}
-	return TRUE;
-}
-
-void JamulSoundDestroyBuffer(int which)
-{
-	if (soundbuf[which].sample)
-	{
-		destroy_sample(soundbuf[which].sample);
-		soundbuf[which].sample = NULL;
-	}
-}
-
-void JamulSoundExit(void)
-{
-	int i;
-
-	if (soundbuf)
-	{
-		for (i = 0; i < soundbufSize; i++)
-			JamulSoundDestroyBuffer(i);
-		delete[] soundbuf;
-	}
-}
+extern "C" void JamulSoundDestroyBuffer(int which);
 
 bool JamulSoundPlay(int voice, long pan, long vol, byte playFlags)
 {
@@ -109,16 +70,6 @@ void JamulSoundUpdate(void)
 				playBuffer[i].flags &= (~SND_PLAYING);
 			}
 		}
-	}
-}
-
-void JamulSoundPurge(void)
-{
-	int i;
-
-	for (i = 0; i < soundbufSize; i++)
-	{
-		JamulSoundDestroyBuffer(i);
 	}
 }
 

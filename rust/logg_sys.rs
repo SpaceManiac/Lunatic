@@ -1,9 +1,9 @@
 use libc::{c_char, c_int};
+use allegro_sys::SAMPLE;
 
 pub const OGG_PAGES_TO_BUFFER: usize = 2;
 
 opaque!(LOGG_Stream);
-opaque!(SAMPLE);
 
 extern {
     pub fn logg_load(filename: *const c_char) -> *mut SAMPLE;

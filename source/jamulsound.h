@@ -15,6 +15,7 @@ enum {
 
 const int MAX_SNDPRIORITY = 65536;
 
+extern "C" {
 bool JamulSoundInit(int numBuffers);
 void JamulSoundExit(void);
 
@@ -30,6 +31,7 @@ void JamulSoundUpdate(void);
 void JamulSoundPurge(void);
 
 // call this a lot, it plays sounds
-extern "C" void GoPlaySound(int num, long pan, long vol, byte flags, int priority);
+void GoPlaySound(int num, long pan, long vol, byte flags, int priority);
+}
 
 #endif
