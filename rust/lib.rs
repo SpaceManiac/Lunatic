@@ -59,6 +59,7 @@ pub mod clock;
 pub mod cossin;
 pub mod display;
 pub mod editor;
+pub mod filedialog;
 pub mod game;
 pub mod guy;
 pub mod intface;

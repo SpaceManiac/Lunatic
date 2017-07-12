@@ -38,12 +38,14 @@ struct editopt_t
 
 extern byte editing;
 
-extern "C" byte LunaticEditor(MGLDraw *mgl);
+extern "C" {
+byte LunaticEditor(MGLDraw *mgl);
 
 void EditorNewWorld(void);
 void EditorLoadWorld(const char *fname);
 void EditorSaveWorld(const char *fname);
 void EditorSelectMap(byte w);
-extern "C" void EditorLoadTiles(const char *fname);
+void EditorLoadTiles(const char *fname);
+}
 
 #endif
