@@ -45,7 +45,7 @@ struct soundbuf_t {
     sample: *mut SAMPLE,
 }
 
-static mut soundbufSize: c_int = 0;
+static mut soundbufSize: usize = 0;
 static mut soundbuf: *mut soundbuf_t = 0 as *mut soundbuf_t;
 
 /// a sound currently playing
@@ -71,18 +71,14 @@ static mut playBuffer: [sound_t; MAX_SOUNDS_AT_ONCE]  = [sound_t {
     flags: SoundFlags { bits: 0 },
 }; MAX_SOUNDS_AT_ONCE];
 
-cpp! {{
-    #include <allegro.h>
-    struct soundbuf_t { SAMPLE *sample; };
-}}
-
 #[no_mangle]
 pub unsafe extern fn JamulSoundInit(numBuffers: c_int) -> bool {
-    soundbufSize = numBuffers;
-    soundbuf = cpp!([numBuffers as "int"] -> *mut soundbuf_t as "soundbuf_t*" {
-        return new soundbuf_t[numBuffers];
-    });
-    for i in 0..numBuffers {
+    let mut vec = Vec::with_capacity(numBuffers as usize);
+    soundbufSize = vec.capacity();
+    soundbuf = vec.as_mut_ptr();
+    ::std::mem::forget(vec);
+
+    for i in 0..soundbufSize {
         (*soundbuf.offset(i as isize)).sample = ptr::null_mut();
     }
     for playing in playBuffer.iter_mut() {
@@ -94,7 +90,7 @@ pub unsafe extern fn JamulSoundInit(numBuffers: c_int) -> bool {
 }
 
 #[no_mangle]
-pub unsafe extern fn JamulSoundDestroyBuffer(which: c_int) {
+pub unsafe extern fn JamulSoundDestroyBuffer(which: usize) {
     let buf = &mut *soundbuf.offset(which as isize);
     if !buf.sample.is_null() {
         destroy_sample(buf.sample);
@@ -106,10 +102,9 @@ pub unsafe extern fn JamulSoundDestroyBuffer(which: c_int) {
 pub unsafe extern fn JamulSoundExit() {
     if !soundbuf.is_null() {
         JamulSoundPurge();
-        cpp!([soundbuf as "soundbuf_t*"] {
-            delete[] soundbuf;
-        });
+        Vec::from_raw_parts(soundbuf, 0, soundbufSize);
         soundbuf = ptr::null_mut();
+        soundbufSize = 0;
     }
 }
 

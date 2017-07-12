@@ -318,7 +318,7 @@ pub unsafe extern fn SoundSystemExists() {
 
 #[no_mangle]
 pub unsafe extern fn InitSound() {
-    cpp!([] { JamulSoundPurge(); });
+    JamulSoundPurge();
 }
 
 #[no_mangle]
