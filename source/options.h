@@ -33,9 +33,11 @@ struct options_t
 extern options_t opt;
 extern byte oldPlayAs;
 
+extern "C" {
 void LoadOptions(void);
 void SaveOptions(void);
 
 void OptionsMenu(MGLDraw *mgl);
+}
 
 #endif

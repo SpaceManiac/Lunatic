@@ -69,9 +69,9 @@ pub enum Bullet {
 pub const MAX_BULLETS: c_int = 256;
 
 // the special hammer flags for different powerups
-pub const HMR_REVERSE: c_int = 1;
-pub const HMR_REFLECT: c_int = 2;
-pub const HMR_WATERWALK: c_int = 4;
+pub const HMR_REVERSE: u8 = 1;
+pub const HMR_REFLECT: u8 = 2;
+pub const HMR_WATERWALK: u8 = 4;
 
 #[repr(C)]
 pub struct bullet_t {
@@ -92,4 +92,11 @@ pub struct bullet_t {
 
 extern {
     pub fn FireBullet(x: c_int, y: c_int, facing: u8, type_: u8, friendly: u8);
+    pub fn HammerLaunch(x: c_int, y: c_int, facing: u8, count: u8, flags: u8);
+    pub fn HappyLaunch(x: c_int, y: c_int, facing: u8, count: u8, flags: u8);
+}
+
+pub unsafe fn fire_bullet(x: i32, y: i32, facing: u8, type_: Bullet, friendly: u8) {
+    // TODO: replace friendly with a bool or enum
+    FireBullet(x, y, facing, type_ as u8, friendly)
 }

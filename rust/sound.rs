@@ -1,5 +1,4 @@
-use jamulsound::*;
-use display::GetCamera;
+pub use jamulsound::*;
 use libc::c_int;
 
 #[repr(C)]
@@ -329,13 +328,12 @@ pub unsafe extern fn ExitSound() {
 
 #[no_mangle]
 pub unsafe extern fn MakeSound(snd: c_int, mut x: c_int, mut y: c_int, flags: c_int, priority: c_int) {
-    if !SOUND_AVAILABLE || !::options::sound() { return }
+    if !SOUND_AVAILABLE || ::options::opt.sound == 0 { return }
 
     x >>= ::FIXSHIFT;
     y >>= ::FIXSHIFT;
 
-    let (mut cx, mut cy) = (0, 0);
-    GetCamera(&mut cx, &mut cy);
+    let (cx, cy) = ::display::get_camera();
 
     let pan = 127 + (x - cx) * 127 / 800; // (x-cx)*2 in range -1600 to 1600, this is 0-255
     let vol = -((x - cx)*(x - cx)+(y - cy)*(y - cy)) / 128;
@@ -344,9 +342,13 @@ pub unsafe extern fn MakeSound(snd: c_int, mut x: c_int, mut y: c_int, flags: c_
     GoPlaySound(snd, pan, vol, flags as u8, priority);
 }
 
+pub unsafe fn make_sound(snd: Sound, x: c_int, y: c_int, flags: u8, priority: c_int) {
+    MakeSound(snd as c_int, x, y, flags as c_int, priority)
+}
+
 #[no_mangle]
 pub unsafe extern fn MakeNormalSound(snd: c_int) {
-    if !SOUND_AVAILABLE || !::options::sound() { return }
+    if !SOUND_AVAILABLE || ::options::opt.sound == 0 { return }
 
     GoPlaySound(snd, 128, 255, SND_MAXPRIORITY | SND_CUTOFF | SND_ONE, MAX_SNDPRIORITY);
 }

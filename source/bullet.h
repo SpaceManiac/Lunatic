@@ -90,14 +90,14 @@ void LaunchMegabeam(int x, int y, word owner);
 extern "C" void FireBullet(int x, int y, byte facing, byte type, byte friendly);
 void FireBulletAfter(int x, int y, byte facing, byte type, bullet_t *thisone, byte friendly);
 void FireExactBullet(int x, int y, int z, int dx, int dy, int dz, byte anim, byte timer, byte facing, byte type, byte friendly);
-void HammerLaunch(int x, int y, byte facing, byte count, byte flags);
+extern "C" void HammerLaunch(int x, int y, byte facing, byte count, byte flags);
 byte Bulletable(Map *map, int x, int y);
 void BulletRanOut(bullet_t *me, Map *map, world_t *world); // prototyped for interior use
 void ReflectShot(void);
 void BulletSwap(int sx, int sy, int width, int height, int dx, int dy);
 void SpitAcid(int x, int y, byte facing, byte type, byte friendly);
 void FireBulletZ(int x, int y, int z, byte facing, byte type, byte friendly);
-void HappyLaunch(int x, int y, byte facing, byte count, byte flags);
+extern "C" void HappyLaunch(int x, int y, byte facing, byte count, byte flags);
 void ReflectBullets(int x, int y, byte size, byte friendly);
 
 void BulletTally(void);

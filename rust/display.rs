@@ -5,3 +5,9 @@ extern {
     pub fn GetStrLength(s: *const c_char) -> c_int;
     pub fn ShakeScreen(howlong: u8);
 }
+
+pub unsafe fn get_camera() -> (c_int, c_int) {
+    let (mut cx, mut cy) = (0, 0);
+    GetCamera(&mut cx, &mut cy);
+    (cx, cy)
+}

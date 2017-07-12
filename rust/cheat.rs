@@ -72,8 +72,7 @@ pub unsafe extern fn DoCheat(w: u8) {
             NewMessage(cstr!("ULTRA HAMMER UP!!"), 30, 0);
         }
         2 => { // meganuke
-            let (mut cx, mut cy) = (0, 0);
-            ::display::GetCamera(&mut cx, &mut cy);
+            let (mut cx, mut cy) = ::display::get_camera();
             cx -= 320;
             cy -= 240;
             for _ in 0..60 {
