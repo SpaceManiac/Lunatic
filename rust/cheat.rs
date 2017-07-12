@@ -125,7 +125,7 @@ pub unsafe extern fn DoCheat(w: u8) {
         }
         12 => { // fill with rage
             NewMessage(cstr!("Filling... with... RAGE!!"), 75, 0);
-            ::player::fill_rage();
+            ::player::player.rage = 127 * 256;
         }
         _ => {}
     }

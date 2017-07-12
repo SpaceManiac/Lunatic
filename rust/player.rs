@@ -3,6 +3,7 @@ use world::MAX_MAPS;
 
 /// secondary weapon defines
 #[repr(C)]
+#[derive(FromInt)]
 pub enum Weapon {
     WPN_NONE,
     WPN_MISSILES,
@@ -93,12 +94,4 @@ extern {
     pub fn PlayerGetItem(itm: u8, x: c_int, y: c_int) -> u8;
     pub fn PlayerHeal(amt: u8);
     pub fn ToggleWaterwalk();
-}
-
-cpp! {{
-    #include "player.h"
-}}
-
-pub unsafe fn fill_rage() {
-    cpp!([] { player.rage = 127 * 256; });
 }

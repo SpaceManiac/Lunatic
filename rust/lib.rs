@@ -57,6 +57,7 @@ pub mod display;
 pub mod editor;
 pub mod game;
 pub mod guy;
+pub mod intface;
 pub mod items;
 pub mod jamulsound;
 pub mod map;
