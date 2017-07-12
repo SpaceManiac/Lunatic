@@ -56,16 +56,20 @@ pub mod cossin;
 pub mod display;
 pub mod editor;
 pub mod game;
+pub mod guy;
 pub mod items;
 pub mod jamulsound;
+pub mod map;
 pub mod message;
 pub mod mgldraw;
 pub mod music;
 pub mod options;
 pub mod player;
+pub mod rage;
 pub mod sound;
 pub mod tiledialog;
 pub mod title;
+pub mod world;
 
 // int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine, int nCmdShow)
 #[no_mangle]
