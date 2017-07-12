@@ -1,0 +1,19 @@
+[package]
+name = "cpp_build"
+version = "0.3.0"
+authors = ["Michael Layzell <michael@thelayzells.com>"]
+description = "Cargo build script for the `cpp` crate"
+readme = "../README.md"
+license = "MIT/Apache-2.0"
+keywords = ["c", "cxx", "ffi", "compiler", "build-dependencies"]
+categories = ["development-tools::ffi"]
+repository = "https://github.com/mystor/rust-cpp"
+documentation = "https://docs.rs/cpp_build"
+
+[dependencies]
+lazy_static = "0.2.2"
+gcc = "0.3"
+cpp_common = { version = "=0.3.0" }
+cpp_synmap = { version = "0.2.0" }
+cpp_syn = { version = "0.12", features=["full", "visit"] }
+cpp_synom = { version = "0.12" }
