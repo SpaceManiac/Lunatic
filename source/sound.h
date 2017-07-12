@@ -303,7 +303,7 @@ extern "C" {
     void InitSound(void);
     void ExitSound(void);
     void MakeNormalSound(int snd);
-    void MakeSound(int snd, int x, int y, int flags, int priority);
+    void MakeSound(int snd, int x, int y, byte flags, int priority);
     void SoundSystemExists(void);
 }
 

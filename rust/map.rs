@@ -7,41 +7,45 @@ pub const MIN_LIGHT: i8 = -32;
 pub const MAX_MAPMONS: usize = 128;
 pub const MAX_SPECIAL: usize = 32;
 
-/// flags for calling map render
-pub mod RenderFlags {
-    pub const MAP_SHOWLIGHTS: u8 = 1;
-    pub const MAP_SHOWWALLS: u8 = 2;
-    pub const MAP_SHOWITEMS: u8 = 4;
-    pub const MAP_SHOWBADGUYS: u8 = 8;
-    pub const MAP_SHOWSPECIALS: u8 = 16;
+bitflags! {
+    /// flags for calling map render
+    pub struct RenderFlags: u8 {
+        const MAP_SHOWLIGHTS = 1;
+        const MAP_SHOWWALLS = 2;
+        const MAP_SHOWITEMS = 4;
+        const MAP_SHOWBADGUYS = 8;
+        const MAP_SHOWSPECIALS = 16;
+    }
 }
 
-/// special trigger flags
-pub mod Trigger {
-    pub const TRG_STEP: u16 = 1;
-    pub const TRG_ENEMYSTEP: u16 = 2;
-    pub const TRG_NEAR: u16 = 4;
-    pub const TRG_PASSLEVELS: u16 = 8;
-    pub const TRG_KEYCHAINS: u16 = 16;
-    pub const TRG_KILLALL: u16 = 32;
-    pub const TRG_HAVEBRAINS: u16 = 64;
-    pub const TRG_SHOOT: u16 = 128;
-    /// works more than once
-    pub const TRG_REPEATABLE: u16 = 256;
-    /// displays a message
-    pub const TRG_MESSAGE: u16 = 512;
-    /// goes off if any special in an adjacent square goes off
-    pub const TRG_CHAIN: u16 = 1024;
-    /// occurs every N seconds
-    pub const TRG_TIMED: u16 = 2048;
-    /// occurs randomly, with an N% chance each second
-    pub const TRG_RANDOM: u16 = 4096;
-    /// has loony key for this world
-    pub const TRG_HAVELOONY: u16 = 8192;
-    /// kill just one of the chosen monster type
-    pub const TRG_KILLONE: u16 = 16384;
-    /// the floor/roof here is N
-    pub const TRG_FLOORHERE: u16 = 32768;
+bitflags! {
+    /// special trigger flags
+    pub struct TriggerFlags: u16 {
+        const TRG_STEP = 1;
+        const TRG_ENEMYSTEP = 2;
+        const TRG_NEAR = 4;
+        const TRG_PASSLEVELS = 8;
+        const TRG_KEYCHAINS = 16;
+        const TRG_KILLALL = 32;
+        const TRG_HAVEBRAINS = 64;
+        const TRG_SHOOT = 128;
+        /// works more than once
+        const TRG_REPEATABLE = 256;
+        /// displays a message
+        const TRG_MESSAGE = 512;
+        /// goes off if any special in an adjacent square goes off
+        const TRG_CHAIN = 1024;
+        /// occurs every N seconds
+        const TRG_TIMED = 2048;
+        /// occurs randomly, with an N% chance each second
+        const TRG_RANDOM = 4096;
+        /// has loony key for this world
+        const TRG_HAVELOONY = 8192;
+        /// kill just one of the chosen monster type
+        const TRG_KILLONE = 16384;
+        /// the floor/roof here is N
+        const TRG_FLOORHERE = 32768;
+    }
 }
 
 /// special effect choices
@@ -74,13 +78,15 @@ pub enum Effect {
     SPC_MAXEFFECTS
 }
 
-/// Map flags
-pub mod MapFlags {
-    pub const MAP_SNOWING: u8 = 1;
-    pub const MAP_MANYITEMS: u8 = 2;
-    pub const MAP_SECRET: u8 = 4;
-    pub const MAP_TORCHLIT: u8 = 8;
-    pub const MAP_STARS: u8 = 16;
+bitflags! {
+    /// Map flags
+    pub struct MapFlags: u8 {
+        const MAP_SNOWING = 1;
+        const MAP_MANYITEMS = 2;
+        const MAP_SECRET = 4;
+        const MAP_TORCHLIT = 8;
+        const MAP_STARS = 16;
+    }
 }
 
 /// map updating modes

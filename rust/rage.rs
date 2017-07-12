@@ -70,7 +70,7 @@ pub unsafe extern fn DoRage(me: *mut Guy) {
     match Weapon::from_int(rageWpn as usize) {
         Some(WPN_NONE) => match PlayAs::from_int(opt.playAs as usize) {
             Some(PlayAs::PLAYAS_BOUAPHA) => if player.rageClock % 4 == 0 {
-                HammerLaunch((*me).x, (*me).y, (*me).facing, 5, HMR_REVERSE | HMR_REFLECT);
+                HammerLaunch((*me).x, (*me).y, (*me).facing, 5, (HMR_REVERSE | HMR_REFLECT).bits());
             },
             Some(PlayAs::PLAYAS_LUNATIC) => if player.rageClock % 4 == 0 {
                 for _ in 0..10 {
@@ -78,7 +78,7 @@ pub unsafe extern fn DoRage(me: *mut Guy) {
                 }
             },
             Some(PlayAs::PLAYAS_HAPPY) => if player.rageClock % 4 == 0 {
-                HappyLaunch((*me).x, (*me).y, (*me).facing, 5, HMR_REVERSE | HMR_REFLECT);
+                HappyLaunch((*me).x, (*me).y, (*me).facing, 5, (HMR_REVERSE | HMR_REFLECT).bits());
             },
             _ => {}
         },

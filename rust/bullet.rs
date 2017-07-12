@@ -68,10 +68,14 @@ pub enum Bullet {
 
 pub const MAX_BULLETS: c_int = 256;
 
-// the special hammer flags for different powerups
-pub const HMR_REVERSE: u8 = 1;
-pub const HMR_REFLECT: u8 = 2;
-pub const HMR_WATERWALK: u8 = 4;
+bitflags! {
+    /// the special hammer flags for different powerups
+    pub struct HammerFlags: u8 {
+        const HMR_REVERSE = 1;
+        const HMR_REFLECT = 2;
+        const HMR_WATERWALK = 4;
+    }
+}
 
 #[repr(C)]
 pub struct bullet_t {

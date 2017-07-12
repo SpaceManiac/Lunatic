@@ -5,23 +5,25 @@ use std::mem;
 
 pub const MAX_MAPS: usize = 24;
 
-/// terrain flags
-pub mod Terrain {
-    pub const TF_SOLID: u16 = 1;
-    pub const TF_ICE: u16 = 2;
-    pub const TF_MUD: u16 = 4;
-    pub const TF_WATER: u16 = 8;
-    pub const TF_LAVA: u16 = 16;
-    /// if this is the roof of a wall, the wall is pushable
-    pub const TF_PUSHY: u16 = 32;
-    /// only PUSHON terrain can have things pushed over it
-    pub const TF_PUSHON: u16 = 64;
-    pub const TF_ANIM: u16 = 128;
-    pub const TF_STEP: u16 = 256;
-    pub const TF_DESTRUCT: u16 = 512;
-    pub const TF_TRANS: u16 = 1024;
-    pub const TF_MINECART: u16 = 2048;
-    pub const TF_BUNNY: u16 = 4096;
+bitflags! {
+    /// terrain flags
+    pub struct TerrainFlags: u16 {
+        const TF_SOLID = 1;
+        const TF_ICE = 2;
+        const TF_MUD = 4;
+        const TF_WATER = 8;
+        const TF_LAVA = 16;
+        /// if this is the roof of a wall, the wall is pushable
+        const TF_PUSHY = 32;
+        /// only PUSHON terrain can have things pushed over it
+        const TF_PUSHON = 64;
+        const TF_ANIM = 128;
+        const TF_STEP = 256;
+        const TF_DESTRUCT = 512;
+        const TF_TRANS = 1024;
+        const TF_MINECART = 2048;
+        const TF_BUNNY = 4096;
+    }
 }
 
 #[repr(C)]
@@ -77,7 +79,7 @@ pub unsafe extern fn LoadWorld(world: *mut world_t, fname: *const c_char) -> u8 
     for i in 0..((*world).numMaps) {
         let flags = *Map::flags((*world).map[i as usize]);
         if player.levelPassed[player.worldNum as usize][i as usize] != 0 &&
-            (flags & ::map::MapFlags::MAP_SECRET) == 0
+            (flags & ::map::MAP_SECRET.bits()) == 0
         {
             player.levelsPassed += 1;
         }

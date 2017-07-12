@@ -327,7 +327,7 @@ pub unsafe extern fn ExitSound() {
 }
 
 #[no_mangle]
-pub unsafe extern fn MakeSound(snd: c_int, mut x: c_int, mut y: c_int, flags: c_int, priority: c_int) {
+pub unsafe extern fn MakeSound(snd: c_int, mut x: c_int, mut y: c_int, flags: u8, priority: c_int) {
     if !SOUND_AVAILABLE || ::options::opt.sound == 0 { return }
 
     x >>= ::FIXSHIFT;
@@ -339,16 +339,16 @@ pub unsafe extern fn MakeSound(snd: c_int, mut x: c_int, mut y: c_int, flags: c_
     let vol = -((x - cx)*(x - cx)+(y - cy)*(y - cy)) / 128;
     if vol < -5000 { return } // too quiet to play
     let vol = vol * 255 / 5000 + 255;
-    GoPlaySound(snd, pan, vol, flags as u8, priority);
+    GoPlaySound(snd, pan, vol, flags, priority);
 }
 
-pub unsafe fn make_sound(snd: Sound, x: c_int, y: c_int, flags: u8, priority: c_int) {
-    MakeSound(snd as c_int, x, y, flags as c_int, priority)
+pub unsafe fn make_sound(snd: Sound, x: c_int, y: c_int, flags: SoundFlags, priority: c_int) {
+    MakeSound(snd as c_int, x, y, flags.bits(), priority)
 }
 
 #[no_mangle]
 pub unsafe extern fn MakeNormalSound(snd: c_int) {
     if !SOUND_AVAILABLE || ::options::opt.sound == 0 { return }
 
-    GoPlaySound(snd, 128, 255, SND_MAXPRIORITY | SND_CUTOFF | SND_ONE, MAX_SNDPRIORITY);
+    GoPlaySound(snd, 128, 255, (SND_MAXPRIORITY | SND_CUTOFF | SND_ONE).bits(), MAX_SNDPRIORITY);
 }
