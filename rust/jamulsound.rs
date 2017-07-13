@@ -117,20 +117,20 @@ pub unsafe extern fn JamulSoundPurge() {
 }
 
 unsafe fn JamulSoundPlay(voice: c_int, pan: c_long, vol: c_long, playFlags: InternalFlags) -> bool {
-	// if this copy is in use, can't play it
-	if voice_get_position(voice) > 0 {
-		if playFlags.contains(SOUND_CUTOFF) {
-			voice_set_position(voice, 0);
-			// keep going to handle the rest of the stuff
-		} else {
+    // if this copy is in use, can't play it
+    if voice_get_position(voice) > 0 {
+        if playFlags.contains(SOUND_CUTOFF) {
+            voice_set_position(voice, 0);
+            // keep going to handle the rest of the stuff
+        } else {
             return false;
         }
-	}
+    }
 
-	// set the pan and volume and start the voice
-	voice_set_volume(voice, vol);
-	voice_set_pan(voice, pan);
-	voice_start(voice);
+    // set the pan and volume and start the voice
+    voice_set_volume(voice, vol);
+    voice_set_pan(voice, pan);
+    voice_start(voice);
     true
 }
 
@@ -154,7 +154,7 @@ pub unsafe extern fn JamulSoundUpdate() {
 pub unsafe extern fn GoPlaySound(num: c_int, pan: c_int, vol: c_int, flags: u8, mut priority: c_int) {
     let flags = SoundFlags::from_bits_truncate(flags);
 
-	// load the sample if it isn't already
+    // load the sample if it isn't already
     let sound = &mut *soundbuf.offset(num as isize);
     if sound.sample.is_null() {
         let mut txt = [0; 32];

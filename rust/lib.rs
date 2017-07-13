@@ -75,6 +75,7 @@ pub mod items;
 pub mod jamulfont;
 pub mod jamulsound;
 pub mod map;
+pub mod mapdialog;
 pub mod message;
 pub mod mgldraw;
 pub mod music;

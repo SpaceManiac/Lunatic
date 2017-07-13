@@ -4,16 +4,16 @@ use mgldraw::MGLDraw;
 /// the different plop modes
 #[repr(C)]
 pub enum PlopMode {
-	PLOP_FLOOR = 0,
-	PLOP_WALL,
-	PLOP_ITEM,
-	PLOP_BADGUY,
-	PLOP_LIGHT,
-	PLOP_DARK,
-	PLOP_SMOOTH,
-	PLOP_TORCH,
-	PLOP_SPECIAL,
-	MAXPLOP,
+    PLOP_FLOOR = 0,
+    PLOP_WALL,
+    PLOP_ITEM,
+    PLOP_BADGUY,
+    PLOP_LIGHT,
+    PLOP_DARK,
+    PLOP_SMOOTH,
+    PLOP_TORCH,
+    PLOP_SPECIAL,
+    MAXPLOP,
 }
 
 #[repr(C)]

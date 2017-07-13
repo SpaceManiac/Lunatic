@@ -81,8 +81,8 @@ pub unsafe extern fn TileDialogKey(key: c_char) -> u8 {
         }
         1
     } else if key == 10 { // enter
-		// load the named one -- SpaceManiac notes: apparently this didn't get implemented
-		TileDialogClick(371, 181)
+        // load the named one -- SpaceManiac notes: apparently this didn't get implemented
+        TileDialogClick(371, 181)
     } else if ::libc::isprint(key as i32) != 0 {
         let len = ::libc::strlen(newfname.as_ptr());
         if len < 30 {
@@ -91,7 +91,7 @@ pub unsafe extern fn TileDialogKey(key: c_char) -> u8 {
         }
         1
     } else {
-		// non-printables keep ending up in the PixelToaster keyboard
+        // non-printables keep ending up in the PixelToaster keyboard
         1
     }
 }
@@ -117,7 +117,7 @@ unsafe fn TileDialogMoreFiles() {
 pub unsafe extern fn TileDialogClick(msx: c_int, msy: c_int) -> u8 {
     let mut fname = [0; 64];
     sprintf!(fname, "graphics\\{}", ::PctS(newfname.as_ptr()));
-	// if click on a filename, that's the current filename
+    // if click on a filename, that's the current filename
     for i in 0..MAX_FILES {
         if msx > 104 && msx < 362 &&
             msy > 85 + i as c_int * 14 &&
