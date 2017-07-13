@@ -128,7 +128,7 @@ pub unsafe extern fn CharWidth(c: u8, font: &mfont_t) -> u8 {
 pub unsafe extern fn FontPrintString(mut x: c_int, y: c_int, s: *const c_char, font: &mfont_t) {
     for &byte in CStr::from_ptr(s).to_bytes() {
         FontPrintChar(x, y, byte, font);
-        x += CharWidth(byte, font) as c_int + (*font).gapSize as c_int;
+        x += CharWidth(byte, font) as c_int + font.gapSize as c_int;
     }
 }
 
@@ -136,7 +136,7 @@ pub unsafe extern fn FontPrintString(mut x: c_int, y: c_int, s: *const c_char, f
 pub unsafe extern fn FontPrintStringColor(mut x: c_int, y: c_int, s: *const c_char, font: &mfont_t, color: u8) {
     for &byte in CStr::from_ptr(s).to_bytes() {
         FontPrintCharColor(x, y, byte, color, font);
-        x += CharWidth(byte, font) as c_int + (*font).gapSize as c_int;
+        x += CharWidth(byte, font) as c_int + font.gapSize as c_int;
     }
 }
 
@@ -144,7 +144,7 @@ pub unsafe extern fn FontPrintStringColor(mut x: c_int, y: c_int, s: *const c_ch
 pub unsafe extern fn FontPrintStringBright(mut x: c_int, y: c_int, s: *const c_char, font: &mfont_t, bright: i8) {
     for &byte in CStr::from_ptr(s).to_bytes() {
         FontPrintCharBright(x, y, byte, bright, font);
-        x += CharWidth(byte, font) as c_int + (*font).gapSize as c_int;
+        x += CharWidth(byte, font) as c_int + font.gapSize as c_int;
     }
 }
 
@@ -152,7 +152,7 @@ pub unsafe extern fn FontPrintStringBright(mut x: c_int, y: c_int, s: *const c_c
 pub unsafe extern fn FontPrintStringSolid(mut x: c_int, y: c_int, s: *const c_char, font: &mfont_t, color: u8) {
     for &byte in CStr::from_ptr(s).to_bytes() {
         FontPrintCharSolid(x, y, byte, font, color);
-        x += CharWidth(byte, font) as c_int + (*font).gapSize as c_int;
+        x += CharWidth(byte, font) as c_int + font.gapSize as c_int;
     }
 }
 
@@ -167,7 +167,7 @@ pub unsafe extern fn FontPrintStringDropShadow(
     for &byte in CStr::from_ptr(s).to_bytes() {
         FontPrintCharSolid(x + shadowOffset as c_int, y + shadowOffset as c_int, byte, font, shadowColor);
         FontPrintChar(x, y, byte, font);
-        x += CharWidth(byte, font) as c_int + (*font).gapSize as c_int;
+        x += CharWidth(byte, font) as c_int + font.gapSize as c_int;
     }
 }
 
@@ -179,6 +179,6 @@ pub unsafe extern fn FontSetColors(first: u8, count: u8, data: *const u8) {
 #[no_mangle]
 pub unsafe extern fn FontStrLen(s: *const c_char, font: &mfont_t) -> c_int {
     CStr::from_ptr(s).to_bytes().iter().map(|&byte| {
-        CharWidth(byte, font) as c_int + (*font).gapSize as c_int
+        CharWidth(byte, font) as c_int + font.gapSize as c_int
     }).sum()
 }

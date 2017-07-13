@@ -41,43 +41,43 @@ pub struct world_t {
 }
 
 #[no_mangle]
-pub unsafe extern fn NewWorld(world: *mut world_t, mgl: *mut MGLDraw) -> u8 {
-    (*world).numMaps = 1;
-    (*mgl).LoadBMP(cstr!("graphics\\forestTiles.bmp"));
-    ::tile::SetTiles((*mgl).GetScreen());
+pub unsafe extern fn NewWorld(world: &mut world_t, mgl: &mut MGLDraw) -> u8 {
+    world.numMaps = 1;
+    mgl.LoadBMP(cstr!("graphics\\forestTiles.bmp"));
+    ::tile::SetTiles(mgl.GetScreen());
 
     // reset all the terrain
-    (*world).terrain = mem::zeroed();
-    (*world).map = mem::zeroed();
-    (*world).map[0] = Map::new(0, cstr!("New World"));
+    world.terrain = mem::zeroed();
+    world.map = mem::zeroed();
+    world.map[0] = Map::new(0, cstr!("New World"));
     1
 }
 
 #[no_mangle]
-pub unsafe extern fn LoadWorld(world: *mut world_t, fname: *const c_char) -> u8 {
+pub unsafe extern fn LoadWorld(world: &mut world_t, fname: *const c_char) -> u8 {
     use player::player;
 
     let f = fopen(fname, cstr!("rb"));
     if f.is_null() { return 0; }
 
-    fread((&mut (*world).numMaps) as *mut _ as *mut _, 1, 1, f);
-    fread((&mut (*world).totalPoints) as *mut _ as *mut _, 1, 4, f);
+    fread((&mut world.numMaps) as *mut _ as *mut _, 1, 1, f);
+    fread((&mut world.totalPoints) as *mut _ as *mut _, 1, 4, f);
 
     ::tile::LoadTiles(f);
 
-    fread((&mut (*world).terrain) as *mut _ as *mut _, 200, szof!(terrain_t), f);
+    fread((&mut world.terrain) as *mut _ as *mut _, 200, szof!(terrain_t), f);
 
-    for map in (*world).map.iter_mut() {
+    for map in world.map.iter_mut() {
         *map = ::std::ptr::null_mut();
     }
 
-    for i in 0..((*world).numMaps) {
-        (*world).map[i as usize] = Map::from_file(f);
+    for i in 0..(world.numMaps) {
+        world.map[i as usize] = Map::from_file(f);
     }
 
     player.levelsPassed = 0;
-    for i in 0..((*world).numMaps) {
-        let flags = *Map::flags((*world).map[i as usize]);
+    for i in 0..(world.numMaps) {
+        let flags = *Map::flags(world.map[i as usize]);
         if player.levelPassed[player.worldNum as usize][i as usize] != 0 &&
             (flags & ::map::MAP_SECRET.bits()) == 0
         {
@@ -90,26 +90,26 @@ pub unsafe extern fn LoadWorld(world: *mut world_t, fname: *const c_char) -> u8 
 }
 
 #[no_mangle]
-pub unsafe extern fn SaveWorld(world: *mut world_t, fname: *const c_char) -> u8 {
-    (*world).totalPoints = 0;
-    for &map in (*world).map[1..].iter() {
+pub unsafe extern fn SaveWorld(world: &mut world_t, fname: *const c_char) -> u8 {
+    world.totalPoints = 0;
+    for &map in world.map[1..].iter() {
         if !map.is_null() {
-            (*world).totalPoints += 100; // each level is worth 100 points except the hub which is worth nothing
+            world.totalPoints += 100; // each level is worth 100 points except the hub which is worth nothing
         }
     }
 
     let f = fopen(fname, cstr!("wb"));
     if f.is_null() { return 0; }
 
-    fwrite((&(*world).numMaps) as *const _ as *const _, 1, 1, f);
-    fwrite((&(*world).totalPoints) as *const _ as *const _, 1, szof!(c_int), f);
+    fwrite((&world.numMaps) as *const _ as *const _, 1, 1, f);
+    fwrite((&world.totalPoints) as *const _ as *const _, 1, szof!(c_int), f);
 
     ::tile::SaveTiles(f);
 
-    fwrite((&(*world).terrain) as *const _ as *const _, 200, szof!(terrain_t), f);
+    fwrite((&world.terrain) as *const _ as *const _, 200, szof!(terrain_t), f);
 
-    for i in 0..((*world).numMaps) {
-        (*(*world).map[i as usize]).Save(f);
+    for i in 0..(world.numMaps) {
+        (*world.map[i as usize]).Save(f);
     }
 
     fclose(f);
@@ -126,16 +126,16 @@ pub unsafe extern fn FreeWorld(world: *mut world_t) {
 }
 
 #[no_mangle]
-pub unsafe extern fn InitWorld(world: *mut world_t, worldNum: u8) {
+pub unsafe extern fn InitWorld(world: &mut world_t, worldNum: u8) {
     let mut complete = 0;
-    for &map in (*world).map[1..].iter() {
+    for &map in world.map[1..].iter() {
         if !map.is_null() {
             complete += 100; // each level is worth 100 points except the hub which is worth nothing
         }
     }
 
     ::player::PlayerSetWorldWorth(worldNum, complete);
-    (*world).totalPoints = complete;
+    world.totalPoints = complete;
 }
 
 #[no_mangle]

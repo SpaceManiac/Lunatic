@@ -87,10 +87,6 @@ pub mod tiledialog;
 pub mod title;
 pub mod world;
 
-cpp! {{
-    #include "guy.h"
-}}
-
 // int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine, int nCmdShow)
 #[no_mangle]
 pub unsafe extern "system" fn WinMain(_: *const c_void, _: *const c_void, _: *const c_char, _: c_int) -> c_int {

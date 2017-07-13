@@ -34,33 +34,33 @@ pub unsafe extern fn ExitFileDialog() {
 }
 
 #[no_mangle]
-pub unsafe extern fn RenderFileDialog(msx: c_int, msy: c_int, mgl: *mut MGLDraw) {
+pub unsafe extern fn RenderFileDialog(msx: c_int, msy: c_int, mgl: &mut MGLDraw) {
     use display::Print;
 
     // box for the whole dialog
-    (*mgl).FillBox(100, 80, 430, 400, 8);
-    (*mgl).Box(100, 80, 430, 400, 16);
+    mgl.FillBox(100, 80, 430, 400, 8);
+    mgl.Box(100, 80, 430, 400, 16);
 
     // the box that contains the file list
-    (*mgl).Box(102, 82, 362, 340, 16);
-    (*mgl).FillBox(103, 83, 361, 339, 0);
+    mgl.Box(102, 82, 362, 340, 16);
+    mgl.FillBox(103, 83, 361, 339, 0);
 
     for i in 0..(MAX_FILES as c_int) {
         if msx > 104 && msx < 362 && msy > 85 + i * 14 && msy < 85 + (i + 1)*14 {
-            (*mgl).Box(104, 84 + i * 14, 360, 84 + (i + 1)*14, 16); // hilite if the cursor is on it
+            mgl.Box(104, 84 + i * 14, 360, 84 + (i + 1)*14, 16); // hilite if the cursor is on it
         }
     }
 
     // the box to enter a new filename
-    (*mgl).Box(102, 342, 362, 356, 16);
-    (*mgl).FillBox(103, 343, 361, 355, 0);
+    mgl.Box(102, 342, 362, 356, 16);
+    mgl.FillBox(103, 343, 361, 355, 0);
 
     // now the buttons
-    (*mgl).Box(102, 358, 182, 372, 16);
-	(*mgl).Box(370, 92, 420, 92 + 14, 16);
-    (*mgl).Box(370, 180, 420, 180 + 14, 16);
-	(*mgl).Box(370, 270, 420, 270 + 14, 16);
-    (*mgl).Box(370, 370, 420, 370 + 14, 16);
+    mgl.Box(102, 358, 182, 372, 16);
+    mgl.Box(370, 92, 420, 92 + 14, 16);
+    mgl.Box(370, 180, 420, 180 + 14, 16);
+    mgl.Box(370, 270, 420, 270 + 14, 16);
+    mgl.Box(370, 370, 420, 370 + 14, 16);
 
     for i in 0..MAX_FILES {
         Print(107, (86 + i * 14) as i32, fnames[i].as_ptr(), 0, 1);
@@ -85,7 +85,7 @@ pub unsafe extern fn FileDialogKey(key: c_char) -> u8 {
         }
         1
     } else if key == 10 { // enter
-		1 // ignore it- what does enter do?  Load or save?
+        1 // ignore it- what does enter do?  Load or save?
     } else if ::libc::isprint(key as i32) != 0 {
         let len = ::libc::strlen(newfname.as_ptr());
         if len < 30 {
@@ -94,7 +94,7 @@ pub unsafe extern fn FileDialogKey(key: c_char) -> u8 {
         }
         1
     } else {
-		// non-printables keep ending up in the PixelToaster keyboard
+        // non-printables keep ending up in the PixelToaster keyboard
         1
     }
 }
@@ -122,7 +122,7 @@ pub unsafe extern fn FileDialogClick(msx: c_int, msy: c_int) -> u8 {
 
     let mut fname = [0; 64];
     sprintf!(fname, "worlds\\{}", ::PctS(newfname.as_ptr()));
-	// if click on a filename, that's the current filename
+    // if click on a filename, that's the current filename
     for i in 0..MAX_FILES {
         if msx > 104 && msx < 362 &&
             msy > 85 + i as c_int * 14 &&
@@ -133,7 +133,7 @@ pub unsafe extern fn FileDialogClick(msx: c_int, msy: c_int) -> u8 {
         }
     }
 
-	// shareware version doesn't let you do this
+    // shareware version doesn't let you do this
     if msx > 102 && msx < 182 && msy > 358 && msy < 372 { // More Files
         FileDialogMoreFiles();
         1
