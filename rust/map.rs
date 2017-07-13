@@ -128,7 +128,19 @@ pub struct mapBadguy_t {
     pub type_: u8,
 }
 
-opaque!(Map);
+#[repr(C)]
+pub struct Map {
+    pub width: c_int,
+    pub height: c_int,
+    pub map: *mut mapTile_t,
+    pub name: [c_char; 32],
+    pub song: u8,
+    pub flags: u8,
+    pub badguy: [mapBadguy_t; MAX_MAPMONS],
+    pub special: [special_t; MAX_SPECIAL],
+    /// Gourad stuff
+    pub smoothLight: [i8; 9],
+}
 
 cpp! {{
     #include "map.h"
@@ -141,8 +153,14 @@ impl Map {
         })
     }
 
-    pub unsafe fn from_file(mut f: *mut ::libc::FILE) -> *mut Map {
-        cpp!([mut f as "FILE*"] -> *mut Map as "Map*" {
+    pub unsafe fn from_map(m: *const Map) -> *mut Map {
+        cpp!([m as "Map*"] -> *mut Map as "Map*" {
+            return new Map(m);
+        })
+    }
+
+    pub unsafe fn from_file(f: *mut ::libc::FILE) -> *mut Map {
+        cpp!([f as "FILE*"] -> *mut Map as "Map*" {
             return new Map(f);
         })
     }
@@ -151,15 +169,9 @@ impl Map {
         cpp!([me as "Map*"] { delete me; });
     }
 
-    pub unsafe fn flags(me: *mut Map) -> *mut u8 {
-        cpp!([me as "Map*"] -> *mut u8 as "byte*" {
-            return &me->flags;
-        })
-    }
-
-    pub unsafe fn Save(&mut self, mut f: *mut ::libc::FILE) {
+    pub unsafe fn Save(&mut self, f: *mut ::libc::FILE) {
         let me = self;
-        cpp!([me as "Map*", mut f as "FILE*"] {
+        cpp!([me as "Map*", f as "FILE*"] {
             me->Save(f);
         })
     }
