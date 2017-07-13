@@ -5,71 +5,6 @@ MGLDraw *fontmgl;
 // this is a sort of palette translation table for the font
 byte fontPal[256];
 
-void FontInit(MGLDraw *mgl)
-{
-	int i;
-
-	fontmgl = mgl;
-	// default translation is none for the font palette
-	for (i = 0; i < 256; i++)
-		fontPal[i] = (byte) i;
-}
-
-void FontExit(void)
-{
-}
-
-void FontFree(mfont_t *font)
-{
-	if (font->data)
-		free(font->data);
-}
-
-int FontLoad(const char *fname, mfont_t *font)
-{
-	FILE *f;
-	int i;
-
-	f = fopen(fname, "rb");
-	if (!f)
-		return FONT_FILENOTFOUND;
-
-	if (fread(font, sizeof (mfont_t), 1, f) != 1)
-		return FONT_INVALIDFILE;
-
-	font->data = (byte *) malloc(font->dataSize);
-	if (!font->data)
-		return FONT_CANTALLOC;
-
-	if (fread(font->data, font->dataSize, 1, f) != 1)
-		return FONT_INVALIDFILE;
-
-	fclose(f);
-	font->chars[0] = font->data;
-	for (i = 1; i < font->numChars; i++)
-		font->chars[i] = font->chars[i - 1] + 1 + ((*font->chars[i - 1]) * font->height);
-
-	return FONT_OK;
-}
-
-int FontSave(char *fname, mfont_t *font)
-{
-	FILE *f;
-
-	f = fopen(fname, "wb");
-	if (!f)
-		return FONT_FILENOTFOUND;
-
-	if (fwrite(font, sizeof (mfont_t), 1, f) != 1)
-		return FONT_INVALIDFILE;
-
-	if (fwrite(font->data, font->dataSize, 1, f) != 1)
-		return FONT_INVALIDFILE;
-
-	fclose(f);
-	return FONT_OK;
-}
-
 void FontPrintChar(int x, int y, char c, mfont_t *font)
 {
 	byte *dst, *src;
@@ -104,7 +39,7 @@ void FontPrintChar(int x, int y, char c, mfont_t *font)
 	}
 }
 
-void FontPrintCharColor(int x, int y, char c, byte color, mfont_t *font)
+extern "C" void FontPrintCharColor(int x, int y, char c, byte color, mfont_t *font)
 {
 	byte *dst, *src;
 	int scrWidth, scrHeight, chrWidth;
@@ -214,88 +149,6 @@ void FontPrintCharSolid(int x, int y, char c, mfont_t *font, byte color)
 		x -= chrWidth;
 		dst += (scrWidth - chrWidth);
 	}
-}
-
-byte CharWidth(char c, mfont_t *font)
-{
-	if (c < font->firstChar || c >= (font->firstChar + font->numChars))
-		return font->spaceSize; // unprintable
-
-	c -= (char) font->firstChar;
-
-	return *(font->chars[(int) c]);
-}
-
-void FontPrintString(int x, int y, const char *s, mfont_t *font)
-{
-	int i;
-
-	for (i = 0; i < (int) strlen(s); i++)
-	{
-		FontPrintChar(x, y, s[i], font);
-		x += CharWidth(s[i], font) + font->gapSize;
-	}
-}
-
-void FontPrintStringColor(int x, int y, const char *s, mfont_t *font, byte color)
-{
-	int i;
-
-	for (i = 0; i < (int) strlen(s); i++)
-	{
-		FontPrintCharColor(x, y, s[i], color, font);
-		x += CharWidth(s[i], font) + font->gapSize;
-	}
-}
-
-void FontPrintStringBright(int x, int y, const char *s, mfont_t *font, char bright)
-{
-	int i;
-
-	for (i = 0; i < (int) strlen(s); i++)
-	{
-		FontPrintCharBright(x, y, s[i], bright, font);
-		x += CharWidth(s[i], font) + font->gapSize;
-	}
-}
-
-void FontPrintStringSolid(int x, int y, const char *s, mfont_t *font, byte color)
-{
-	int i;
-
-	for (i = 0; i < (int) strlen(s); i++)
-	{
-		FontPrintCharSolid(x, y, s[i], font, color);
-		x += CharWidth(s[i], font) + font->gapSize;
-	}
-}
-
-void FontPrintStringDropShadow(int x, int y, const char *s, mfont_t *font, byte shadowColor, byte shadowOffset)
-{
-	int i;
-
-	for (i = 0; i < (int) strlen(s); i++)
-	{
-		FontPrintCharSolid(x + shadowOffset, y + shadowOffset, s[i], font, shadowColor);
-		FontPrintChar(x, y, s[i], font);
-		x += CharWidth(s[i], font) + font->gapSize;
-	}
-}
-
-void FontSetColors(byte first, byte count, byte *data)
-{
-	memcpy(&fontPal[first], data, count);
-}
-
-int FontStrLen(const char *s, mfont_t *font)
-{
-	int i, len = 0;
-
-	for (i = 0; i < (int) strlen(s); i++)
-	{
-		len += CharWidth(s[i], font) + font->gapSize;
-	}
-	return len;
 }
 
 bool FontInputText(char *prompt, char *buffer, int len, void (*renderScrn)(mfont_t *), mfont_t *font)

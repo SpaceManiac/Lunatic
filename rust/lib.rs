@@ -34,6 +34,12 @@ macro_rules! szof {
     ($t:ty) => { ::std::mem::size_of::<$t>() }
 }
 
+macro_rules! decay {
+    (mut $e:expr) => { $e as *mut _ as *mut _ };
+    (const $e:expr) => { $e as *const _ as *const _ };
+    ($e:expr) => { decay!(mut $e) };
+}
+
 struct PctS { ptr: *const c_char }
 unsafe fn PctS(ptr: *const c_char) -> PctS { PctS { ptr } }
 impl std::fmt::Display for PctS {
@@ -66,6 +72,7 @@ pub mod game;
 pub mod guy;
 pub mod intface;
 pub mod items;
+pub mod jamulfont;
 pub mod jamulsound;
 pub mod map;
 pub mod message;
