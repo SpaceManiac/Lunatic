@@ -3,8 +3,8 @@ name = "lunatic"
 version = "0.1.0"
 dependencies = [
  "bitflags 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cpp 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "cpp_build 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cpp 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cpp_build 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "enum-derive 0.1.0",
  "libc 0.2.26 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -29,17 +29,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "cpp"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "cpp_macros 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cpp_macros 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "cpp_build"
-version = "0.3.0"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "cpp_common 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cpp_common 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cpp_syn 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cpp_synmap 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cpp_synom 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -48,14 +49,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "cpp_build"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-replace = "cpp_build 0.3.0"
-
-[[package]]
 name = "cpp_common"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cpp_syn 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -65,12 +60,12 @@ dependencies = [
 
 [[package]]
 name = "cpp_macros"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "aho-corasick 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "cpp_common 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cpp_common 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cpp_syn 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cpp_synom 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -168,10 +163,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum aho-corasick 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)" = "500909c4f87a9e52355b26626d890833e9e1d53ac566db76c36faa984b889699"
 "checksum bitflags 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "4efd02e230a02e18f92fc2735f44597385ed02ad8f831e7c1c1156ee5e1ab3a5"
 "checksum byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ff81738b726f5d099632ceaffe7fb65b90212e8dce59d518729e7e8634032d3d"
-"checksum cpp 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2e72e3d17cbee978d237f9813676e075f47ce25039931e1235f13a79ddd6d71a"
-"checksum cpp_build 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "6f1d588b092d48ee79617b9e85129f1bb9fde7b8fcced7e088f95199f6b2a349"
-"checksum cpp_common 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7bece838c8db9c453aaf2b76d5c5e7a71c3b98ced3cc605dd1b8df9d97602d1d"
-"checksum cpp_macros 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "eaadf668331048795509e7e7794c038cde73c1b12bf247cdeb5eb343b22affcc"
+"checksum cpp 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "4bd902948c3dc3ddf0879dbbb5a4ddfbd631d09b7faf893b7200634652e8a214"
+"checksum cpp_build 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "e66fbfe9f2b7e62ef1bd57d02fe7b61bc957f794e02c37e78aa86e0b5aad6e8a"
+"checksum cpp_common 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "b1a1a61c5762d53e8c82d77ca70dbd9e7e67978e24376e33ba34c3f78977de0e"
+"checksum cpp_macros 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "1001b9048adf6c6b11763e308e1bd4f6c3935eca350588cc79d9eec31bd97db8"
 "checksum cpp_syn 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a8cd649bf5b3804d92fe12a60c7698f5a538a6033ed8a668bf5241d4d4f1644e"
 "checksum cpp_synmap 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "79fcca08bbedacb9beee09e8d20d5e709d6ee6eb31d809f90ed5a142b435e891"
 "checksum cpp_synom 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1fc8da5694233b646150c785118f77835ad0a49680c7f312a10ef30957c67b6d"
