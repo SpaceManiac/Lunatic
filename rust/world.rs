@@ -147,10 +147,10 @@ pub unsafe extern fn GetWorldName(fname: *const c_char, buf: *mut c_char) {
     let f = fopen(fname2.as_ptr() as *const c_char, cstr!("rb"));
     if f.is_null() { return; }
 
-	// this fseeks past:
-	//   the byte nummaps, the int totalpoints, the 400 32x24 tiles,
-	//   the 200 terrain types, the width&height of map 0, and bam there it is at the name
-	//   of map 0.
+    // this fseeks past:
+    //   the byte nummaps, the int totalpoints, the 400 32x24 tiles,
+    //   the 200 terrain types, the width&height of map 0, and bam there it is at the name
+    //   of map 0.
     let ofs = 1 + szof!(c_int) + 400 * 32 * 24 + 200 * szof!(terrain_t) + 2 * szof!(c_int);
     fseek(f, ofs as c_int, SEEK_SET);
 

@@ -53,7 +53,7 @@ extern {
 #[no_mangle]
 pub unsafe extern fn FontInit(mgl: *mut MGLDraw) {
     fontmgl = mgl;
-	// default translation is none for the font palette
+    // default translation is none for the font palette
     for i in 0..256 {
         fontPal[i] = i as u8;
     }
@@ -117,11 +117,11 @@ pub unsafe extern fn FontSave(fname: *const c_char, font: &mfont_t) -> FontError
 
 #[no_mangle]
 pub unsafe extern fn CharWidth(c: u8, font: &mfont_t) -> u8 {
-	if c < font.firstChar || c >= (font.firstChar + font.numChars) {
+    if c < font.firstChar || c >= (font.firstChar + font.numChars) {
         return font.spaceSize; // unprintable
     }
 
-	*font.chars[(c - font.firstChar) as usize]
+    *font.chars[(c - font.firstChar) as usize]
 }
 
 #[no_mangle]
