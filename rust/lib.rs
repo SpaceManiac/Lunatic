@@ -51,6 +51,36 @@ impl std::fmt::Display for PctS {
     }
 }
 
+trait LocalKeyExt<T> {
+    fn init<F: FnOnce() -> T>(&'static self, f: F);
+    fn destroy(&'static self) -> T;
+    fn borrow<F: FnOnce(&T) -> R, R>(&'static self, f: F) -> R;
+    fn borrow_mut<F: FnOnce(&mut T) -> R, R>(&'static self, f: F) -> R;
+}
+impl<T: 'static> LocalKeyExt<T> for std::thread::LocalKey<std::cell::RefCell<Option<T>>> {
+    fn init<F: FnOnce() -> T>(&'static self, f: F) {
+        self.with(|t| {
+            let t = &mut *t.borrow_mut();
+            assert!(t.is_none(), "double-init");
+            *t = Some(f());
+        })
+    }
+    fn destroy(&'static self) -> T {
+        self.with(|t| t.borrow_mut().take().unwrap())
+    }
+    fn borrow<F: FnOnce(&T) -> R, R>(&'static self, f: F) -> R {
+        self.with(|t| f(t.borrow().as_ref().unwrap()))
+    }
+    fn borrow_mut<F: FnOnce(&mut T) -> R, R>(&'static self, f: F) -> R {
+        self.with(|t| f(t.borrow_mut().as_mut().unwrap()))
+    }
+}
+macro_rules! global {
+    (static $name:ident: $t:ty) => {
+        thread_local!(static $name: ::std::cell::RefCell<Option<$t>> = ::std::cell::RefCell::new(None));
+    }
+}
+
 // imports
 pub mod allegro_sys;
 pub mod misc_sys;
