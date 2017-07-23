@@ -39,20 +39,21 @@ pub enum FontError {
     FONT_INVALIDFILE,
 }
 
-extern {
-    static mut fontmgl: *mut MGLDraw;
-    /// this is sort of a palette translation table for the font
-    static mut fontPal: [u8; 256];
-
-    fn FontPrintChar(x: c_int, y: c_int, c: u8, font: *const mfont_t);
-    fn FontPrintCharColor(x: c_int, y: c_int, c: u8, color: u8, font: *const mfont_t);
-    fn FontPrintCharSolid(x: c_int, y: c_int, c: u8, font: *const mfont_t, color: u8);
-    fn FontPrintCharBright(x: c_int, y: c_int, c: u8, bright: i8, font: *const mfont_t);
+// this is probably not good
+pub mod _evil {
+    #[no_mangle]
+    pub static mut fontmgl: usize = 0;
 }
+extern {
+    static mut fontmgl: &'static mut MGLDraw;
+}
+
+/// this is sort of a palette translation table for the font
+static mut fontPal: [u8; 256] = [0; 256];
 
 #[no_mangle]
 pub unsafe extern fn FontInit(mgl: *mut MGLDraw) {
-    fontmgl = mgl;
+    fontmgl = &mut *mgl;
     // default translation is none for the font palette
     for i in 0..256 {
         fontPal[i] = i as u8;
@@ -122,6 +123,67 @@ pub unsafe extern fn CharWidth(c: u8, font: &mfont_t) -> u8 {
     }
 
     *font.chars[(c - font.firstChar) as usize]
+}
+
+unsafe fn print_char<F>(mut x: c_int, mut y: c_int, c: u8, font: &mfont_t, f: F)
+    where F: Fn(*mut u8, *mut u8) // dst, src
+{
+    let (scrWidth, scrHeight) = fontmgl.get_size();
+    let mut dst = fontmgl.GetScreen().offset(x as isize + y as isize * scrWidth as isize);
+    if c < font.firstChar || c >= (font.firstChar + font.numChars) {
+        return; // unprintable
+    }
+
+    let c = (c - font.firstChar) as usize;
+    let chrWidth = *font.chars[c];
+    let mut src = font.chars[c].offset(1);
+    for _ in 0 .. font.height {
+        for _ in 0 .. chrWidth {
+            if *src != 0 && x >= 0 && x < scrWidth && y >= 0 && y < scrHeight {
+                f(dst, src);
+            }
+            dst = dst.offset(1);
+            src = src.offset(1);
+            x += 1;
+        }
+        y += 1;
+        x -= chrWidth as c_int;
+        dst = dst.offset(scrWidth as isize - chrWidth as isize);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn FontPrintChar(x: c_int, y: c_int, c: u8, font: &mfont_t) {
+    print_char(x, y, c, font, |dst, src| *dst = fontPal[*src as usize]);
+}
+
+#[no_mangle]
+pub unsafe extern fn FontPrintCharSolid(x: c_int, y: c_int, c: u8, font: &mfont_t, color: u8) {
+    print_char(x, y, c, font, |dst, _| *dst = color);
+}
+
+#[no_mangle]
+pub unsafe extern fn FontPrintCharColor(x: c_int, y: c_int, c: u8, color: u8, font: &mfont_t) {
+    let color = color * 32;
+    print_char(x, y, c, font, |dst, src| {
+        if (*src >= 64 && *src < 64 + 32) || (*src >= 128 && *src < 128 + 32) {
+            *dst = ((*src) & 31) + color;
+        } else {
+            *dst = *src;
+        }
+    });
+}
+
+#[no_mangle]
+pub unsafe extern fn FontPrintCharBright(x: c_int, y: c_int, c: u8, bright: i8, font: &mfont_t) {
+    print_char(x, y, c, font, |dst, src| {
+        *dst = (*src as i8).wrapping_add(bright) as u8;
+        if *dst > (*src & !31) + 31 {
+            *dst = (*src & !31) + 31;
+        } else if *dst < (*src & !31) {
+            *dst = *src & !31;
+        }
+    })
 }
 
 #[no_mangle]

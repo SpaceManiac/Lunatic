@@ -868,7 +868,7 @@ byte MainMenu(MGLDraw *mgl)
 	title_t title;
 
 	if (opt.music == MUSIC_ON)
-		CDPlay(2); // the title theme	
+		CDPlay(2); // the title theme
 	CDNeedsUpdating();
 
 	mgl->LoadBMP("graphics\\title.bmp");

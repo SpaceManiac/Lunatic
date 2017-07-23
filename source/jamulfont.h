@@ -52,7 +52,6 @@ void FontPrintStringBright(int x, int y, const char *s, mfont_t *font, char brig
 
 int FontStrLen(const char *s, mfont_t *font);
 void FontSetColors(byte first, byte count, byte *data);
-bool FontInputText(char *prompt, char *buffer, int len, void (*renderScrn)(mfont_t *), mfont_t *font);
 }
 
 #endif

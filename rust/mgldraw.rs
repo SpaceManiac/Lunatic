@@ -44,4 +44,14 @@ impl MGLDraw {
             return mgl->GetScreen();
         })
     }
+
+    pub unsafe fn get_size(&mut self) -> (c_int, c_int) {
+        let mgl = self;
+        let (mut x, mut y) = (0, 0);
+        cpp!([mgl as "MGLDraw*", mut x as "int", mut y as "int"] {
+            x = mgl->GetWidth();
+            y = mgl->GetHeight();
+        });
+        (x, y)
+    }
 }
