@@ -1,10 +1,26 @@
-use libc::{c_int, c_char};
+use libc::{c_int, c_char, c_long};
 
-opaque!(MGLDraw);
+/// Replacement for missing palette_t
+#[repr(C)]
+pub struct palette_t {
+    pub alpha: u8,
+    pub red: u8,
+    pub green: u8,
+    pub blue: u8,
+}
 
 extern {
+    // For appdata storage of stuff
+    pub fn AppdataOpen(filename: *const c_char, mode: *const c_char) -> *mut ::libc::FILE;
+
+    // Replacement for missing MGL functions
     pub fn MGL_random(max: c_int) -> c_int;
+    pub fn MGL_srand(seed: c_int) -> c_int;
+    pub fn MGL_randoml(max: c_long) -> c_long;
+    pub fn MGL_fatalError(txt: *const c_char);
 }
+
+opaque!(MGLDraw);
 
 impl MGLDraw {
     pub unsafe fn new(name: *const c_char, xRes: c_int, yRes: c_int, window: bool) -> *mut MGLDraw {
