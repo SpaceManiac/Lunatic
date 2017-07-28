@@ -35,9 +35,7 @@ macro_rules! szof {
 }
 
 macro_rules! decay {
-    (mut $e:expr) => { $e as *mut _ as *mut _ };
-    (const $e:expr) => { $e as *const _ as *const _ };
-    ($e:expr) => { decay!(mut $e) };
+    ($e:expr) => { $e as *const _ as *mut _ };
 }
 
 struct PctS { ptr: *const c_char }

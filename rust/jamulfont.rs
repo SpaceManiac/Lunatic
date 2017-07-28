@@ -106,10 +106,10 @@ pub unsafe extern fn FontSave(fname: *const c_char, font: &mfont_t) -> FontError
         return FontError::FONT_FILENOTFOUND;
     }
 
-    if fwrite(decay!(const font), szof!(mfont_t), 1, f) != 1 {
+    if fwrite(decay!(font), szof!(mfont_t), 1, f) != 1 {
         return FontError::FONT_INVALIDFILE;
     }
-    if fwrite(decay!(const font.data), font.dataSize, 1, f) != 1 {
+    if fwrite(decay!(font.data), font.dataSize, 1, f) != 1 {
         return FontError::FONT_INVALIDFILE;
     }
     fclose(f);
@@ -186,36 +186,31 @@ pub unsafe extern fn FontPrintCharBright(x: c_int, y: c_int, c: u8, bright: i8, 
     })
 }
 
-#[no_mangle]
-pub unsafe extern fn FontPrintString(mut x: c_int, y: c_int, s: *const c_char, font: &mfont_t) {
+unsafe fn print_string<F: Fn(c_int, u8)>(mut x: c_int, s: *const c_char, font: &mfont_t, f: F) {
     for &byte in CStr::from_ptr(s).to_bytes() {
-        FontPrintChar(x, y, byte, font);
+        f(x, byte);
         x += CharWidth(byte, font) as c_int + font.gapSize as c_int;
     }
 }
 
 #[no_mangle]
-pub unsafe extern fn FontPrintStringColor(mut x: c_int, y: c_int, s: *const c_char, font: &mfont_t, color: u8) {
-    for &byte in CStr::from_ptr(s).to_bytes() {
-        FontPrintCharColor(x, y, byte, color, font);
-        x += CharWidth(byte, font) as c_int + font.gapSize as c_int;
-    }
+pub unsafe extern fn FontPrintString(x: c_int, y: c_int, s: *const c_char, font: &mfont_t) {
+    print_string(x, s, font, |x, byte| FontPrintChar(x, y, byte, font));
 }
 
 #[no_mangle]
-pub unsafe extern fn FontPrintStringBright(mut x: c_int, y: c_int, s: *const c_char, font: &mfont_t, bright: i8) {
-    for &byte in CStr::from_ptr(s).to_bytes() {
-        FontPrintCharBright(x, y, byte, bright, font);
-        x += CharWidth(byte, font) as c_int + font.gapSize as c_int;
-    }
+pub unsafe extern fn FontPrintStringColor(x: c_int, y: c_int, s: *const c_char, font: &mfont_t, color: u8) {
+    print_string(x, s, font, |x, byte| FontPrintCharColor(x, y, byte, color, font));
 }
 
 #[no_mangle]
-pub unsafe extern fn FontPrintStringSolid(mut x: c_int, y: c_int, s: *const c_char, font: &mfont_t, color: u8) {
-    for &byte in CStr::from_ptr(s).to_bytes() {
-        FontPrintCharSolid(x, y, byte, font, color);
-        x += CharWidth(byte, font) as c_int + font.gapSize as c_int;
-    }
+pub unsafe extern fn FontPrintStringBright(x: c_int, y: c_int, s: *const c_char, font: &mfont_t, bright: i8) {
+    print_string(x, s, font, |x, byte| FontPrintCharBright(x, y, byte, bright, font));
+}
+
+#[no_mangle]
+pub unsafe extern fn FontPrintStringSolid(x: c_int, y: c_int, s: *const c_char, font: &mfont_t, color: u8) {
+    print_string(x, s, font, |x, byte| FontPrintCharSolid(x, y, byte, font, color));
 }
 
 #[no_mangle]
@@ -235,7 +230,7 @@ pub unsafe extern fn FontPrintStringDropShadow(
 
 #[no_mangle]
 pub unsafe extern fn FontSetColors(first: u8, count: u8, data: *const u8) {
-    memcpy(decay!(&mut fontPal[first as usize]), decay!(const data), count as usize);
+    memcpy(decay!(&mut fontPal[first as usize]), decay!(data), count as usize);
 }
 
 #[no_mangle]
