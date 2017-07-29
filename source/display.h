@@ -60,6 +60,7 @@ private:
 	int head, nextfree;
 };
 
+extern "C" {
 bool InitDisplay(MGLDraw *mainmgl);
 void ExitDisplay(void);
 
@@ -68,13 +69,13 @@ byte *GetDisplayScreen(void);
 void DrawMouseCursor(int x, int y);
 
 void PutCamera(int x, int y);
-extern "C" void GetCamera(int *x, int *y);
+void GetCamera(int *x, int *y);
 // call this once per gameloop, with the X and Y of the object you want the camera to track
 void UpdateCamera(int x, int y, byte facing, Map *map);
-extern "C" void Print(int x, int y, const char *s, char bright, byte font);
+void Print(int x, int y, const char *s, char bright, byte font);
 void CenterPrint(int x, int y, const char *s, char bright, byte font);
 void RenderItAll(world_t *world, Map *map, byte flags);
-extern "C" int GetStrLength(const char *s);
+int GetStrLength(const char *s);
 
 void SprDraw(int x, int y, int z, byte hue, char bright, sprite_t *spr, word flags);
 void SprDrawOff(int x, int y, int z, byte fromHue, byte hue, char bright, sprite_t *spr, word flags);
@@ -88,12 +89,13 @@ void MakeItFlip(void);
 void DrawBox(int x, int y, int x2, int y2, byte c);
 void DrawFillBox(int x, int y, int x2, int y2, byte c);
 void DrawDebugBox(int x, int y, int x2, int y2);
-extern "C" void ShakeScreen(byte howlong);
+void ShakeScreen(byte howlong);
 void ShowVictoryAnim(byte world);
 void ShowImageOrFlic(char *str);
 
 MGLDraw *GetDisplayMGL(void);
 byte GetGamma(void);
 void SetGamma(byte g);
+}
 
 #endif

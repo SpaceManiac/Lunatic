@@ -8,74 +8,11 @@ enum {
 };
 
 byte cursor = 0;
-static byte subcursor = 0;
+byte subcursor = 0;
 static char lastKey = 0;
 byte subMode;
 float percent[3]; // the percentages in each save slot
-static byte giveUp = 0; // which text should be shown for "Give Up"
-
-void SetSubCursor(byte s)
-{
-	subcursor = s;
-}
-
-void RenderPauseMenu(void)
-{
-	char txt[32] = "Music: ";
-
-	DrawBox(208, 44, 432, 422, 128 + 10);
-	DrawBox(209, 45, 431, 421, 128 + 16);
-	DrawFillBox(210, 46, 430, 420, 0);
-	DrawBox(211, 47, 429, 419, 128 + 10);
-
-	Print(320 - GetStrLength("Cancel") / 2, 50, "Cancel", (cursor == 0)*16, 0);
-	Print(320 - GetStrLength("Load Game") / 2, 110, "Load Game", (cursor == 1)*16, 0);
-	Print(320 - GetStrLength("Save Game") / 2, 170, "Save Game", (cursor == 2)*16, 0);
-
-	if (PlayerGetMusicSettings() == MUSIC_OFF)
-		strcat(txt, "Off");
-	else if (PlayerGetMusicSettings() == MUSIC_ON)
-		strcat(txt, "On");
-	else
-		strcat(txt, "Rnd");
-	Print(320 - GetStrLength(txt) / 2, 230, txt, (cursor == 3)*16, 0);
-
-	// giveUp==2 means don't draw the give up option at all (for world picker pause)
-	if (giveUp == 1)
-		Print(320 - GetStrLength("Give Up") / 2, 290, "Give Up", (cursor == 4)*16, 0);
-	else if (giveUp == 0)
-		Print(320 - GetStrLength("World Select") / 2, 290, "World Select", (cursor == 4)*16, 0);
-	Print(320 - GetStrLength("Quit Game") / 2, 350, "Quit Game", (cursor == 5)*16, 0);
-	if (subMode == SUBMODE_SLOTPICK)
-		RenderSlotPickMenu();
-}
-
-void RenderSlotPickMenu(void)
-{
-	char txt[20];
-
-	DrawBox(258, 104, 492, 294, 128 + 10);
-	DrawBox(259, 105, 491, 293, 128 + 16);
-	DrawFillBox(260, 106, 490, 292, 0);
-	DrawBox(261, 107, 489, 291, 128 + 10);
-
-	if (percent[0] > 99.9)
-		sprintf(txt, "Slot 1 - 100%%");
-	else
-		sprintf(txt, "Slot 1 - %03.1f%%", percent[0]);
-	Print(375 - GetStrLength(txt) / 2, 110, txt, (subcursor == 0)*16, 0);
-	if (percent[1] > 99.9)
-		sprintf(txt, "Slot 2 - 100%%");
-	else
-		sprintf(txt, "Slot 2 - %03.1f%%", percent[1]);
-	Print(375 - GetStrLength(txt) / 2, 170, txt, (subcursor == 1)*16, 0);
-	if (percent[2] > 99.9)
-		sprintf(txt, "Slot 3 - 100%%");
-	else
-		sprintf(txt, "Slot 3 - %03.1f%%", percent[2]);
-	Print(375 - GetStrLength(txt) / 2, 230, txt, (subcursor == 2)*16, 0);
-
-}
+byte giveUp = 0; // which text should be shown for "Give Up"
 
 void HandlePauseKeyPresses(MGLDraw *mgl)
 {
@@ -84,25 +21,6 @@ void HandlePauseKeyPresses(MGLDraw *mgl)
 	k = mgl->LastKeyPressed();
 	if (k)
 		lastKey = k;
-}
-
-float CalcTotalPercent(player_t *p)
-{
-	int i, amt, total;
-
-	amt = 0;
-	total = 0;
-	for (i = 0; i < 5; i++)
-	{
-		total += p->totalCompletion[i];
-		amt += p->complete[i];
-	}
-	return (float) amt / (float) total;
-}
-
-void SetGiveUpText(byte gu)
-{
-	giveUp = gu;
 }
 
 void InitPauseMenu(void)

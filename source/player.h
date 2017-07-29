@@ -90,12 +90,13 @@ struct player_t
 
 extern player_t player;
 
+extern "C" {
 void InitPlayer(byte initWhat, byte world, byte level);
 void ExitPlayer(void);
 void PlayerControlMe(Guy *me, mapTile_t *mapTile, world_t *world);
 void PlayerControlPowerArmor(Guy *me, mapTile_t *mapTile, world_t *world);
 byte PlayerHasHammer(void);
-extern "C" byte PlayerGetItem(byte itm, int x, int y);
+byte PlayerGetItem(byte itm, int x, int y);
 void PlayerWinLevel(byte w, byte l, byte isSecret);
 void PlayerRenderInterface(MGLDraw *mgl);
 int PlayerBrains(void);
@@ -105,13 +106,13 @@ byte PlayerPassedLevel(byte world, byte map);
 byte PlayerKeyChain(byte w);
 byte PlayerKeys(byte w);
 void PlayerLoseKey(byte w);
-extern "C" void PlayerSetWorldWorth(byte world, int amt);
+void PlayerSetWorldWorth(byte world, int amt);
 float PlayerGetPercent(byte world);
 float PlayerGetGamePercent(void);
 void SetCustomName(const char *name);
 char *GetCustomName(void);
 byte PlayerHasLunacyKey(byte w);
-extern "C" void PlayerHeal(byte amt);
+void PlayerHeal(byte amt);
 void PlayerLoadGame(byte which);
 void PlayerSaveGame(byte which);
 byte GetPlayerWorld(void);
@@ -125,10 +126,11 @@ byte GetPlayerGlow(void);
 byte PlayerPushMore(void);
 void PoisonVictim(Guy *me, byte amt);
 byte PlayerIsPoisoned(void);
-extern "C" void ToggleWaterwalk(void);
+void ToggleWaterwalk(void);
 byte PlayerCanWaterwalk(void);
 void SetTportClock(byte tp);
 byte GetTportClock(void);
 byte StealWeapon(void);
+}
 
 #endif

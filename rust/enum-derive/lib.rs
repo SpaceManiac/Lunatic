@@ -14,7 +14,7 @@ pub fn derive_format_args(input: TokenStream) -> TokenStream {
 
 fn implement(ast: &syn::DeriveInput) -> quote::Tokens {
     let ident = &ast.ident;
-    let (ident2, ident3) = (ident, ident);
+    let (ident2, ident3, ident4) = (ident, ident, ident);
     let variants = match ast.body {
         syn::Body::Enum(ref variants) => variants,
         _ => panic!("#[derive(FromInt)] only available for enums")
@@ -29,7 +29,7 @@ fn implement(ast: &syn::DeriveInput) -> quote::Tokens {
                 use self::#ident3::*;
                 #(
                     if value == (#names as usize) { Some(#names2) } else
-                )* { None }
+                )* { ::std::option::Option::None }
             }
         }
     }

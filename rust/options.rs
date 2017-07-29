@@ -1,6 +1,7 @@
 use mgldraw::MGLDraw;
 
 #[repr(C)]
+#[derive(FromInt)]
 pub enum Music {
     MUSIC_OFF = 0,
     MUSIC_ON,

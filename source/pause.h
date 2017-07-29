@@ -6,6 +6,7 @@
 
 struct player_t;
 
+extern "C" {
 void RenderPauseMenu(void);
 void RenderSlotPickMenu(void);
 byte UpdatePauseMenu(MGLDraw *mgl);
@@ -13,5 +14,6 @@ void InitPauseMenu(void);
 float CalcTotalPercent(player_t *p);
 void SetGiveUpText(byte gu);
 void SetSubCursor(byte s);
+}
 
 #endif

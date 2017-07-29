@@ -94,5 +94,6 @@ extern {
     pub fn PlayerGetItem(itm: u8, x: c_int, y: c_int) -> u8;
     pub fn PlayerSetWorldWorth(world: u8, amt: c_int);
     pub fn PlayerHeal(amt: u8);
+    pub fn PlayerGetMusicSettings() -> u8;
     pub fn ToggleWaterwalk();
 }
