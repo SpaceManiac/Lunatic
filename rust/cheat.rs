@@ -47,7 +47,7 @@ pub unsafe extern fn CheatKey(c: c_char) {
 
 #[no_mangle]
 pub unsafe extern fn DoCheat(w: u8) {
-    use sound::MakeNormalSound;
+    use sound::make_normal_sound;
     use mgldraw::MGL_random;
     use message::NewMessage;
     use sound::Sound::*;
@@ -56,9 +56,9 @@ pub unsafe extern fn DoCheat(w: u8) {
 
     match w {
         0 => { // auto-win level
-            MakeNormalSound(SND_CHEATWIN as c_int);
+            make_normal_sound(SND_CHEATWIN);
             NewMessage(cstr!("Lemme out!"), 30, 0);
-            ::game::SendMessageToGame(::game::Message::MSG_WINLEVEL as u8, 0);
+            ::game::SendMessageToGame(::game::Message::MSG_WINLEVEL, 0);
         }
         1 => { // max hammer up
             for _ in 0..5 {
@@ -93,14 +93,14 @@ pub unsafe extern fn DoCheat(w: u8) {
         4 => { // restore health
             PlayerHeal(128);
             NewMessage(cstr!("Aaaaah"), 30, 0);
-            MakeNormalSound(SND_HEALTHCHEAT as c_int);
+            make_normal_sound(SND_HEALTHCHEAT);
         }
         5 => { // shield
             PlayerGetItem(ITM_SHIELD as u8, 0, 0);
         }
         6 => { // water-walk
             ToggleWaterwalk();
-            MakeNormalSound(SND_CHEATWIN as c_int);
+            make_normal_sound(SND_CHEATWIN);
         }
         7 => { // keychains
             PlayerGetItem(ITM_KEYCH1 as u8, 0, 0);

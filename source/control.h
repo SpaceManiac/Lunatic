@@ -22,6 +22,7 @@ enum {
     CONTROL_JOY
 };
 
+extern "C" {
 void InitControls(void);
 void ApplyControlSettings(void);
 
@@ -38,5 +39,6 @@ byte JoystickAvailable(void);
 void SetKeys(byte keys[8]);
 
 char *ScanCodeText(byte s);
+}
 
 #endif

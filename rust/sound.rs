@@ -352,3 +352,7 @@ pub unsafe extern fn MakeNormalSound(snd: c_int) {
 
     GoPlaySound(snd, 128, 255, (SND_MAXPRIORITY | SND_CUTOFF | SND_ONE).bits(), MAX_SNDPRIORITY);
 }
+
+pub unsafe fn make_normal_sound(snd: Sound) {
+    MakeNormalSound(snd as c_int)
+}

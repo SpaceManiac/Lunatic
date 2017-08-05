@@ -95,5 +95,9 @@ extern {
     pub fn PlayerSetWorldWorth(world: u8, amt: c_int);
     pub fn PlayerHeal(amt: u8);
     pub fn PlayerGetMusicSettings() -> u8;
+    pub fn PlayerSetMusicSettings(m: u8);
     pub fn ToggleWaterwalk();
+
+    pub fn PlayerLoadGame(which: u8);
+    pub fn PlayerSaveGame(which: u8);
 }

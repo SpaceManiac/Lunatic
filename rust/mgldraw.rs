@@ -33,6 +33,13 @@ impl MGLDraw {
         cpp!([mgl as "MGLDraw*"] { delete mgl; });
     }
 
+    pub unsafe fn LastKeyPressed(&mut self) -> u8 {
+        let mgl = self;
+        cpp!([mgl as "MGLDraw*"] -> u8 as "char" {
+            return mgl->LastKeyPressed();
+        })
+    }
+
     pub unsafe fn Box(&mut self, x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) {
         let mgl = self;
         cpp!([mgl as "MGLDraw*", x as "int", y as "int", x2 as "int", y2 as "int", c as "byte"] {

@@ -148,7 +148,7 @@ pub unsafe extern fn NoRepeatNewMessage(txt: *const c_char, time: c_int, priorit
         return; // don't reset if showing the same message
     }
     NewMessage(txt, time, priority);
-    ::sound::MakeNormalSound(::sound::Sound::SND_MESSAGE as c_int);
+    ::sound::make_normal_sound(::sound::Sound::SND_MESSAGE);
 }
 
 #[no_mangle]

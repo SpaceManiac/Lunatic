@@ -67,9 +67,10 @@ enum {
 extern world_t curWorld;
 extern FILE *logFile;
 
+extern "C" {
 // these are the major inits, just at the beginning and ending of a whole game
-extern "C" void LunaticInit(MGLDraw *mgl);
-extern "C" void LunaticExit(void);
+void LunaticInit(MGLDraw *mgl);
+void LunaticExit(void);
 
 Map* GameCurrentMap(); // replaces extern Map *curMap
 
@@ -89,10 +90,10 @@ void LunaticDraw(void);
 byte PlayALevel(byte map);
 
 byte LunaticWorld(byte world, const char *worldName);
-extern "C" void LunaticGame(MGLDraw *mgl, byte load);
+void LunaticGame(MGLDraw *mgl, byte load);
 void TrainingGame(MGLDraw *mgl);
 
-extern "C" void SendMessageToGame(byte msg, int content);
+void SendMessageToGame(byte msg, int content);
 void AddGarbageTime(dword t);
 
 void SetGameIdle(byte b);
@@ -103,5 +104,6 @@ byte GetCurSong(void);
 byte WorldPauseRun(int *lastTime);
 void WorldPauseDraw(void);
 void HandleCDMusic(void);
+}
 
 #endif

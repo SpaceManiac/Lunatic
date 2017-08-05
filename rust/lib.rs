@@ -92,6 +92,7 @@ pub const FIXAMT: c_int = 65536;
 pub mod bullet;
 pub mod cheat;
 pub mod clock;
+pub mod control;
 pub mod cossin;
 pub mod display;
 pub mod editor;

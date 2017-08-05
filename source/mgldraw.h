@@ -10,7 +10,7 @@
 #include <memory>
 
 // For appdata storage of stuff
-FILE* AppdataOpen(const char* filename, const char* mode);
+extern "C" FILE* AppdataOpen(const char* filename, const char* mode);
 
 // Replacement for missing palette_t
 

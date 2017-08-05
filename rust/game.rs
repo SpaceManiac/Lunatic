@@ -17,5 +17,8 @@ extern {
     pub fn LunaticInit(mgl: *mut MGLDraw);
     pub fn LunaticGame(mgl: *mut MGLDraw, load: u8);
     pub fn LunaticExit();
-    pub fn SendMessageToGame(msg: u8, content: c_int);
+
+    pub fn SendMessageToGame(msg: Message, content: c_int);
+
+    pub fn GetCurSong() -> u8;
 }
