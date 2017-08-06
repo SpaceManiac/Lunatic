@@ -185,7 +185,7 @@ byte UpdateOptionsMenu(MGLDraw *mgl)
 			break;
 		case 2: // entering a specific key
 			c2 = LastScanCode();
-			if (c2 == 1) // ESC key
+			if (c2 == 59) // ESC key
 			{
 				optMode = 1;
 				c2 = 255;
