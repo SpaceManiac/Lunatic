@@ -6,6 +6,7 @@
 #[macro_use] extern crate enum_derive;
 #[macro_use] extern crate cpp;
 extern crate libc;
+extern crate flic;
 use libc::*;
 
 macro_rules! cstr {
@@ -101,6 +102,7 @@ pub mod game;
 pub mod guy;
 pub mod intface;
 pub mod items;
+pub mod jamulfmv;
 pub mod jamulfont;
 pub mod jamulsound;
 pub mod map;

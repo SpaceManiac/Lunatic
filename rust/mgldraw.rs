@@ -2,6 +2,7 @@ use libc::{c_int, c_char, c_long};
 
 /// Replacement for missing palette_t
 #[repr(C)]
+#[derive(Copy, Clone)]
 pub struct palette_t {
     pub alpha: u8,
     pub red: u8,
@@ -65,6 +66,29 @@ impl MGLDraw {
         let mgl = self;
         cpp!([mgl as "MGLDraw*"] -> *mut u8 as "byte*" {
             return mgl->GetScreen();
+        })
+    }
+
+    pub unsafe fn SetPalette(&mut self, pal2: &[palette_t]) {
+        assert_eq!(pal2.len(), 256);
+        let mgl = self;
+        let pal2 = pal2.as_ptr();
+        cpp!([mgl as "MGLDraw*", pal2 as "const palette_t*"] {
+            mgl->SetPalette(pal2);
+        })
+    }
+
+    pub unsafe fn Process(&mut self) -> bool {
+        let mgl = self;
+        cpp!([mgl as "MGLDraw*"] -> bool as "bool" {
+            return mgl->Process();
+        })
+    }
+
+    pub unsafe fn Flip(&mut self) {
+        let mgl = self;
+        cpp!([mgl as "MGLDraw*"] {
+            mgl->Flip();
         })
     }
 

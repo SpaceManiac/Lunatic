@@ -21,4 +21,5 @@ extern {
     pub fn SendMessageToGame(msg: Message, content: c_int);
 
     pub fn GetCurSong() -> u8;
+    pub fn HandleCDMusic();
 }
