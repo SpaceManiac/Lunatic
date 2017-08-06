@@ -34,10 +34,10 @@ pub struct terrain_t {
 
 #[repr(C)]
 pub struct world_t {
-    numMaps: u8,
-    totalPoints: c_int,
-    map: [*mut Map; MAX_MAPS],
-    terrain: [terrain_t; 200],
+    pub numMaps: u8,
+    pub totalPoints: c_int,
+    pub map: [*mut Map; MAX_MAPS],
+    pub terrain: [terrain_t; 200],
 }
 
 #[no_mangle]

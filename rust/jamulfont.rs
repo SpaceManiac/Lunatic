@@ -39,21 +39,14 @@ pub enum FontError {
     FONT_INVALIDFILE,
 }
 
-// this is probably not good
-pub mod _evil {
-    #[no_mangle]
-    pub static mut fontmgl: usize = 0;
-}
-extern {
-    static mut fontmgl: &'static mut MGLDraw;
-}
+static mut fontmgl_: *mut MGLDraw = 0 as *mut MGLDraw;
 
 /// this is sort of a palette translation table for the font
 static mut fontPal: [u8; 256] = [0; 256];
 
 #[no_mangle]
 pub unsafe extern fn FontInit(mgl: *mut MGLDraw) {
-    fontmgl = &mut *mgl;
+    fontmgl_ = mgl;
     // default translation is none for the font palette
     for i in 0..256 {
         fontPal[i] = i as u8;
@@ -128,6 +121,7 @@ pub unsafe extern fn CharWidth(c: u8, font: &mfont_t) -> u8 {
 unsafe fn print_char<F>(mut x: c_int, mut y: c_int, c: u8, font: &mfont_t, f: F)
     where F: Fn(*mut u8, *mut u8) // dst, src
 {
+    let fontmgl = &mut *fontmgl_;
     let (scrWidth, scrHeight) = fontmgl.get_size();
     let mut dst = fontmgl.GetScreen().offset(x as isize + y as isize * scrWidth as isize);
     if c < font.firstChar || c >= (font.firstChar + font.numChars) {
