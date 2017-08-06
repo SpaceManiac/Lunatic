@@ -28,16 +28,6 @@ int monsHP;
 word monsTimer;
 Guy *monster;
 
-void InitInterface(void)
-{
-	intfaceSpr = new sprite_set_t("graphics\\intface.jsp");
-}
-
-void ExitInterface(void)
-{
-	delete intfaceSpr;
-}
-
 void ResetInterface(void)
 {
 	curLife = 0;
@@ -163,11 +153,6 @@ void ShowEnemyLife(char *name, byte formerLife, byte life, byte alive)
 	strcpy(monsName, name);
 	monsTimer = 60; // 2 seconds
 	monsAlive = alive;
-}
-
-void RenderRage(byte size, MGLDraw *mgl)
-{
-	intfaceSpr->GetSprite(SPR_RAGE + size)->Draw(320, 240, mgl);
 }
 
 void RenderInterface(byte life, byte rage, byte hmrFlags, byte hammers, int brains, int score, byte wpn, int ammo,

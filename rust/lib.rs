@@ -105,6 +105,7 @@ pub mod items;
 pub mod jamulfmv;
 pub mod jamulfont;
 pub mod jamulsound;
+pub mod jamulspr;
 pub mod map;
 pub mod mapdialog;
 pub mod message;
