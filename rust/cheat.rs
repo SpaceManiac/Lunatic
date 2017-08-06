@@ -1,4 +1,4 @@
-use libc::{c_char, c_int, tolower};
+use libc::{c_char, tolower};
 
 const NUM_CHEATS: usize = 13;
 
