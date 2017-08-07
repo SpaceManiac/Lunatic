@@ -100,4 +100,7 @@ extern {
 
     pub fn PlayerLoadGame(which: u8);
     pub fn PlayerSaveGame(which: u8);
+
+    pub fn PlayerKeys(w: u8) -> u8;
+    pub fn PlayerKeyChain(w: u8) -> u8;
 }
