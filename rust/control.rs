@@ -58,7 +58,7 @@ pub unsafe extern fn InitControls() {
 
     if joystickOn != 0 {
         let mut joyCaps = mem::zeroed();
-        let result = joyGetDevCaps(JOYSTICKID1, &mut joyCaps, mem::size_of::<JOYCAPS>() as u32);
+        let result = joyGetDevCaps(JOYSTICKID1, &mut joyCaps, szof!(JOYCAPS) as u32);
         if result != JOYERR_NOERROR {
             joystickOn = 0;
             return;
@@ -136,7 +136,7 @@ pub unsafe extern fn ControlKeyUp(k: u8) {
 #[no_mangle]
 pub unsafe extern fn GetJoyState() -> Controls {
     let mut joyInfo: JOYINFOEX = mem::zeroed();
-    joyInfo.dwSize = mem::size_of::<JOYINFOEX>() as u32;
+    joyInfo.dwSize = szof!(JOYINFOEX) as u32;
     joyInfo.dwFlags = JOY_RETURNBUTTONS | JOY_RETURNX | JOY_RETURNY;
     let result = joyGetPosEx(JOYSTICKID1, &mut joyInfo);
     if result != JOYERR_NOERROR {
@@ -186,7 +186,7 @@ pub unsafe extern fn GetJoyButtons() -> u32 {
     }
 
     let mut joyInfo: JOYINFOEX = mem::zeroed();
-    joyInfo.dwSize = mem::size_of::<JOYINFOEX>() as u32;
+    joyInfo.dwSize = szof!(JOYINFOEX) as u32;
     joyInfo.dwFlags = JOY_RETURNBUTTONS | JOY_RETURNX | JOY_RETURNY;
     if joyGetPosEx(JOYSTICKID1, &mut joyInfo) == JOYERR_NOERROR {
         joyInfo.dwButtons

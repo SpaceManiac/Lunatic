@@ -40,7 +40,7 @@ pub unsafe extern fn InitPauseMenu() {
     } else {
         let mut p = ::std::mem::zeroed();
         for i in 0..3 {
-            ::libc::fread(decay!(&mut p), ::std::mem::size_of::<player_t>(), 1, f);
+            ::libc::fread(decay!(&mut p), szof!(player_t), 1, f);
             percent[i] = 100. * CalcTotalPercent(&p);
         }
     }
