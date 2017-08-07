@@ -116,6 +116,7 @@ pub mod pause;
 pub mod player;
 pub mod rage;
 pub mod sound;
+pub mod spcldialog;
 pub mod tile;
 pub mod tiledialog;
 pub mod title;

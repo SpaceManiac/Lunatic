@@ -10,11 +10,12 @@ const int NUMTILES = 400;
 
 typedef byte tile_t[TILE_WIDTH*TILE_HEIGHT];
 
+extern "C" {
 void InitTiles(MGLDraw *mgl);
 void ExitTiles(void);
-extern "C" void SetTiles(byte *scrn);
-extern "C" void LoadTiles(FILE *f);
-extern "C" void SaveTiles(FILE *f);
+void SetTiles(byte *scrn);
+void LoadTiles(FILE *f);
+void SaveTiles(FILE *f);
 void RenderFloorTile(int x, int y, int t, char light);
 void RenderFloorTileTrans(int x, int y, int t, char light);
 void RenderFloorTileShadow(int x, int y, int t, char light);
@@ -26,5 +27,6 @@ void PlotStar(int x, int y, byte col, byte tx, byte ty, byte tileNum);
 void RenderFloorTileFancy(int x, int y, int t, byte shadow, char *theLight);
 void RenderWallTileFancy(int x, int y, int t, char *theLight);
 void RenderRoofTileFancy(int x, int y, int t, byte trans, byte wallBelow, char *theLight);
+}
 
 #endif

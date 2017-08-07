@@ -20,6 +20,7 @@ bitflags! {
 
 bitflags! {
     /// special trigger flags
+    #[repr(C)]
     pub struct TriggerFlags: u16 {
         const TRG_STEP = 1;
         const TRG_ENEMYSTEP = 2;
@@ -49,7 +50,8 @@ bitflags! {
 }
 
 /// special effect choices
-#[repr(C)]
+#[repr(u8)]
+#[derive(PartialEq)]
 pub enum Effect {
     SPC_NONE = 0,
     SPC_SUMMON,
@@ -100,9 +102,9 @@ pub enum UpdateMode {
 
 #[repr(C)]
 pub struct special_t {
-    pub trigger: u16,
+    pub trigger: TriggerFlags,
     pub trigValue: u8,
-    pub effect: u8,
+    pub effect: Effect,
     pub x: u8,
     pub y: u8,
     pub effectX: u8,
