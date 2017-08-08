@@ -178,9 +178,9 @@ pub unsafe extern fn UpdatePauseMenu(mgl: &mut MGLDraw) -> u8 {
                 3 => { // music
                     ::music::CDNeedsUpdating();
                     ::music::CDStop();
-                    let mus = (::player::PlayerGetMusicSettings() + 1) % 3;
+                    let mus = ::player::PlayerGetMusicSettings().cycle();
                     ::player::PlayerSetMusicSettings(mus);
-                    if mus == ::options::Music::MUSIC_ON as u8 {
+                    if mus == ::options::Music::MUSIC_ON {
                         ::music::CDPlay(::game::GetCurSong() as c_int);
                     }
                     ::options::opt.music = mus;

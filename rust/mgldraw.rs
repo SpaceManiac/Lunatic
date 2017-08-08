@@ -78,6 +78,13 @@ impl MGLDraw {
         })
     }
 
+    pub unsafe fn ClearScreen(&mut self) {
+        let mgl = self;
+        cpp!([mgl as "MGLDraw*"] {
+            mgl->ClearScreen();
+        })
+    }
+
     pub unsafe fn Process(&mut self) -> bool {
         let mgl = self;
         cpp!([mgl as "MGLDraw*"] -> bool as "bool" {

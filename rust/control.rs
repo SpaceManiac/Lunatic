@@ -255,11 +255,8 @@ pub unsafe extern fn SetKeys(keys: [u8; 8]) {
 
 #[no_mangle]
 pub extern fn ScanCodeText(s: u8) -> *const c_char {
-    macro_rules! table {
-        ($($t:expr,)*) => (&[$(cstr!($t),)*])
-    }
     // text strings corresponding to scan codes 0-88
-    let scancodes = table! {
+    let scancodes = cstr! {
         // 0
         "Null", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
         // 16
