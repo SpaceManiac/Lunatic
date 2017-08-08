@@ -32,6 +32,7 @@ pub struct mfont_t {
 
 /// error codes
 #[repr(C)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum FontError {
     FONT_OK = 0,
     FONT_FILENOTFOUND,
@@ -60,6 +61,26 @@ pub unsafe extern fn FontExit() {}
 pub unsafe extern fn FontFree(font: *mut mfont_t) {
     if !(*font).data.is_null() {
         ::libc::free((*font).data as *mut ::libc::c_void);
+    }
+}
+
+pub unsafe fn load_font(fname: *const c_char) -> Result<Box<mfont_t>, FontError> {
+    let mut font = Box::new(mfont_t {
+        numChars: 0,
+        firstChar: 0,
+        height: 0,
+        spaceSize: 0,
+        gapSize: 0,
+        gapHeight: 0,
+        dataSize: 0,
+        data: 0 as *mut u8,
+        chars: [0 as *mut u8; FONT_MAX_CHARS],
+    });
+    let r = FontLoad(fname, &mut *font);
+    if r == FontError::FONT_OK {
+        Ok(font)
+    } else {
+        Err(r)
     }
 }
 

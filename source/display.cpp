@@ -13,52 +13,8 @@ int rscrx = 320 << FIXSHIFT, rscry = 240 << FIXSHIFT;
 byte shakeTimer = 0;
 
 DisplayList *dispList;
-static byte gammaCorrection = 0;
-
-MGLDraw *GetDisplayMGL(void)
-{
-	return mgl;
-}
-
-bool InitDisplay(MGLDraw *mainmgl)
-{
-	mgl = mainmgl;
-	if (!mgl)
-		return false;
-	gameFont[0] = (mfont_t *) malloc(sizeof (mfont_t));
-	if (!gameFont[0])
-		return false;
-	FontInit(mgl);
-	if (FontLoad("graphics\\girlsrweird.jft", gameFont[0]) != FONT_OK)
-		return false;
-
-	gameFont[1] = (mfont_t *) malloc(sizeof (mfont_t));
-	if (!gameFont[1])
-		return false;
-
-	if (FontLoad("graphics\\verdana.jft", gameFont[1]) != FONT_OK)
-		return false;
-
-	dispList = new DisplayList();
-
-	return true;
-}
-
-void ExitDisplay(void)
-{
-	if (gameFont[0])
-	{
-		FontFree(gameFont[0]);
-		free(gameFont[0]);
-	}
-	if (gameFont[1])
-	{
-		FontFree(gameFont[1]);
-		free(gameFont[1]);
-	}
-
-	delete dispList;
-}
+byte display_gammaCorrection = 0;
+#define gammaCorrection display_gammaCorrection
 
 void ShowVictoryAnim(byte world)
 {
@@ -192,38 +148,6 @@ void ShowImageOrFlic(char *str)
 	AddGarbageTime(end - start);
 }
 
-byte *GetDisplayScreen(void)
-{
-	return mgl->GetScreen();
-}
-
-byte GetGamma(void)
-{
-	return gammaCorrection;
-}
-
-void SetGamma(byte g)
-{
-	gammaCorrection = g;
-}
-
-void GetCamera(int *x, int *y)
-{
-	*x = scrx;
-	*y = scry;
-}
-
-void PutCamera(int x, int y)
-{
-	rscrx = x;
-	rscry = y;
-	scrdx = 0;
-	scrdy = 0;
-
-	scrx = (rscrx >> FIXSHIFT);
-	scry = (rscry >> FIXSHIFT);
-}
-
 void UpdateCamera(int x, int y, byte facing, Map *map)
 {
 	int desiredX, desiredY;
@@ -259,57 +183,6 @@ void UpdateCamera(int x, int y, byte facing, Map *map)
 	scry = (rscry >> FIXSHIFT);
 }
 
-void Print(int x, int y, const char *s, char bright, byte font)
-{
-	if (font == 0)
-		FontPrintStringBright(x, y, s, gameFont[0], bright);
-	else
-	{
-		if (bright == 0)
-			FontPrintString(x, y, s, gameFont[1]);
-		else
-			FontPrintStringSolid(x, y, s, gameFont[1], 0);
-	}
-}
-
-void CenterPrint(int x, int y, const char *s, char bright, byte font)
-{
-	if (font == 0)
-	{
-		x = x - FontStrLen(s, gameFont[0]) / 2;
-		FontPrintStringBright(x, y, s, gameFont[0], bright);
-	}
-	else
-	{
-		x = x - FontStrLen(s, gameFont[1]) / 2;
-		if (bright == 0)
-			FontPrintString(x, y, s, gameFont[1]);
-		else if (bright != 16)
-			FontPrintStringSolid(x, y, s, gameFont[1], 0);
-		else
-			FontPrintStringSolid(x, y, s, gameFont[1], 16);
-	}
-}
-
-int GetStrLength(const char *s)
-{
-	return FontStrLen(s, gameFont[0]);
-}
-
-void DrawMouseCursor(int x, int y)
-{
-	FontPrintStringSolid(x - 1, y, "}", gameFont[1], 0);
-	FontPrintStringSolid(x + 1, y, "}", gameFont[1], 0);
-	FontPrintStringSolid(x, y - 1, "}", gameFont[1], 0);
-	FontPrintStringSolid(x, y + 1, "}", gameFont[1], 0);
-	FontPrintStringSolid(x, y, "}", gameFont[1], 31);
-}
-
-void ShakeScreen(byte howlong)
-{
-	shakeTimer = howlong;
-}
-
 void RenderItAll(world_t *world, Map *map, byte flags)
 {
 	if (shakeTimer)
@@ -326,41 +199,6 @@ void RenderItAll(world_t *world, Map *map, byte flags)
 	dispList->ClearList();
 	scrx += 320;
 	scry += 240;
-}
-
-void SprDraw(int x, int y, int z, byte hue, char bright, sprite_t *spr, word flags)
-{
-	// this call returns whether it worked or not, but frankly, we don't care
-	dispList->DrawSprite(x, y, z, 0, hue, bright, spr, flags);
-}
-
-void SprDrawOff(int x, int y, int z, byte fromHue, byte hue, char bright, sprite_t *spr, word flags)
-{
-	// this call returns whether it worked or not, but frankly, we don't care
-	dispList->DrawSprite(x, y, z, fromHue, hue, bright, spr, flags | DISPLAY_OFFCOLOR);
-}
-
-void WallDraw(int x, int y, byte wall, byte floor, Map* map, word flags)
-{
-	// this call returns whether it worked or not, but frankly, we don't care
-	dispList->DrawSprite(x, y, 0, wall, floor, 0, (sprite_t *) map, flags);
-}
-
-void RoofDraw(int x, int y, byte roof, Map* map, word flags)
-{
-	// this call returns whether it worked or not, but frankly, we don't care
-	dispList->DrawSprite(x, y, TILE_HEIGHT, 0, roof, 0, (sprite_t *) map, flags);
-}
-
-void ParticleDraw(int x, int y, int z, byte color, byte size, word flags)
-{
-	// this call returns whether it worked or not, but frankly, we don't care
-	dispList->DrawSprite(x, y, z, 0, color, size, (sprite_t *) 1, flags);
-}
-
-void LightningDraw(int x, int y, int x2, int y2, byte bright, char range)
-{
-	dispList->DrawSprite(x, y, x2, y2, bright, range, (sprite_t *) 1, DISPLAY_DRAWME | DISPLAY_LIGHTNING);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -548,29 +386,4 @@ void DisplayList::Render(void)
 		}
 		i = dispObj[i].next;
 	}
-}
-
-void MakeItFlip(void)
-{
-	mgl->Flip();
-}
-
-void DrawBox(int x, int y, int x2, int y2, byte c)
-{
-	mgl->Box(x, y, x2, y2, c);
-}
-
-void DrawDebugBox(int x, int y, int x2, int y2)
-{
-	x -= scrx - 320;
-	y -= scry - 240;
-	x2 -= scrx - 320;
-	y2 -= scry - 240;
-	mgl->Box(x, y, x2, y2, 255);
-	mgl->Flip();
-}
-
-void DrawFillBox(int x, int y, int x2, int y2, byte c)
-{
-	mgl->FillBox(x, y, x2, y2, c);
 }
