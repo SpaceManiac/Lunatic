@@ -14,6 +14,7 @@ pub enum Message {
 }
 
 extern {
+    // these are the major inits, just at the beginning and ending of a whole game
     pub fn LunaticInit(mgl: *mut MGLDraw);
     pub fn LunaticGame(mgl: *mut MGLDraw, load: u8);
     pub fn LunaticExit();
@@ -22,4 +23,6 @@ extern {
 
     pub fn GetCurSong() -> u8;
     pub fn HandleCDMusic();
+
+    pub fn AddGarbageTime(t: u32);
 }

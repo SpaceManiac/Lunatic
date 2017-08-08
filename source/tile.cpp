@@ -4,46 +4,6 @@
 tile_t tiles[NUMTILES];
 MGLDraw *tileMGL;
 
-void InitTiles(MGLDraw *mgl)
-{
-	tileMGL = mgl;
-}
-
-void ExitTiles(void)
-{
-	// nothing to do
-}
-
-void SetTiles(byte *scrn)
-{
-	int i, j;
-	int x, y;
-
-	x = 0;
-	y = 0;
-	for (i = 0; i < NUMTILES; i++)
-	{
-		for (j = 0; j < TILE_HEIGHT; j++)
-			memcpy(&tiles[i][j * TILE_WIDTH], &scrn[x + (y + j)*640], TILE_WIDTH);
-		x += TILE_WIDTH;
-		if (x > 639)
-		{
-			x = 0;
-			y += TILE_HEIGHT;
-		}
-	}
-}
-
-void SaveTiles(FILE *f)
-{
-	fwrite(tiles, NUMTILES, sizeof (tile_t), f);
-}
-
-void LoadTiles(FILE *f)
-{
-	fread(tiles, NUMTILES, sizeof (tile_t), f);
-}
-
 // --- RENDERING!
 // Helper shenanigans for C stuff, see jamulspr.cpp
 extern byte SprModifyColor(byte color, byte hue);
@@ -319,17 +279,6 @@ void RenderFloorTileTrans(int x, int y, int t, char light)
 		}
 		dst += 640;
 		src += 32;
-	}
-}
-
-void PlotStar(int x, int y, byte col, byte tx, byte ty, byte tileNum)
-{
-	byte *dst;
-
-	if (tiles[tileNum][tx + ty * TILE_WIDTH] == 0)
-	{
-		dst = tileMGL->GetScreen() + x + y * 640;
-		*dst = col;
 	}
 }
 

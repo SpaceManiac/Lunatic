@@ -1,9 +1,7 @@
+use ffi::misc::timeGetTime;
+
 static mut START: u32 = 0;
 static mut END: u32 = 0;
-
-extern "system" {
-    fn timeGetTime() -> u32;
-}
 
 #[no_mangle]
 pub unsafe extern fn StartClock() {

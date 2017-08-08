@@ -58,9 +58,9 @@ extern {
     static mut shakeTimer: u8;
 
     static mut dispList: *mut DisplayList;
-    #[link_name="display_gammaCorrection"]
-    static mut gammaCorrection: u8;
 }
+
+static mut gammaCorrection: u8 = 0;
 
 pub unsafe fn get_camera() -> (c_int, c_int) {
     (scrx, scry)
@@ -204,6 +204,68 @@ pub unsafe extern fn DrawDebugBox(x: c_int, y: c_int, x2: c_int, y2: c_int) {
 #[no_mangle]
 pub unsafe extern fn DrawFillBox(x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) {
     (*mgl).FillBox(x, y, x2, y2, c);
+}
+
+#[no_mangle]
+pub unsafe extern fn ShowVictoryAnim(world: u8) {
+    use ffi::misc::timeGetTime;
+    use jamulfmv::FLI_play;
+    use music::CDPlay;
+
+    let mgl_ = &mut *mgl;
+
+    let start = timeGetTime();
+    let music_on = ::player::PlayerGetMusicSettings() == ::options::Music::MUSIC_ON;
+    if music_on {
+        if world < 4 {
+            CDPlay(19); // standard victory theme
+        } else if world > 10 {
+            CDPlay(16); // the asylum hub music.  Play it for the asylum intro anim.
+        } else if world == 10 {
+            CDPlay(18); // switch to asylum boss music when Lunatic transforms
+        }
+    }
+    match world {
+        0 => FLI_play(cstr!("graphics/caverns.flc"), 0, 80, mgl_),
+        1 => FLI_play(cstr!("graphics/icy.flc"), 0, 60, mgl_),
+        2 => FLI_play(cstr!("graphics/forest.flc"), 0, 60, mgl_),
+        3 => FLI_play(cstr!("graphics/desert.flc"), 0, 60, mgl_),
+        4 => { // the final victory!
+            if music_on {
+                CDPlay(22); // ending music, deedeleedo
+            }
+            FLI_play(cstr!("graphics/asylum.flc"), 0, 60, mgl_);
+        }
+        10 => FLI_play(cstr!("graphics/transfrm.flc"), 0, 60, mgl_),
+        11 => FLI_play(cstr!("graphics/asylumno.flc"), 0, 40, mgl_),
+        12 => FLI_play(cstr!("graphics/asylumys.flc"), 0, 40, mgl_),
+        _ => {}
+    }
+    mgl_.LoadBMP(cstr!("graphics/title.bmp"));
+    ::game::AddGarbageTime(timeGetTime() - start);
+}
+
+#[no_mangle]
+pub unsafe extern fn LoadText(nm: *const c_char) {
+    use libc::*;
+
+    let f = fopen(nm, cstr!("rt"));
+    if f.is_null() { return; }
+
+    let mgl_ = &mut *mgl;
+    mgl_.ClearScreen();
+    for y in 0..32 {
+        mgl_.FillBox(0, y, 639, y, (31 - y as u8) + 32 * 5);
+        mgl_.FillBox(0, 479 - y, 639, 479 - y, (31 - y as u8) + 32 * 5);
+    }
+
+    let mut y = 10;
+    let mut line = [0; 256];
+    while !fgets(decay!(&mut line), 256, f).is_null() && y < 480 - 50 {
+        CenterPrint(320, y, decay!(&line), 0, 0);
+        y += 50;
+    }
+    fclose(f);
 }
 
 // these calls return whether they worked or not, but frankly, we don't care

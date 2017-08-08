@@ -1,5 +1,9 @@
 use libc::*;
 
+extern "system" {
+    pub fn timeGetTime() -> u32;
+}
+
 pub type __time64_t = i64;
 pub type _fsize_t = c_ulong;
 
