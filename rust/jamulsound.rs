@@ -2,7 +2,7 @@
 //! it assumes there is a subdirectory "\sounds" that contains snd000.wav - sndXXX.wav,
 //! for as many sounds as you'll try to play.  It will load them if they aren't in memory already.
 use libc::{c_int, c_long, c_char};
-use allegro_sys::*;
+use ffi::allegro::*;
 use std::ptr;
 use LocalKeyExt;
 

@@ -1,6 +1,6 @@
 use std::ptr;
 use libc::c_int;
-use logg_sys::*;
+use ffi::logg::*;
 
 /// these are CD audio modes for the CDPlayerUpdate
 #[repr(C)]

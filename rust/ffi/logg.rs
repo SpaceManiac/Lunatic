@@ -1,5 +1,5 @@
 use libc::{c_char, c_int};
-use allegro_sys::SAMPLE;
+use ffi::allegro::SAMPLE;
 
 pub const OGG_PAGES_TO_BUFFER: usize = 2;
 

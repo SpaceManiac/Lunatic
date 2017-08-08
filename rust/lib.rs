@@ -84,9 +84,7 @@ macro_rules! global {
 }
 
 // imports
-pub mod allegro_sys;
-pub mod misc_sys;
-pub mod logg_sys;
+pub mod ffi;
 
 // jamultypes.h
 pub const FIXSHIFT: c_int = 16;
