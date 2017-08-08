@@ -11,6 +11,27 @@ impl sprite_t {
             me->Draw(x, y, mgl);
         })
     }
+
+    pub unsafe fn DrawBright(&mut self, x: c_int, y: c_int, mgl: &mut MGLDraw, bright: i8) {
+        let me = self;
+        cpp!([me as "sprite_t*", x as "int", y as "int", mgl as "MGLDraw*", bright as "char"] {
+            me->DrawBright(x, y, mgl, bright);
+        })
+    }
+
+    pub unsafe fn DrawGlow(&mut self, x: c_int, y: c_int, mgl: &mut MGLDraw, bright: i8) {
+        let me = self;
+        cpp!([me as "sprite_t*", x as "int", y as "int", mgl as "MGLDraw*", bright as "char"] {
+            me->DrawGlow(x, y, mgl, bright);
+        })
+    }
+
+    pub unsafe fn DrawOffColor(&mut self, x: c_int, y: c_int, mgl: &mut MGLDraw, from: u8, to: u8, bright: i8) {
+        let me = self;
+        cpp!([me as "sprite_t*", x as "int", y as "int", mgl as "MGLDraw*", from as "byte", to as "byte", bright as "char"] {
+            me->DrawOffColor(x, y, mgl, from, to, bright);
+        })
+    }
 }
 
 impl sprite_set_t {

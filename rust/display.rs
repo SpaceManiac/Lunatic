@@ -208,33 +208,33 @@ pub unsafe extern fn DrawFillBox(x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8
 
 // these calls return whether they worked or not, but frankly, we don't care
 #[no_mangle]
-pub unsafe extern fn SprDraw(x: c_int, y: c_int, z: c_int, hue: u8, bright: i8, spr: *mut sprite_t, flags: u16) {
+pub unsafe extern fn SprDraw(x: c_int, y: c_int, z: c_int, hue: u8, bright: i8, spr: *mut sprite_t, flags: DisplayFlags) {
     (*dispList).DrawSprite(x, y, z, 0, hue, bright, spr, flags);
 }
 
 #[no_mangle]
-pub unsafe extern fn SprDrawOff(x: c_int, y: c_int, z: c_int, hue: u8, bright: i8, spr: *mut sprite_t, flags: u16) {
-    (*dispList).DrawSprite(x, y, z, 0, hue, bright, spr, flags | DISPLAY_OFFCOLOR.bits());
+pub unsafe extern fn SprDrawOff(x: c_int, y: c_int, z: c_int, fromHue: u8, hue: u8, bright: i8, spr: *mut sprite_t, flags: DisplayFlags) {
+    (*dispList).DrawSprite(x, y, z, fromHue as i32, hue, bright, spr, flags | DISPLAY_OFFCOLOR);
 }
 
 #[no_mangle]
-pub unsafe extern fn WallDraw(x: c_int, y: c_int, wall: u8, floor: u8, map: *mut Map, flags: u16) {
+pub unsafe extern fn WallDraw(x: c_int, y: c_int, wall: u8, floor: u8, map: *mut Map, flags: DisplayFlags) {
     (*dispList).DrawSprite(x, y, 0, wall as c_int, floor, 0, map as *mut sprite_t, flags);
 }
 
 #[no_mangle]
-pub unsafe extern fn RoofDraw(x: c_int, y: c_int, roof: u8, map: *mut Map, flags: u16) {
+pub unsafe extern fn RoofDraw(x: c_int, y: c_int, roof: u8, map: *mut Map, flags: DisplayFlags) {
     (*dispList).DrawSprite(x, y, TILE_HEIGHT, 0, roof, 0, map as *mut sprite_t, flags);
 }
 
 #[no_mangle]
-pub unsafe extern fn ParticleDraw(x: c_int, y: c_int, z: c_int, color: u8, size: u8, flags: u16) {
+pub unsafe extern fn ParticleDraw(x: c_int, y: c_int, z: c_int, color: u8, size: u8, flags: DisplayFlags) {
     (*dispList).DrawSprite(x, y, z, 0, color, size as i8, 1 as *mut sprite_t, flags);
 }
 
 #[no_mangle]
 pub unsafe extern fn LightningDraw(x: c_int, y: c_int, x2: c_int, y2: c_int, bright: u8, range: i8) {
-    (*dispList).DrawSprite(x, y, x2, y2, bright, range, 1 as *mut sprite_t, (DISPLAY_DRAWME | DISPLAY_LIGHTNING).bits());
+    (*dispList).DrawSprite(x, y, x2, y2, bright, range, 1 as *mut sprite_t, DISPLAY_DRAWME | DISPLAY_LIGHTNING);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -261,9 +261,10 @@ impl DisplayList {
 
     pub unsafe fn DrawSprite(&mut self,
         x: c_int, y: c_int, z: c_int, z2: c_int,
-        hue: u8, bright: i8, spr: *mut sprite_t, flags: u16
+        hue: u8, bright: i8, spr: *mut sprite_t, flags: DisplayFlags
     ) -> bool {
         let me = self;
+        let flags = flags.bits();
         cpp!([me as "DisplayList*", x as "int", y as "int", z as "int", z2 as "int",
             hue as "byte", bright as "char", spr as "sprite_t*", flags as "word"
         ] -> bool as "bool" {

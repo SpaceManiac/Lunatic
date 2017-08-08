@@ -113,11 +113,13 @@ const int MAX_WALKABLE_ITMS = 50;
 const int MAX_SHOOTABLE_ITMS = 69;
 const int NEW_PICKUP_ITMS = 92;
 
+extern "C" {
 void InitItems(void);
 void ExitItems(void);
 void RenderItem(int x, int y, byte type, char bright);
 void InstaRenderItem(int x, int y, byte type, char bright, MGLDraw *mgl);
 void DrawRedX(int x, int y, MGLDraw *mgl);
-extern "C" void ItemLightUp(void);
+void ItemLightUp(void);
+}
 
 #endif
