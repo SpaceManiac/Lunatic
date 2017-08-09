@@ -1,9 +1,13 @@
 use libc::*;
 
+// --------
+// time
 extern "system" {
     pub fn timeGetTime() -> u32;
 }
 
+// --------
+// directory listing
 pub type __time64_t = i64;
 pub type _fsize_t = c_ulong;
 
@@ -27,6 +31,8 @@ extern {
     pub fn _findclose(handle: intptr_t) -> c_int;
 }
 
+// --------
+// joystick
 pub type MMRESULT = c_uint;
 pub const JOYSTICKID1: c_uint = 0;
 pub const JOYERR_NOERROR: MMRESULT = 0;
@@ -86,3 +92,13 @@ extern "system" {
 
 pub use self::joyGetDevCapsA as joyGetDevCaps;
 pub use self::JOYCAPSA as JOYCAPS;
+
+// --------
+// paths
+pub type HWND = *mut c_void;
+pub type HANDLE = *mut c_void;
+extern "system" {
+    pub fn SHGetFolderPathA(hwnd: HWND, csidl: c_int, hToken: HANDLE, dwFlags: u16, pszPath: *mut c_char);
+}
+pub const CSIDL_APPDATA: c_int = 0x001a;
+pub use self::SHGetFolderPathA as SHGetFolderPath;

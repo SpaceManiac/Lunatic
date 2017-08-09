@@ -8,20 +8,6 @@
 #include <stdio.h>
 #include <random>
 
-// Appdata shenanigans
-
-FILE* AppdataOpen(const char* file, const char* mode)
-{
-	char buffer[MAX_PATH];
-	SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, buffer);
-	sprintf(buffer + strlen(buffer), "\\Hamumu");
-	mkdir(buffer);
-	sprintf(buffer + strlen(buffer), "\\DrLunatic");
-	mkdir(buffer);
-	sprintf(buffer + strlen(buffer), "\\%s", file);
-	return fopen(buffer, mode);
-}
-
 // Allegro shenanigans
 static char prevKey[KEY_MAX];
 static bool closeButtonPressed;
@@ -39,31 +25,6 @@ static void switchInCallback()
 static void switchOutCallback()
 {
 	SetGameIdle(1);
-}
-
-// Replacements for missing MGL functions
-std::mt19937_64 mersenne;
-
-int MGL_random(int max)
-{
-	return std::uniform_int_distribution<int>(0, max - 1)(mersenne);
-}
-
-void MGL_srand(int seed)
-{
-	mersenne.seed(seed);
-}
-
-long MGL_randoml(long max)
-{
-	return std::uniform_int_distribution<long>(0, max - 1)(mersenne);
-}
-
-void MGL_fatalError(const char* txt)
-{
-	set_gfx_mode(GFX_TEXT, 0, 0, 0, 0);
-	allegro_message(txt);
-	exit(0);
 }
 
 MGLDraw::MGLDraw(const char *name, int xRes, int yRes, bool window)

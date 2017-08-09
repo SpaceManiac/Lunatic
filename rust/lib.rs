@@ -7,6 +7,8 @@
 #[macro_use] extern crate cpp;
 extern crate libc;
 extern crate flic;
+extern crate mersenne_twister;
+extern crate rand;
 use libc::*;
 
 macro_rules! cstr {
@@ -24,10 +26,11 @@ macro_rules! opaque {
 macro_rules! sprintf {
     ($buf:expr, $text:expr, $($rest:tt)*) => {{
         use std::io::Write;
-        match write!(&mut $buf[..], concat!($text, "\0"), $($rest)*) {
+        let buf = &mut $buf[..];
+        match write!(&mut *buf, concat!($text, "\0"), $($rest)*) {
             Err(ref e) if e.kind() == ::std::io::ErrorKind::WriteZero => {
-                let len = $buf.len();
-                $buf[len - 1] = 0;
+                let len = buf.len();
+                buf[len - 1] = 0;
             }
             other => other.unwrap(),
         }

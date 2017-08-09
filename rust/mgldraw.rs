@@ -10,17 +10,69 @@ pub struct palette_t {
     pub blue: u8,
 }
 
-extern {
-    // For appdata storage of stuff
-    pub fn AppdataOpen(filename: *const c_char, mode: *const c_char) -> *mut ::libc::FILE;
+/// For appdata storage of stuff
+#[no_mangle]
+pub unsafe extern fn AppdataOpen(file: *const c_char, mode: *const c_char) -> *mut ::libc::FILE {
+    use libc::{mkdir, strlen, fopen};
+    use std::ptr::null_mut;
+    use ffi::misc::{SHGetFolderPath, CSIDL_APPDATA};
 
-    // Replacement for missing MGL functions
-    pub fn MGL_random(max: c_int) -> c_int;
-    pub fn MGL_srand(seed: c_int) -> c_int;
-    pub fn MGL_randoml(max: c_long) -> c_long;
-    pub fn MGL_fatalError(txt: *const c_char);
+    let mut buffer = [0; 260]; // MAX_PATH
+    SHGetFolderPath(null_mut(), CSIDL_APPDATA, null_mut(), 0, decay!(&mut buffer));
+
+    let len = strlen(decay!(&buffer));
+    sprintf!(buffer[len..], "\\Hamumu",);
+    mkdir(decay!(&buffer));
+
+    let len = strlen(decay!(&buffer));
+    sprintf!(buffer[len..], "\\DrLunatic",);
+    mkdir(decay!(&buffer));
+
+    let len = strlen(decay!(&buffer));
+    sprintf!(buffer[len..], "\\{}", ::PctS(file));
+    mkdir(decay!(&buffer));
+
+    fopen(decay!(&buffer), mode)
 }
 
+// Replacements for missing MGL functions
+use rand::{SeedableRng, Rng};
+use mersenne_twister::MT19937_64;
+use std::cell::RefCell;
+
+thread_local!(static mersenne: RefCell<MT19937_64> = RefCell::new(MT19937_64::new_unseeded()));
+
+#[no_mangle]
+pub extern fn MGL_srand(seed: c_int) {
+    mersenne.with(|m| m.borrow_mut().reseed(seed as u64));
+}
+
+#[no_mangle]
+pub extern fn MGL_random(max: c_int) -> c_int {
+    mersenne.with(|m| m.borrow_mut().gen_range(0, max))
+}
+
+#[no_mangle]
+pub extern fn MGL_randoml(max: c_long) -> c_long {
+    mersenne.with(|m| m.borrow_mut().gen_range(0, max))
+}
+
+#[no_mangle]
+pub unsafe extern fn MGL_fatalError(txt: *const c_char) {
+    /*
+    The old Allegro way doesn't seem to actually do what I thought it did,
+    which is show a pretty error message box:
+        set_gfx_mode(GFX_TEXT, 0, 0, 0, 0);
+        allegro_message(txt);
+        exit(0);
+    so instead panic. This isn't really going to be able to unwind with all the
+    C flying around, and `-C panic=abort` should really be set, but in the
+    meantime, maybe a backtrace will be useful.
+    */
+    panic!("{}", ::PctS(txt));
+}
+
+// MGLDraw class
 opaque!(MGLDraw);
 
 impl MGLDraw {
