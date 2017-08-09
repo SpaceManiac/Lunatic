@@ -1,4 +1,5 @@
 use libc::{c_int, c_char};
+use ffi::misc::HWND;
 
 opaque!(BITMAP);
 opaque!(SAMPLE);
@@ -36,6 +37,7 @@ extern {
     pub fn set_close_button_callback(proc_: unsafe extern fn());
     pub fn set_display_switch_mode(mode: c_int) -> c_int;
     pub fn set_display_switch_callback(dir: c_int, proc_: unsafe extern fn()) -> c_int;
+    pub fn win_get_window() -> HWND;
 
     pub fn create_bitmap(width: c_int, height: c_int) -> *mut BITMAP;
     pub fn destroy_bitmap(bitmap: *mut BITMAP);

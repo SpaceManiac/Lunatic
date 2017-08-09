@@ -102,3 +102,57 @@ extern "system" {
 }
 pub const CSIDL_APPDATA: c_int = 0x001a;
 pub use self::SHGetFolderPathA as SHGetFolderPath;
+
+// --------
+// windowing
+
+#[repr(C)]
+pub struct POINT {
+    pub x: c_long,
+    pub y: c_long,
+}
+extern "system" {
+    pub fn ClientToScreen(hwnd: HWND, pt: &mut POINT);
+    pub fn SetCursorPos(X: c_int, Y: c_int);
+}
+
+// --------
+// bitmaps
+pub type WORD = c_ushort;
+pub type DWORD = u32;
+pub type LONG = i32;
+
+#[repr(packed)]
+pub struct BITMAPFILEHEADER {
+    pub bfType: WORD,
+    pub bfSize: DWORD,
+    pub bfReserved1: WORD,
+    pub bfReserved2: WORD,
+    pub bfOffBits: DWORD,
+}
+check_size!(_check_BITMAPFILEHEADER, BITMAPFILEHEADER, 14);
+
+#[repr(C)]
+pub struct BITMAPINFOHEADER {
+    pub biSize: DWORD,
+    pub biWidth: LONG,
+    pub biHeight: LONG,
+    pub biPlanes: WORD,
+    pub biBitCount: WORD,
+    pub biCompression: DWORD,
+    pub biSizeImage: DWORD,
+    pub biXPelsPerMeter: LONG,
+    pub biYPelsPerMeter: LONG,
+    pub biClrUsed: DWORD,
+    pub biClrImportant: DWORD,
+}
+check_size!(_check_BITMAPINFOHEADER, BITMAPINFOHEADER, 40);
+
+#[repr(C)]
+pub struct RGBQUAD {
+    pub rgbBlue: u8,
+    pub rgbGreen: u8,
+    pub rgbRed: u8,
+    pub rgbReserved: u8,
+}
+check_size!(_check_RGBQUAD, RGBQUAD, 4);

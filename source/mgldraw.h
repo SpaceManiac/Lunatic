@@ -29,24 +29,25 @@ void MGL_fatalError(const char* txt);
 class MGLDraw
 {
 public:
-	bool Process(); // handle windows messages and such
+	// handle windows messages and such
+	bool Process();
 
-	HWND GetHWnd();
-	byte *GetScreen(); // get a pointer to the screen memory
-	int GetWidth();
-	int GetHeight();
-	void ClearScreen();
+	// get a pointer to the screen memory
+	byte *GetScreen() { return scrn; }
+	int GetWidth() { return pitch; }
+	int GetHeight() { return yRes; }
+	void ClearScreen() { memset(scrn, 0, xRes * yRes); }
 	void Flip();
-	void Quit();
+	void Quit() { readyToQuit = true; }
 
 	bool LoadPalette(const char *name);
 	void SetPalette(const palette_t *pal2);
 
 	bool LoadBMP(const char *name);
 
-	char LastKeyPressed();
-	char LastKeyPeek();
-	void SetLastKey(char c);
+	char LastKeyPressed() { char c = lastKeyPressed; lastKeyPressed = 0; return c; }
+	char LastKeyPeek() { return lastKeyPressed; }
+	void SetLastKey(char c) { lastKeyPressed = c; }
 
 	void GammaCorrect(byte gamma);
 
@@ -55,11 +56,11 @@ public:
 	void FillBox(int x, int y, int x2, int y2, byte c);
 
 	// mouse functions
-	byte MouseDown();
-	void SetMouseDown(byte w);
-	void SetMouse(int x, int y);
+	byte MouseDown() { return mouseDown; }
+	void SetMouseDown(byte w) { mouseDown = w; }
+	void SetMouse(int x, int y) { mousex = x; mousey = y; }
 	void TeleportMouse(int x, int y);
-	void GetMouse(int *x, int *y);
+	void GetMouse(int *x, int *y) { *x = mousex; *y = mousey; }
 
 protected:
 	MGLDraw(const char *name, int xRes, int yRes, bool window);

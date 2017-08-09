@@ -86,6 +86,17 @@ macro_rules! global {
     }
 }
 
+macro_rules! check_size {
+    ($cover:ident, $t:ident, $sz:expr) => {
+        mod $cover {
+            unsafe fn _check() {
+                const N: usize = $sz;
+                ::std::mem::transmute::<[u8; N], super::$t>([0; N]);
+            }
+        }
+    }
+}
+
 fn memset<T: Copy>(dest: &mut [T], val: T, len: usize) {
     for p in dest[..len].iter_mut() {
         *p = val;

@@ -34,7 +34,7 @@ pub unsafe fn play_flic(name: &str, loop_: bool, wait: u16, mgl: &mut MGLDraw) {
             for (dst, src) in mgl_pal.iter_mut().zip(pal.chunks(3)) {
                 *dst = palette_t { red: src[0], green: src[1], blue: src[2], alpha: 255 };
             }
-            mgl.SetPalette(&mgl_pal);
+            mgl.set_palette(&mgl_pal);
         }
 
         for x in 0..width {

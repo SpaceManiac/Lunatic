@@ -102,6 +102,7 @@ pub struct MGLDraw {
     lastKeyPressed: u8,
     mouseDown: u8,
 }
+check_size!(_check_MGLDraw, MGLDraw, 1056);
 
 impl Drop for MGLDraw {
     fn drop(&mut self) {
@@ -183,8 +184,6 @@ impl MGLDraw {
         !self.readyToQuit
     }
 
-    // GetHWnd
-
     pub unsafe fn Flip(&mut self) {
         if ::game::GetGameIdle() != 0 {
             ::game::GameIdle();
@@ -213,28 +212,31 @@ impl MGLDraw {
         self.scrn
     }
 
-    pub unsafe fn get_screen(&mut self) -> &mut [u8] {
-        ::std::slice::from_raw_parts_mut(self.scrn, (self.pitch * self.yRes) as usize)
+    pub fn get_screen(&mut self) -> &mut [u8] {
+        // scrn points to a bytebuffer of size self.pitch * self.yRes
+        unsafe {
+            ::std::slice::from_raw_parts_mut(self.scrn, (self.pitch * self.yRes) as usize)
+        }
     }
 
-    pub unsafe fn get_size(&mut self) -> (c_int, c_int) {
+    pub fn get_size(&mut self) -> (c_int, c_int) {
         (self.pitch, self.yRes)
     }
 
-    pub unsafe fn Quit(&mut self) {
+    pub fn Quit(&mut self) {
         self.readyToQuit = true;
     }
 
     // LoadPalette
 
-    pub unsafe fn SetPalette(&mut self, pal2: &[palette_t]) {
+    pub fn set_palette(&mut self, pal2: &[palette_t]) {
         assert_eq!(pal2.len(), 256);
         for (p, &c) in self.pal.iter_mut().zip(pal2.iter()) {
-            *p = makecol(c.red as c_int, c.green as c_int, c.blue as c_int);
+            *p = unsafe { makecol(c.red as c_int, c.green as c_int, c.blue as c_int) };
         }
     }
 
-    pub unsafe fn Box(&mut self, x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) {
+    pub fn Box(&mut self, x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) {
         use std::cmp::{min, max};
 
         if x2 < 0 || y2 < 0 { return; }
@@ -256,7 +258,7 @@ impl MGLDraw {
         }
     }
 
-    pub unsafe fn FillBox(&mut self, x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) {
+    pub fn FillBox(&mut self, x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) {
         use std::cmp::{min, max};
 
         if x2 < 0 || y2 < 0 || y >= self.yRes { return; }
@@ -272,35 +274,95 @@ impl MGLDraw {
         }
     }
 
-    pub unsafe fn SetLastKey(&mut self, c: u8) {
+    pub fn SetLastKey(&mut self, c: u8) {
         self.lastKeyPressed = c;
     }
 
-    pub unsafe fn LastKeyPressed(&mut self) -> u8 {
+    pub fn LastKeyPressed(&mut self) -> u8 {
         ::std::mem::replace(&mut self.lastKeyPressed, 0)
     }
 
-    pub unsafe fn LastKeyPeek(&mut self) -> u8 {
+    pub fn LastKeyPeek(&mut self) -> u8 {
         self.lastKeyPressed
     }
 
-    pub unsafe fn SetMouseDown(&mut self, w: u8) {
+    pub fn SetMouseDown(&mut self, w: u8) {
         self.mouseDown = w;
     }
 
-    pub unsafe fn MouseDown(&mut self) -> u8 {
+    pub fn MouseDown(&mut self) -> u8 {
         self.mouseDown
     }
 
-    // SetMouse
-    // TeleportMouse
-    // GetMouse
+    pub fn SetMouse(&mut self, x: c_int, y: c_int) {
+        self.mousex = x;
+        self.mousey = y;
+    }
+
+    pub fn get_mouse(&mut self) -> (c_int, c_int) {
+        (self.mousex, self.mousey)
+    }
+
+    pub unsafe fn TeleportMouse(&mut self, x: c_int, y: c_int) {
+        use ffi::misc::{POINT, ClientToScreen, SetCursorPos};
+
+        let mut pt = POINT { x: x as c_long, y: y as c_long };
+        ClientToScreen(win_get_window(), &mut pt);
+        SetCursorPos(pt.x, pt.y);
+        self.SetMouse(x, y);
+    }
 
     pub unsafe fn LoadBMP(&mut self, name: *const c_char) -> bool {
-        let mgl = self;
-        cpp!([mgl as "MGLDraw*", name as "const char*"] -> bool as "bool" {
-            return mgl->LoadBMP(name);
-        })
+        /*let me = self;
+        cpp!([me as "MGLDraw*", name as "const char*"] -> bool as "bool" {
+            return me->LoadBMP(name);
+        })*/
+        use libc::{fopen, fread, fclose};
+        use ffi::misc::*;
+
+        let mut bmpFHead: BITMAPFILEHEADER = ::std::mem::zeroed();
+        let mut bmpIHead: BITMAPINFOHEADER = ::std::mem::zeroed();
+        let mut pal2: [RGBQUAD; 256] = ::std::mem::zeroed();
+
+        let f = fopen(name, cstr!("rb"));
+        if f.is_null() { return false; }
+
+        fread(decay!(&mut bmpFHead), szof!(BITMAPFILEHEADER), 1, f);
+        fread(decay!(&mut bmpIHead), szof!(BITMAPINFOHEADER), 1, f);
+
+        // 8-bit BMPs only
+        if bmpIHead.biBitCount != 8 { return false; }
+
+        // Non-RLE BMPs only
+        if bmpIHead.biCompression != 0 {
+            println!("bitmap {} is compressed ({})", ::PctS(name), bmpIHead.biCompression);
+            return false;
+        }
+
+        fread(decay!(&mut pal2), 256 * szof!(RGBQUAD), 1, f);
+        for i in 0..256 {
+            self.pal[i] = makecol(pal2[i].rgbRed as c_int, pal2[i].rgbGreen as c_int, pal2[i].rgbBlue as c_int);
+        }
+
+        let pitch = self.pitch;
+        let screen = self.get_screen();
+        for i in 0..bmpIHead.biHeight {
+            fread(
+                decay!(&mut screen[((bmpIHead.biHeight - 1 - i) * pitch) as usize]),
+                1, bmpIHead.biWidth as usize, f);
+        }
+        fclose(f);
+        true
+    }
+
+    pub fn GammaCorrect(&mut self, _gamma: u8) {
+        // TODO: add back this logic if it makes sense to do so.
+        // The C implementation was broken to the point of doing nothing.
+
+        // for (r,g,b) in palette:
+        //   r = min(255, (r * (gamma + 4)) / 4)
+        //   g = min(255, (g * (gamma + 4)) / 4)
+        //   b = min(255, (b * (gamma + 4)) / 4)
     }
 }
 
@@ -316,7 +378,7 @@ pub unsafe extern fn MGLDraw_Flip(mgl: &mut MGLDraw) {
 
 #[no_mangle]
 pub unsafe extern fn MGLDraw_SetPalette(mgl: &mut MGLDraw, palette: *const palette_t) {
-    mgl.SetPalette(::std::slice::from_raw_parts(palette, 256));
+    mgl.set_palette(::std::slice::from_raw_parts(palette, 256));
 }
 
 #[no_mangle]
@@ -329,9 +391,17 @@ pub unsafe extern fn MGLDraw_FillBox(mgl: &mut MGLDraw, x: c_int, y: c_int, x2: 
     mgl.FillBox(x, y, x2, y2, c)
 }
 
-#[allow(unreachable_code)]
-unsafe fn _check_layout() {
-    return;
-    const N: usize = 1056;
-    ::std::mem::transmute::<[u8; N], MGLDraw>([0; N]);
+#[no_mangle]
+pub unsafe extern fn MGLDraw_TeleportMouse(mgl: &mut MGLDraw, x: c_int, y: c_int) {
+    mgl.TeleportMouse(x, y)
+}
+
+#[no_mangle]
+pub unsafe extern fn MGLDraw_LoadBMP(mgl: &mut MGLDraw, name: *const c_char) -> bool {
+    mgl.LoadBMP(name)
+}
+
+#[no_mangle]
+pub unsafe extern fn MGLDraw_GammaCorrect(mgl: &mut MGLDraw, gamma: u8) {
+    mgl.GammaCorrect(gamma)
 }
