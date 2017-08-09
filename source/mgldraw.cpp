@@ -8,127 +8,26 @@
 #include <stdio.h>
 #include <random>
 
-// Allegro shenanigans
-static char prevKey[KEY_MAX];
-static bool closeButtonPressed;
-
-static void closeButtonCallback()
-{
-	closeButtonPressed = true;
-}
-
-static void switchInCallback()
-{
-	SetGameIdle(0);
-}
-
-static void switchOutCallback()
-{
-	SetGameIdle(1);
-}
-
-MGLDraw::MGLDraw(const char *name, int xRes, int yRes, bool window)
-{
-	allegro_init();
-	install_keyboard();
-	install_mouse();
-	install_sound(DIGI_AUTODETECT, MIDI_AUTODETECT, "donotuse.cfg");
-	set_color_depth(32);
-
-	if (set_gfx_mode(window ? GFX_AUTODETECT_WINDOWED : GFX_AUTODETECT_FULLSCREEN, xRes, yRes, 0, 0) != 0)
-	{
-		char buf[256];
-		sprintf(buf, "Unable to set graphics mode: %s", allegro_error);
-		MGL_fatalError(buf);
-	}
-	set_window_title(name);
-	set_close_button_callback(&closeButtonCallback);
-	set_display_switch_mode(SWITCH_BACKGROUND);
-	set_display_switch_callback(SWITCH_IN, switchInCallback);
-	set_display_switch_callback(SWITCH_OUT, switchOutCallback);
-
-	// this used to have to be in a very specific place but now it doesn't, hooray!
-	if (JamulSoundInit(512))
-		SoundSystemExists();
-
-	readyToQuit = false;
-
-	// gimme windows colors
-	this->xRes = xRes;
-	this->yRes = yRes;
-	this->pitch = xRes;
-	scrn.reset(new byte[xRes * yRes]);
-	buffer.reset(create_bitmap(xRes, yRes));
-
-	mouseDown = 0;
-}
-
-MGLDraw::~MGLDraw()
-{
-	JamulSoundExit();
-}
-
+extern "C" bool MGLDraw_Process(MGLDraw*);
 bool MGLDraw::Process()
 {
-	blit(buffer.get(), screen, 0, 0, 0, 0, xRes, yRes);
-
-	while (keypressed())
-	{
-		int k = readkey();
-		SetLastKey((char) (k & 0xff));
-	}
-
-	for (int i = 0; i < KEY_MAX; ++i)
-	{
-		if (key[i] && !prevKey[i])
-		{
-			ControlKeyDown(i);
-		}
-		else if (!key[i] && prevKey[i])
-		{
-			ControlKeyUp(i);
-		}
-		prevKey[i] = key[i];
-	}
-
-	SetMouse(mouse_x, mouse_y);
-	SetMouseDown(mouse_b & 3);
-
-	if (closeButtonPressed)
-	{
-		readyToQuit = true;
-	}
-
-	return (!readyToQuit);
+	return MGLDraw_Process(this);
 }
 
-HWND MGLDraw::GetHWnd()
-{
-	return win_get_window();
-}
-
+extern "C" bool MGLDraw_Flip(MGLDraw*);
 void MGLDraw::Flip()
 {
-	if (GetGameIdle())
-		GameIdle();
-
-	// This is nice and fast, thankfully
-	for (int i = 0; i < xRes * yRes; ++i)
-	{
-		palette_t c = pal[scrn[i]];
-		putpixel(buffer.get(), i % xRes, i / xRes, makecol(c.red, c.green, c.blue));
-	}
-	Process();
+	MGLDraw_Flip(this);
 }
 
 void MGLDraw::ClearScreen()
 {
-	memset(scrn.get(), 0, xRes * yRes);
+	memset(scrn, 0, xRes * yRes);
 }
 
 byte *MGLDraw::GetScreen()
 {
-	return scrn.get();
+	return scrn;
 }
 
 int MGLDraw::GetWidth()
@@ -146,42 +45,10 @@ void MGLDraw::Quit()
 	readyToQuit = true;
 }
 
-struct palfile_t
-{
-	char r, g, b;
-};
-
-bool MGLDraw::LoadPalette(const char *name)
-{
-	FILE *f;
-	palfile_t p[256];
-	int i;
-
-	f = fopen(name, "rb");
-	if (!f)
-		return false;
-
-	if (fread(p, sizeof (palfile_t), 256, f) != 256)
-	{
-		fclose(f);
-		return false;
-	}
-
-	for (i = 0; i < 256; i++)
-	{
-		pal[i].red = p[i].r;
-		pal[i].green = p[i].g;
-		pal[i].blue = p[i].b;
-		pal[i].alpha = 0;
-	}
-
-	fclose(f);
-	return true;
-}
-
+extern "C" void MGLDraw_SetPalette(MGLDraw*, const palette_t*);
 void MGLDraw::SetPalette(const palette_t *pal2)
 {
-	memcpy(pal, pal2, sizeof (palette_t)*256);
+	MGLDraw_SetPalette(this, pal2);
 }
 
 // 8-bit graphics only
@@ -229,7 +96,7 @@ void MGLDraw::SetMouse(int x, int y)
 void MGLDraw::TeleportMouse(int x, int y)
 {
 	POINT pt = {x, y};
-	ClientToScreen(GetHWnd(), &pt);
+	ClientToScreen(win_get_window(), &pt);
 	SetCursorPos(pt.x, pt.y);
 	SetMouse(x, y);
 }
@@ -276,9 +143,7 @@ bool MGLDraw::LoadBMP(const char *name)
 	fread(pal2, sizeof (pal2), 1, f);
 	for (i = 0; i < 256; i++)
 	{
-		pal[i].red = pal2[i].rgbRed;
-		pal[i].green = pal2[i].rgbGreen;
-		pal[i].blue = pal2[i].rgbBlue;
+		pal[i] = makecol(pal2[i].rgbRed, pal2[i].rgbGreen, pal2[i].rgbBlue);
 	}
 
 	for (i = 0; i < bmpIHead.biHeight; i++)
@@ -292,7 +157,7 @@ bool MGLDraw::LoadBMP(const char *name)
 
 void MGLDraw::GammaCorrect(byte gamma)
 {
-	int i;
+	/*int i;
 	int r, g, b;
 	palette_t temp[256];
 
@@ -315,5 +180,5 @@ void MGLDraw::GammaCorrect(byte gamma)
 		pal[i].green = g;
 		pal[i].blue = b;
 	}
-	memcpy(pal, temp, sizeof (palette_t)*256);
+	memcpy(pal, temp, sizeof (palette_t)*256);*/
 }

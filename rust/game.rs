@@ -23,6 +23,9 @@ extern {
 
     pub fn SendMessageToGame(msg: Message, content: c_int);
 
+    pub fn SetGameIdle(b: u8);
+    pub fn GetGameIdle() -> u8;
+    pub fn GameIdle();
     pub fn GetCurSong() -> u8;
     pub fn HandleCDMusic();
 

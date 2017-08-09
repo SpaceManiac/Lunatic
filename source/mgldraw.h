@@ -13,7 +13,6 @@
 extern "C" FILE* AppdataOpen(const char* filename, const char* mode);
 
 // Replacement for missing palette_t
-
 struct palette_t
 {
 	byte alpha, red, green, blue;
@@ -30,9 +29,6 @@ void MGL_fatalError(const char* txt);
 class MGLDraw
 {
 public:
-	MGLDraw(const char *name, int xRes, int yRes, bool window);
-	~MGLDraw();
-
 	bool Process(); // handle windows messages and such
 
 	HWND GetHWnd();
@@ -66,6 +62,9 @@ public:
 	void GetMouse(int *x, int *y);
 
 protected:
+	MGLDraw(const char *name, int xRes, int yRes, bool window);
+	~MGLDraw();
+
 	struct bitmap_deleter {
 		void operator()(BITMAP* buffer) {
 			destroy_bitmap(buffer);
@@ -74,9 +73,9 @@ protected:
 
 	int xRes, yRes, pitch;
 	int mousex, mousey;
-	std::unique_ptr<byte[]> scrn;
-	std::unique_ptr<BITMAP, bitmap_deleter> buffer;
-	palette_t pal[256];
+	byte* scrn;
+	BITMAP* buffer;
+	int pal[256];
 	bool readyToQuit;
 	char lastKeyPressed;
 	byte mouseDown;

@@ -1,4 +1,5 @@
-use libc::{c_int, c_char, c_long, c_void};
+use libc::{c_int, c_char, c_long};
+use ffi::allegro::*;
 
 /// Replacement for missing palette_t
 #[repr(C)]
@@ -72,6 +73,20 @@ pub unsafe extern fn MGL_fatalError(txt: *const c_char) {
     panic!("{}", ::PctS(txt));
 }
 
+// Allegro shenanigans
+static mut prevKey: [i8; KEY_MAX] = [0; KEY_MAX];
+static mut closeButtonPressed: bool = false;
+
+unsafe extern fn closeButtonCallback() {
+    closeButtonPressed = true;
+}
+unsafe extern fn switchInCallback() {
+    ::game::SetGameIdle(0);
+}
+unsafe extern fn switchOutCallback() {
+    ::game::SetGameIdle(1);
+}
+
 // MGLDraw class
 #[repr(C)]
 pub struct MGLDraw {
@@ -81,38 +96,111 @@ pub struct MGLDraw {
     mousex: c_int,
     mousey: c_int,
     scrn: *mut u8,
-    buffer: *mut c_void, // BITMAP
-    pal: [palette_t; 256],
+    buffer: *mut BITMAP,
+    pal: [c_int; 256], // palette_t -> c_int
     readyToQuit: bool,
     lastKeyPressed: u8,
     mouseDown: u8,
 }
 
+impl Drop for MGLDraw {
+    fn drop(&mut self) {
+        unsafe {
+            ::sound::JamulSoundExit();
+            destroy_bitmap(self.buffer);
+            Vec::from_raw_parts(self.scrn, 0, (self.xRes * self.yRes) as usize);
+        }
+    }
+}
+
 impl MGLDraw {
     pub unsafe fn new(name: *const c_char, xRes: c_int, yRes: c_int, window: bool) -> *mut MGLDraw {
-        cpp!([name as "const char*", xRes as "int", yRes as "int", window as "bool"] -> *mut MGLDraw as "MGLDraw*" {
-            return new MGLDraw(name, xRes, yRes, window);
-        })
+        Box::into_raw(Box::new(MGLDraw::inner_new(name, xRes, yRes, window)))
+    }
+
+    unsafe fn inner_new(name: *const c_char, xRes: c_int, yRes: c_int, window: bool) -> MGLDraw {
+        allegro_init();
+        install_keyboard();
+        install_mouse();
+        install_sound(DIGI_AUTODETECT, MIDI_AUTODETECT, cstr!("donotuse.cfg"));
+        set_color_depth(32);
+
+        if set_gfx_mode(if window { GFX_AUTODETECT_WINDOWED } else { GFX_AUTODETECT_FULLSCREEN }, xRes, yRes, 0, 0) != 0 {
+            panic!("Unable to set graphics mode: {}", ::PctS(decay!(&allegro_error)));
+        }
+        set_window_title(name);
+        set_close_button_callback(closeButtonCallback);
+        set_display_switch_mode(SWITCH_BACKGROUND);
+        set_display_switch_callback(SWITCH_IN, switchInCallback);
+        set_display_switch_callback(SWITCH_OUT, switchOutCallback);
+
+        if ::jamulsound::JamulSoundInit(512) {
+            ::sound::SoundSystemExists();
+        }
+
+        let mut vec = vec![0u8; (xRes * yRes) as usize];
+        let scrn = vec.as_mut_ptr();
+        ::std::mem::forget(vec);
+        MGLDraw {
+            xRes: xRes,
+            yRes: yRes,
+            pitch: xRes,
+            mousex: xRes / 2,
+            mousey: yRes / 2,
+            scrn: scrn,
+            buffer: create_bitmap(xRes, yRes),
+            pal: [0; 256],
+            readyToQuit: false,
+            lastKeyPressed: 0,
+            mouseDown: 0,
+        }
     }
 
     pub unsafe fn delete(mgl: *mut MGLDraw) {
-        cpp!([mgl as "MGLDraw*"] { delete mgl; });
+        Box::from_raw(mgl);
     }
 
     pub unsafe fn Process(&mut self) -> bool {
-        let mgl = self;
-        cpp!([mgl as "MGLDraw*"] -> bool as "bool" {
-            return mgl->Process();
-        })
+        blit(self.buffer, al_screen, 0, 0, 0, 0, self.xRes, self.yRes);
+
+        while keypressed() != 0 {
+            self.SetLastKey(readkey() as u8);
+        }
+
+        for i in 0..KEY_MAX {
+            if al_key[i] != 0 && prevKey[i] == 0 {
+                ::control::ControlKeyDown(i as u8);
+            } else if al_key[i] == 0 && prevKey[i] != 0 {
+                ::control::ControlKeyUp(i as u8);
+            }
+            prevKey[i] = al_key[i];
+        }
+
+        self.mousex = al_mouse_x;
+        self.mousey = al_mouse_y;
+        self.mouseDown = al_mouse_b as u8 & 3;
+        self.readyToQuit |= closeButtonPressed;
+        !self.readyToQuit
     }
 
     // GetHWnd
 
     pub unsafe fn Flip(&mut self) {
-        let mgl = self;
-        cpp!([mgl as "MGLDraw*"] {
-            mgl->Flip();
-        })
+        if ::game::GetGameIdle() != 0 {
+            ::game::GameIdle();
+        }
+
+        // This is nice and fast, thankfully
+        {
+            let screen = ::std::slice::from_raw_parts_mut(self.scrn, (self.pitch * self.yRes) as usize);
+            let (mut x, mut y) = (0, 0);
+            for &v in screen.iter() {
+                _putpixel32(self.buffer, x, y, self.pal[v as usize]);
+                x += 1;
+                if x >= self.xRes { x = 0; y += 1; }
+            }
+        }
+        self.Process();
     }
 
     pub unsafe fn ClearScreen(&mut self) {
@@ -140,7 +228,10 @@ impl MGLDraw {
     // LoadPalette
 
     pub unsafe fn SetPalette(&mut self, pal2: &[palette_t]) {
-        self.pal.copy_from_slice(pal2);
+        assert_eq!(pal2.len(), 256);
+        for (p, &c) in self.pal.iter_mut().zip(pal2.iter()) {
+            *p = makecol(c.red as c_int, c.green as c_int, c.blue as c_int);
+        }
     }
 
     pub unsafe fn Box(&mut self, x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) {
@@ -211,6 +302,21 @@ impl MGLDraw {
             return mgl->LoadBMP(name);
         })
     }
+}
+
+#[no_mangle]
+pub unsafe extern fn MGLDraw_Process(mgl: &mut MGLDraw) -> bool {
+    mgl.Process()
+}
+
+#[no_mangle]
+pub unsafe extern fn MGLDraw_Flip(mgl: &mut MGLDraw) {
+    mgl.Flip()
+}
+
+#[no_mangle]
+pub unsafe extern fn MGLDraw_SetPalette(mgl: &mut MGLDraw, palette: *const palette_t) {
+    mgl.SetPalette(::std::slice::from_raw_parts(palette, 256));
 }
 
 #[no_mangle]
