@@ -26,10 +26,31 @@ impl sprite_t {
         })
     }
 
+    pub unsafe fn DrawGhost(&mut self, x: c_int, y: c_int, mgl: &mut MGLDraw, bright: i8) {
+        let me = self;
+        cpp!([me as "sprite_t*", x as "int", y as "int", mgl as "MGLDraw*", bright as "char"] {
+            me->DrawGhost(x, y, mgl, bright);
+        })
+    }
+
     pub unsafe fn DrawOffColor(&mut self, x: c_int, y: c_int, mgl: &mut MGLDraw, from: u8, to: u8, bright: i8) {
         let me = self;
         cpp!([me as "sprite_t*", x as "int", y as "int", mgl as "MGLDraw*", from as "byte", to as "byte", bright as "char"] {
             me->DrawOffColor(x, y, mgl, from, to, bright);
+        })
+    }
+
+    pub unsafe fn DrawColored(&mut self, x: c_int, y: c_int, mgl: &mut MGLDraw, hue: u8, bright: i8) {
+        let me = self;
+        cpp!([me as "sprite_t*", x as "int", y as "int", mgl as "MGLDraw*", hue as "byte", bright as "char"] {
+            me->DrawColored(x, y, mgl, hue, bright);
+        })
+    }
+
+    pub unsafe fn DrawShadow(&mut self, x: c_int, y: c_int, mgl: &mut MGLDraw) {
+        let me = self;
+        cpp!([me as "sprite_t*", x as "int", y as "int", mgl as "MGLDraw*"] {
+            me->DrawShadow(x, y, mgl);
         })
     }
 }

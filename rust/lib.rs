@@ -113,6 +113,7 @@ pub mod message;
 pub mod mgldraw;
 pub mod music;
 pub mod options;
+pub mod particle;
 pub mod pause;
 pub mod player;
 pub mod rage;

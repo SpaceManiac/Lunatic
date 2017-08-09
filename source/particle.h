@@ -41,6 +41,7 @@ public:
 	int life;
 };
 
+extern "C" {
 void InitParticles(int max);
 void ExitParticles(void);
 void UpdateParticles(Map *map);
@@ -60,5 +61,6 @@ void LightningBolt(int x, int y, int x2, int y2);
 void StinkySteam(int x, int y, int z, int dz);
 void GlassShatter(int x, int y, int x2, int y2, int z, byte amt);
 void CountessGlow(int x, int y);
+}
 
 #endif

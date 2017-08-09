@@ -5,8 +5,11 @@ use std::ffi::CStr;
 
 #[no_mangle]
 pub unsafe extern fn FLI_play(name: *const c_char, loop_: u8, wait: u16, mgl: &mut MGLDraw) {
-    let name_str = CStr::from_ptr(name).to_str().unwrap();
-    let mut flic = FlicFile::open(name_str.as_ref()).unwrap();
+    play_flic(CStr::from_ptr(name).to_str().unwrap(), loop_ != 0, wait, mgl)
+}
+
+pub unsafe fn play_flic(name: &str, loop_: bool, wait: u16, mgl: &mut MGLDraw) {
+    let mut flic = FlicFile::open(name.as_ref()).unwrap();
     let width = flic.width() as usize;
     let height = flic.height() as usize;
 
@@ -70,7 +73,7 @@ pub unsafe extern fn FLI_play(name: *const c_char, loop_: u8, wait: u16, mgl: &m
         if wait > 0 {
             ::std::thread::sleep(wait_duration);
         }
-        if (loop_ == 0 && (info.ended || info.looped)) ||
+        if (!loop_ && (info.ended || info.looped)) ||
             !mgl.Process() ||
             mgl.LastKeyPressed() == 27 // key #27 is escape
         {

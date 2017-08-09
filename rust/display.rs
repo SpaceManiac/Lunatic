@@ -9,7 +9,7 @@ use jamulspr::sprite_t;
 use map::Map;
 use tile::TILE_HEIGHT;
 
-pub const MAX_DISPLAY_OBJS: c_int = 1024;
+pub const MAX_DISPLAY_OBJS: usize = 1024;
 pub const DISPLAY_XBORDER: c_int = 128;
 pub const DISPLAY_YBORDER: c_int = 128;
 
@@ -30,35 +30,19 @@ bitflags! {
     }
 }
 
-#[repr(C)]
-pub struct displayObj_t {
-    pub x: c_int,
-    pub y: c_int,
-    pub z: c_int,
-    pub z2: c_int,
-    pub spr: *mut sprite_t,
-    pub hue: u8,
-    pub bright: i8,
-    pub flags: u16,
-    pub prev: c_int,
-    pub next: c_int,
-}
+static mut gameFont: [*mut mfont_t; 2] = [0 as *mut mfont_t; 2];
+static mut mgl: *mut MGLDraw = 0 as *mut MGLDraw;
 
-extern {
-    static mut gameFont: [*mut mfont_t; 2];
-    static mut mgl: *mut MGLDraw;
+static mut scrx: c_int = 0;
+static mut scry: c_int = 0;
+static mut scrdx: c_int = 0;
+static mut scrdy: c_int = 0;
+static mut rscrx: c_int = 0;
+static mut rscry: c_int = 0;
 
-    static mut scrx: c_int;
-    static mut scry: c_int;
-    static mut scrdx: c_int;
-    static mut scrdy: c_int;
-    static mut rscrx: c_int;
-    static mut rscry: c_int;
+static mut shakeTimer: u8 = 0;
 
-    static mut shakeTimer: u8;
-
-    static mut dispList: *mut DisplayList;
-}
+static mut dispList: *mut DisplayList = 0 as *mut DisplayList;
 
 static mut gammaCorrection: u8 = 0;
 
@@ -81,7 +65,7 @@ pub unsafe extern fn InitDisplay(mainmgl: &mut MGLDraw) -> bool {
         Err(_) => { return false; }
     });
 
-    dispList = DisplayList::new();
+    dispList = Box::into_raw(Box::new(DisplayList::new()));
     true
 }
 
@@ -97,7 +81,7 @@ pub unsafe extern fn ExitDisplay() {
         Box::from_raw(gameFont[1]);
         gameFont[0] = 1 as *mut _;
     }
-    DisplayList::delete(dispList);
+    Box::from_raw(dispList);
 }
 
 #[no_mangle] // iffy
@@ -245,8 +229,7 @@ pub unsafe extern fn ShowVictoryAnim(world: u8) {
     ::game::AddGarbageTime(timeGetTime() - start);
 }
 
-#[no_mangle]
-pub unsafe extern fn LoadText(nm: *const c_char) {
+unsafe fn LoadText(nm: *const c_char) {
     use libc::*;
 
     let f = fopen(nm, cstr!("rt"));
@@ -266,6 +249,97 @@ pub unsafe extern fn LoadText(nm: *const c_char) {
         y += 50;
     }
     fclose(f);
+}
+
+#[no_mangle]
+pub unsafe extern fn ShowImageOrFlic(input: *const c_char) {
+    use std::ascii::AsciiExt;
+    use sound::{make_normal_sound, Sound};
+    use ffi::misc::timeGetTime;
+
+    let input = ::std::ffi::CStr::from_ptr(input).to_string_lossy();
+    let mut split = input.splitn(2, ",");
+    let fname = split.next().unwrap();
+    let speed = split.next().and_then(|v| v.parse::<u16>().ok()).unwrap_or(60);
+
+    let mut nm = [0; 64];
+    sprintf!(nm, "graphics/{}", fname);
+
+    let ext = match fname.rfind(".") {
+        Some(i) => &fname[i + 1..],
+        None => return, // no extension, what is it?
+    };
+
+    if ext.eq_ignore_ascii_case("bmp") {
+        // BMP loading
+        ::game::EnterPictureDisplay();
+        make_normal_sound(Sound::SND_MESSAGE);
+        (*mgl).LoadBMP(decay!(&nm));
+    } else if ext.eq_ignore_ascii_case("txt") {
+        // Text files
+        ::game::EnterPictureDisplay();
+        make_normal_sound(Sound::SND_MESSAGE);
+        LoadText(decay!(&nm));
+    } else {
+        // assume it's an flc for now
+        let start = timeGetTime();
+        ::jamulfmv::FLI_play(decay!(&nm), 0, speed, &mut *mgl);
+        (*mgl).LoadBMP(cstr!("graphics/title.bmp"));
+        ::game::AddGarbageTime(timeGetTime() - start);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn UpdateCamera(x: c_int, y: c_int, facing: u8, map: &Map) {
+    use {FIXSHIFT, FIXAMT};
+    use cossin::*;
+    use tile::{TILE_WIDTH, TILE_HEIGHT};
+    use std::cmp::{min, max};
+
+    let desiredX = ((x << FIXSHIFT) + Cosine(facing as c_int) * 80) >> FIXSHIFT;
+    let desiredY = ((y << FIXSHIFT) + Sine(facing as c_int) * 60) >> FIXSHIFT;
+
+    rscrx += scrdx;
+    rscry += scrdy;
+
+    rscrx = max(rscrx, 320 << FIXSHIFT);
+    rscrx = min(rscrx, (map.width * TILE_WIDTH - 320) << FIXSHIFT);
+    rscry = max(rscry, (240 - TILE_HEIGHT) << FIXSHIFT);
+    rscry = min(rscry, (map.height * TILE_HEIGHT - 240) << FIXSHIFT);
+
+    if scrx > desiredX + 20 {
+        scrdx = (scrx - (desiredX + 20)) * FIXAMT / -16;
+    } else if scrx < desiredX - 20 {
+        scrdx = (desiredX - 20 - scrx) * FIXAMT / 16;
+    }
+    if scry > desiredY + 20 {
+        scrdy = (scry - (desiredY + 20)) * FIXAMT / -16;
+    } else if scry < desiredY - 20 {
+        scrdy = (desiredY - 20 - scry) * FIXAMT / 16;
+    }
+
+    Dampen(&mut scrdx, 1 << FIXSHIFT);
+    Dampen(&mut scrdy, 1 << FIXSHIFT);
+
+    scrx = rscrx >> FIXSHIFT;
+    scry = rscry >> FIXSHIFT;
+}
+
+#[no_mangle]
+pub unsafe extern fn RenderItAll(world: *mut ::world::world_t, map: &mut Map, flags: u8) {
+    if shakeTimer > 0 {
+        shakeTimer -= 1;
+        scrx -= 2 + ::mgldraw::MGL_random(5);
+        scry -= 2 + ::mgldraw::MGL_random(5);
+    }
+    map.Render(world, scrx, scry, flags);
+
+    scrx -= 320;
+    scry -= 240;
+    (*dispList).Render(&mut *mgl);
+    (*dispList).ClearList();
+    scrx += 320;
+    scry += 240;
 }
 
 // these calls return whether they worked or not, but frankly, we don't care
@@ -302,35 +376,170 @@ pub unsafe extern fn LightningDraw(x: c_int, y: c_int, x2: c_int, y2: c_int, bri
 // ---------------------------------------------------------------------------------------
 // from here on out it's class DISPLAYLIST
 
-cpp! {{
-    #include "display.h"
-}}
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct displayObj_t {
+    x: c_int,
+    y: c_int,
+    z: c_int,
+    z2: c_int,
+    spr: *mut sprite_t,
+    hue: u8,
+    bright: i8,
+    flags: DisplayFlags,
+    prev: usize,
+    next: usize,
+}
 
-opaque!(DisplayList);
+const NONE: usize = ::std::usize::MAX;
+
+#[repr(C)]
+pub struct DisplayList {
+    dispObj: [displayObj_t; MAX_DISPLAY_OBJS],
+    head: usize,
+    nextfree: usize,
+}
 
 impl DisplayList {
-    pub unsafe fn new() -> *mut DisplayList {
-        cpp!([] -> *mut DisplayList as "DisplayList*" {
-            return new DisplayList();
-        })
+    fn new() -> DisplayList {
+        DisplayList {
+            dispObj: [displayObj_t {
+                prev: NONE, next: NONE, flags: DisplayFlags::empty(),
+                x: 0, y: 0, z: 0, z2: 0, spr: 0 as *mut sprite_t,
+                hue: 0, bright: 0,
+            }; MAX_DISPLAY_OBJS],
+            head: NONE,
+            nextfree: 0,
+        }
     }
 
-    pub unsafe fn delete(me: *mut DisplayList) {
-        cpp!([me as "DisplayList*"] {
-            delete me;
-        })
+    pub fn ClearList(&mut self) {
+        *self = DisplayList::new();
     }
 
-    pub unsafe fn DrawSprite(&mut self,
+    fn GetOpenSlot(&self) -> usize {
+        self.dispObj.iter().position(|i| i.flags.is_empty()).unwrap_or(NONE)
+    }
+
+    fn HookIn(&mut self, me: usize) {
+        let dispObj = &mut self.dispObj;
+        if self.head == NONE {
+            self.head = me;
+            dispObj[me].prev = NONE;
+            dispObj[me].next = NONE;
+            return;
+        }
+
+        // shadows go on the head of the list always, drawn before anything else
+        // (and the order of shadows doesn't matter, of course)
+        if dispObj[me].flags.contains(DISPLAY_SHADOW) {
+            dispObj[me].next = self.head;
+            dispObj[self.head].prev = me;
+            dispObj[me].prev = NONE;
+            self.head = me;
+            return;
+        }
+
+        let mut i = self.head;
+        loop {
+            if !dispObj[i].flags.contains(DISPLAY_SHADOW) &&
+                (dispObj[i].y > dispObj[me].y ||
+                (dispObj[i].y == dispObj[me].y && dispObj[i].z > dispObj[me].z))
+            {
+                dispObj[me].prev = dispObj[i].prev;
+                dispObj[me].next = i;
+                if dispObj[me].prev != NONE {
+                    dispObj[dispObj[me].prev].next = me;
+                }
+                dispObj[i].prev = me;
+                if self.head == i {
+                    self.head = me;
+                }
+                return;
+            }
+            if dispObj[i].next == NONE {
+                dispObj[i].next = me;
+                dispObj[me].prev = i;
+                dispObj[me].next = NONE;
+                return;
+            }
+            i = dispObj[i].next;
+        }
+    }
+
+    fn DrawSprite(&mut self,
         x: c_int, y: c_int, z: c_int, z2: c_int,
         hue: u8, bright: i8, spr: *mut sprite_t, flags: DisplayFlags
     ) -> bool {
-        let me = self;
-        let flags = flags.bits();
-        cpp!([me as "DisplayList*", x as "int", y as "int", z as "int", z2 as "int",
-            hue as "byte", bright as "char", spr as "sprite_t*", flags as "word"
-        ] -> bool as "bool" {
-            return me->DrawSprite(x, y, z, z2, hue, bright, spr, flags);
-        })
+        let (scrx_, scry_) = unsafe { (scrx, scry) };
+        if (x - scrx_ + 320) < -DISPLAY_XBORDER ||
+            (x - scrx_ + 320) > 640 + DISPLAY_XBORDER ||
+            (y - scry_ + 240) < -DISPLAY_YBORDER ||
+            (y - scry_ + 240) > 480 + DISPLAY_YBORDER
+        {
+            return true;
+        }
+
+        let i = self.GetOpenSlot();
+        if i == NONE { return false; }
+
+        {
+            let o = &mut self.dispObj[i];
+            o.hue = hue;
+            o.bright = bright;
+            o.flags = flags;
+            o.spr = spr;
+            o.x = x;
+            o.y = y;
+            o.z = z;
+            o.z2 = z2;
+        }
+        self.HookIn(i);
+        true
+    }
+
+    unsafe fn Render(&mut self, mgl_: &mut MGLDraw) {
+        use particle::{RenderParticle, RenderLightningParticle};
+        use tile::{RenderWallTileFancy, RenderRoofTileFancy};
+
+        let mut i = self.head;
+        while i != NONE {
+            let o = self.dispObj[i];
+            i = o.next;
+
+            if !o.flags.contains(DISPLAY_DRAWME) || o.spr.is_null() {
+                continue
+            }
+
+            let x = o.x - scrx;
+            let y = o.y - o.z - scry;
+            //let mgl_ = &mut *mgl;
+
+            if o.flags.contains(DISPLAY_WALLTILE) {
+				// for tiles, DISPLAY_GHOST means lighting is disabled
+                let bright = (*(o.spr as *mut Map)).MakeSmoothLighting(o.flags.contains(DISPLAY_GHOST), o.x / 32, o.y / 24);
+                RenderWallTileFancy(x, o.y - scry, 199 + o.z2, bright);
+                RenderRoofTileFancy(x, o.y - scry - TILE_HEIGHT, o.hue as i32, o.flags.contains(DISPLAY_TRANSTILE), 0, bright);
+            } else if o.flags.contains(DISPLAY_ROOFTILE) {
+                let bright = (*(o.spr as *mut Map)).MakeSmoothLighting(o.flags.contains(DISPLAY_GHOST), o.x / 32, o.y / 24);
+                RenderRoofTileFancy(x, o.y - scry - TILE_HEIGHT, o.hue as i32, o.flags.contains(DISPLAY_TRANSTILE), 0, bright);
+            } else if o.flags.contains(DISPLAY_SHADOW) {
+                (*o.spr).DrawShadow(x, y, mgl_);
+            } else if o.flags.contains(DISPLAY_PARTICLE) {
+                RenderParticle(x, y, mgl_.GetScreen(), o.hue, o.bright as u8);
+            } else if o.flags.contains(DISPLAY_LIGHTNING) {
+                RenderLightningParticle(x, o.y - scry, o.z - scrx, o.z2 - scry, o.bright as c_int, o.hue, mgl_.GetScreen());
+            } else if o.flags.contains(DISPLAY_GHOST) {
+                (*o.spr).DrawGhost(x, y, mgl_, o.bright);
+            } else if o.flags.contains(DISPLAY_GLOW) {
+                (*o.spr).DrawGlow(x, y, mgl_, o.bright);
+            } else if o.flags.contains(DISPLAY_OFFCOLOR) {
+                (*o.spr).DrawOffColor(x, y, mgl_, o.z2 as u8, o.hue, o.bright);
+            } else if o.hue == 255 { // no special coloring
+                (*o.spr).DrawBright(x, y, mgl_, o.bright);
+            } else { // draw special color
+                (*o.spr).DrawColored(x, y, mgl_, o.hue, o.bright);
+            }
+        }
     }
 }

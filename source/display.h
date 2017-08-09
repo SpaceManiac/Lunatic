@@ -31,35 +31,6 @@ enum {
     DISPLAY_OFFCOLOR = 512
 };
 
-struct displayObj_t
-{
-	int x, y, z, z2;
-	sprite_t *spr;
-	byte hue;
-	char bright;
-	word flags;
-	int prev, next;
-};
-
-class DisplayList
-{
-public:
-	DisplayList(void);
-	~DisplayList(void);
-
-	bool DrawSprite(int x, int y, int z, int z2, byte hue, char bright, sprite_t *spr, word flags);
-	void ClearList(void);
-	void Render(void);
-private:
-
-	void HookIn(int me);
-	int GetOpenSlot(void);
-
-
-	displayObj_t dispObj[MAX_DISPLAY_OBJS];
-	int head, nextfree;
-};
-
 extern "C" {
 bool InitDisplay(MGLDraw *mainmgl);
 void ExitDisplay(void);

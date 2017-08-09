@@ -177,4 +177,18 @@ impl Map {
             me->Save(f);
         })
     }
+
+    pub unsafe fn Render(&mut self, world: *mut ::world::world_t, camX: c_int, camY: c_int, flags: u8) {
+        let me = self;
+        cpp!([me as "Map*", world as "world_t*", camX as "int", camY as "int", flags as "byte"] {
+            me->Render(world, camX, camY, flags);
+        })
+    }
+
+    pub unsafe fn MakeSmoothLighting(&mut self, beZero: bool, x: c_int, y: c_int) -> *mut c_char {
+        let me = self;
+        cpp!([me as "Map*", beZero as "bool", x as "int", y as "int"] -> *mut c_char as "char*" {
+            return me->MakeSmoothLighting(beZero, x, y);
+        })
+    }
 }

@@ -1,4 +1,4 @@
-use libc::{FILE, c_int, fread, fwrite};
+use libc::{FILE, c_int, c_char, fread, fwrite};
 use mgldraw::MGLDraw;
 
 pub const TILE_WIDTH: c_int = 32;
@@ -10,6 +10,9 @@ pub type tile_t = [u8; TILE_WIDTH as usize * TILE_HEIGHT as usize];
 extern {
     static mut tiles: [tile_t; NUMTILES];
     static mut tileMGL: *mut MGLDraw;
+
+    pub fn RenderWallTileFancy(x: c_int, y: c_int, t: c_int, theLight: *mut c_char);
+    pub fn RenderRoofTileFancy(x: c_int, y: c_int, t: c_int, trans: bool, wallBelow: u8, theLight: *mut c_char);
 }
 
 #[no_mangle]
