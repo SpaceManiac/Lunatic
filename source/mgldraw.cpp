@@ -186,75 +186,16 @@ void MGLDraw::SetPalette(const palette_t *pal2)
 
 // 8-bit graphics only
 
+extern "C" void MGLDraw_Box(MGLDraw*, int, int, int, int, byte);
 void MGLDraw::Box(int x, int y, int x2, int y2, byte c)
 {
-	int i;
-
-	if (x < 0)
-		x = 0;
-	if (x >= xRes)
-		x = xRes - 1;
-	if (y < 0)
-		y = 0;
-	if (y >= yRes)
-		y = yRes - 1;
-	if (x2 < 0)
-		return;
-	if (x2 >= xRes)
-		x2 = xRes - 1;
-	if (y2 < 0)
-		return;
-	if (y2 >= yRes)
-		y2 = yRes - 1;
-	if (x > x2)
-	{
-		i = x;
-		x = x2;
-		x2 = i;
-	}
-	if (y > y2)
-	{
-		i = y;
-		y = y2;
-		y2 = i;
-	}
-	memset(&scrn[x + y * pitch], c, x2 - x + 1);
-	memset(&scrn[x + y2 * pitch], c, x2 - x + 1);
-	for (i = y; i <= y2; i++)
-	{
-		scrn[x + i * pitch] = c;
-		scrn[x2 + i * pitch] = c;
-	}
+	MGLDraw_Box(this, x, y, x2, y2, c);
 }
 
+extern "C" void MGLDraw_FillBox(MGLDraw*, int, int, int, int, byte);
 void MGLDraw::FillBox(int x, int y, int x2, int y2, byte c)
 {
-	int i;
-
-	if (y >= yRes)
-		return;
-
-	if (x < 0)
-		x = 0;
-	if (x >= xRes)
-		x = xRes - 1;
-	if (y < 0)
-		y = 0;
-	if (y >= yRes)
-		y = yRes - 1;
-	if (x2 < 0)
-		return;
-	if (x2 >= xRes)
-		x2 = xRes - 1;
-	if (y2 < 0)
-		return;
-	if (y2 >= yRes)
-		y2 = yRes - 1;
-
-	for (i = y; i <= y2; i++)
-	{
-		memset(&scrn[x + i * pitch], c, x2 - x + 1);
-	}
+	MGLDraw_FillBox(this, x, y, x2, y2, c);
 }
 
 void MGLDraw::SetLastKey(char c)

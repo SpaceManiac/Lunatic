@@ -86,6 +86,12 @@ macro_rules! global {
     }
 }
 
+fn memset<T: Copy>(dest: &mut [T], val: T, len: usize) {
+    for p in dest[..len].iter_mut() {
+        *p = val;
+    }
+}
+
 // imports
 pub mod ffi;
 

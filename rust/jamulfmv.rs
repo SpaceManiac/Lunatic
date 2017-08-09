@@ -37,9 +37,9 @@ pub unsafe fn play_flic(name: &str, loop_: bool, wait: u16, mgl: &mut MGLDraw) {
             mgl.SetPalette(&mgl_pal);
         }
 
-        let mgl_buf = ::std::slice::from_raw_parts_mut(mgl.GetScreen(), 640 * 480);
         for x in 0..width {
             for y in 0..height {
+                let mgl_buf = mgl.get_screen();
                 let e = buf[width * y + x];
                 let basis = 640 * y * 2 + x * 2;
                 #[cfg(feature="scale2x")] {

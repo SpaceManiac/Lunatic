@@ -54,6 +54,6 @@ pub unsafe extern fn SaveTiles(f: *mut FILE) {
 #[no_mangle]
 pub unsafe extern fn PlotStar(x: c_int, y: c_int, col: u8, tx: u8, ty: u8, tileNum: u8) {
     if tiles[tileNum as usize][tx as usize + ty as usize * TILE_WIDTH as usize] == 0 {
-        *(*tileMGL).GetScreen().offset((x + y * 640) as isize) = col;
+        (*tileMGL).get_screen()[(x + y * 640) as usize] = col;
     }
 }
