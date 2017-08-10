@@ -165,7 +165,7 @@ enum {
 };
 
 #ifdef EXPANDO
-const int NUM_MONSTERS = 161;
+const int NUM_MONSTERS = 131;
 #else	// lacking the expansion pack
 const int NUM_MONSTERS = 60;
 #endif

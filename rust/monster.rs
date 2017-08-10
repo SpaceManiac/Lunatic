@@ -161,7 +161,7 @@ pub enum MonsterType {
     MONS_CREEPAZOID = 130
 }
 
-pub const NUM_MONSTERS: c_int = 161;
+pub const NUM_MONSTERS: c_int = 131;
 // 60 without EXPANDO
 
 /// the animations
