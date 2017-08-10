@@ -1,5 +1,4 @@
-#ifdef MONSTER_CPP // Don't compile directly
-
+// AI for Expando Pak monsters
 void AI_MineCart(Guy *me, Map *map, world_t *world, Guy *goodguy)
 {
 	int x, y;
@@ -2206,7 +2205,7 @@ void AI_Meaniebot(Guy *me, Map *map, world_t *world, Guy *goodguy)
 						g->type = MONS_NONE; // vanish if this spot is occupied
 					g = AddGuy(me->x + FIXAMT * 20, me->y, 0, MONS_GOODROBOT);
 					if (g && (!g->CanWalk(g->x, g->y, map, world)))
-						g->type = MONS_NONE; // vanish if this spot is occupied			
+						g->type = MONS_NONE; // vanish if this spot is occupied
 				}
 				else
 				{
@@ -2215,7 +2214,7 @@ void AI_Meaniebot(Guy *me, Map *map, world_t *world, Guy *goodguy)
 						g->type = MONS_NONE; // vanish if this spot is occupied
 					g = AddGuy(me->x + FIXAMT * 20, me->y, 0, MONS_ROBOT1);
 					if (g && (!g->CanWalk(g->x, g->y, map, world)))
-						g->type = MONS_NONE; // vanish if this spot is occupied			
+						g->type = MONS_NONE; // vanish if this spot is occupied
 				}
 			}
 		}
@@ -3258,5 +3257,3 @@ void AI_LoonyShip(Guy *me, Map *map, world_t *world, Guy *goodguy)
 	}
 	me->mind1 = 0;
 }
-
-#endif // MONSTER_CPP
