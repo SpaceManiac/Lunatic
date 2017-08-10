@@ -1,16 +1,13 @@
-#ifndef MONSTER_H
-#define MONSTER_H
-
 /* this file does the AI and everything else for each monster type.
    It knows all about the different types, as opposed to guy.cpp which
    just sort of keeps track of the list of guys. */
 
-#include "winpch.h"
-#include "jamulspr.h"
-#include "display.h"
+use libc::c_int;
+use jamulspr::sprite_t;
 
-// the monster types
-enum {
+/// the monster types
+#[repr(u8)]
+pub enum MonsterType {
     MONS_NONE = 0,
     MONS_BOUAPHA = 1,
     MONS_BONEHEAD = 2,
@@ -162,89 +159,30 @@ enum {
     MONS_PUMPKIN2 = 128,
     MONS_CRAZYBONE = 129,
     MONS_CREEPAZOID = 130
-};
-
-#ifdef EXPANDO
-const int NUM_MONSTERS = 161;
-#else	// lacking the expansion pack
-const int NUM_MONSTERS = 60;
-#endif
-
-// the animations
-enum {
-	ANIM_IDLE = 0,
-	ANIM_MOVE,
-	ANIM_ATTACK,
-	ANIM_DIE,
-	ANIM_A1,
-	ANIM_A2,
-	ANIM_A3,
-	ANIM_A4,
-	ANIM_A5,
-	NUM_ANIMS
-};
-
-const int ANIM_LENGTH = 24;
-
-// flags
-enum {
-	MF_FLYING = 1,
-	MF_WATERWALK = 2,
-	MF_ONEFACE = 4,
-	MF_ENEMYWALK = 8,	// other enemies can stomp all over this one (but not Bouapha)
-	MF_NOMOVE = 16,		// doesn't move when hit
-	MF_AQUATIC = 32,	// can ONLY move on water/lava, not land
-	MF_INVINCIBLE = 64, // totally invulnerable to harm
-	MF_SPRITEBOX = 128, // use the sprite's rect for collision checks instead of standard size-box method
-	MF_FACECMD = 256,	// this monster's "facing" value should just be added to the sprite number,
-						// it's calculated by his AI (only useful for MF_ONEFACE monsters)
-	MF_NOGRAV = 512,
-	MF_FREEWALK = 1024, // Bouapha can walk right through it
-	MF_WALLWALK = 2048, // walk through walls
-	MF_NOSHADOW = 4096, // doesn't cast a shadow
-	MF_GHOST = 8192,	// draw using ghost draw
-	MF_NOHIT = 16384,	// bullets pass through it
-	MF_GLOW = 32768		// draw using glow draw
-};
-
-typedef void (*monsterAi_t)(Guy *me, Map *map, world_t *world, Guy *goodguy);
-
-struct monsterType_t
-{
-	char name[32];
-	byte fromCol, toCol;
-	char brtChg;
-	byte size;
-	byte framesPerDir;
-	word hp;
-	word points;
-	char sprName[32];
-	sprite_set_t *spr;
-	word flags;
-	monsterAi_t aiFunc;
-	byte anim[NUM_ANIMS][ANIM_LENGTH];
-};
-
-extern "C" {
-void InitMonsters(void);
-void ExitMonsters(void);
-
-void PurgeMonsterSprites(void);
-
-void ChangeOffColor(byte type, byte from, byte to);
-byte MonsterSize(byte type);
-byte *MonsterAnim(byte type, byte anim);
-word MonsterFlags(byte type);
-void SetMonsterFlags(byte type, word flags);
-byte MonsterFrames(byte type);
-word MonsterHP(byte type);
-word MonsterPoints(byte type);
-char *MonsterName(byte type);
-monsterAi_t MonsterAi(byte type);
-void MonsterDraw(int x, int y, int z, byte type, byte seq, byte frm, byte facing, char bright, byte ouch, byte poison);
-void InstaRenderMonster(int x, int y, byte type, char bright, MGLDraw *mgl);
-sprite_t *GetMonsterSprite(byte type, byte seq, byte frm, byte facing);
-int RangeToTarget(Guy *me, Guy *goodguy);
 }
 
-#endif
+pub const NUM_MONSTERS: c_int = 161;
+// 60 without EXPANDO
+
+/// the animations
+#[repr(u8)]
+pub enum Animation {
+    ANIM_IDLE = 0,
+    ANIM_MOVE,
+    ANIM_ATTACK,
+    ANIM_DIE,
+    ANIM_A1,
+    ANIM_A2,
+    ANIM_A3,
+    ANIM_A4,
+    ANIM_A5,
+    NUM_ANIMS,
+}
+
+pub const ANIM_LENGTH: usize = 24;
+
+// TODO: flags
+
+extern {
+    pub fn GetMonsterSprite(type_: MonsterType, seq: Animation, frm: u8, facing: u8) -> *mut sprite_t;
+}

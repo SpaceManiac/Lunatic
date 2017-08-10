@@ -131,6 +131,7 @@ pub mod map;
 pub mod mapdialog;
 pub mod message;
 pub mod mgldraw;
+pub mod monster;
 pub mod music;
 pub mod options;
 pub mod particle;

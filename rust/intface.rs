@@ -141,7 +141,7 @@ unsafe fn DrawLitGauge(x: c_int, y: c_int, c: u8) {
 #[no_mangle]
 pub unsafe extern fn RenderInterface(
     life: u8, rage: u8, hmrFlags: u8, hammers: u8,
-    brains: c_int, score: c_int, wpn: u8, ammo: u8,
+    brains: c_int, score: c_int, wpn: u8, ammo: c_int,
     hamSpeed: u8, mgl: &mut MGLDraw,
 ) {
     use display::Print;

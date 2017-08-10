@@ -95,6 +95,11 @@ pub struct bullet_t {
 }
 
 extern {
+    pub fn RenderBullets();
+    pub fn RenderSmoke(x: c_int, y: c_int, z: c_int, bright: i8, frm: u8);
+    pub fn RenderBoom(x: c_int, y: c_int, z: c_int, bright: i8, frm: u8);
+    pub fn RenderStinky(x: c_int, y: c_int, z: c_int, bright: i8, frm: u8);
+
     pub fn FireBullet(x: c_int, y: c_int, facing: u8, type_: u8, friendly: u8);
     pub fn HammerLaunch(x: c_int, y: c_int, facing: u8, count: u8, flags: u8);
     pub fn HappyLaunch(x: c_int, y: c_int, facing: u8, count: u8, flags: u8);

@@ -21,26 +21,6 @@ enum {
 	PART_COUNTESS	// glowing image of the countess for when she charges
 };
 
-class Particle
-{
-public:
-	Particle(void);
-	~Particle(void);
-
-	void Go(byte type, int x, int y, int z, byte angle, byte force);
-	void GoLightning(int x, int y, int x2, int y2);
-	void GoRandom(byte type, int x, int y, int z, byte force);
-	void Update(Map *map);
-	bool Alive(void);
-
-	byte size;
-	byte type;
-	byte color;
-	int x, y, z;
-	int dx, dy, dz;
-	int life;
-};
-
 extern "C" {
 void InitParticles(int max);
 void ExitParticles(void);

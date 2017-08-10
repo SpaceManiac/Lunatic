@@ -26,7 +26,7 @@ pub unsafe extern fn Sine(angle: c_int) -> c_int {
 }
 
 #[no_mangle]
-pub unsafe extern fn Dampen(value: *mut c_int, amt: c_int) {
+pub extern fn Dampen(value: &mut c_int, amt: c_int) {
     if *value > 0 {
         *value -= amt;
         if *value < 0 { *value = 0 }
@@ -38,7 +38,7 @@ pub unsafe extern fn Dampen(value: *mut c_int, amt: c_int) {
 }
 
 #[no_mangle]
-pub unsafe extern fn Clamp(value: *mut c_int, amt: c_int) {
+pub extern fn Clamp(value: &mut c_int, amt: c_int) {
     if *value > amt {
         *value = amt;
     }
