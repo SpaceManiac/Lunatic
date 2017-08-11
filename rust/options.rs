@@ -46,31 +46,50 @@ pub struct options_t {
     pub control: [[u8; 6]; 2],
     /// joystick 'codes' for the buttons
     pub joyCtrl: [u8; 2],
-    pub sound: u8,
+    pub sound: bool,
     pub music: Music,
     /// if you wish to play as a different character after winning
     pub playAs: PlayAs,
-    pub wonGame: u8,
-    pub gotAllSecrets: u8,
-    pub youSuck: u8,
+    pub wonGame: bool,
+    pub gotAllSecrets: bool,
+    pub youSuck: bool,
     // new options
-    pub discoMode: u8,
-    pub smoothLight: u8,
+    pub discoMode: bool,
+    pub smoothLight: bool,
 }
 
-#[no_mangle]
-pub static mut opt: options_t = options_t {
-    control: [[0; 6]; 2],
-    joyCtrl: [0; 2],
-    sound: 0,
+const DEFAULT_OPTIONS: options_t = options_t {
+    sound: true,
     music: Music::MUSIC_ON,
     playAs: PlayAs::PLAYAS_BOUAPHA,
-    wonGame: 0,
-    gotAllSecrets: 0,
-    youSuck: 0,
-    discoMode: 0,
-    smoothLight: 0,
+    wonGame: false,
+    gotAllSecrets: false,
+    smoothLight: true, // new
+    discoMode: false, // new
+    control: [
+        [
+            84, // up
+            85, // down,
+            82, // left
+            83, // right
+            117, // hammer: CTRL
+            115, // special: shift
+        ],
+        [
+            0, // up
+            0, // down
+            0, // left
+            0, // right
+            26, // hammer: Z
+            24, // special: X
+        ]
+    ],
+    joyCtrl: [0, 1],
+    youSuck: false,
 };
+
+#[no_mangle]
+pub static mut opt: options_t = DEFAULT_OPTIONS;
 #[no_mangle]
 pub static mut oldPlayAs: u8 = 0;
 
@@ -85,34 +104,7 @@ static mut optMode: u8 = 0;
 pub unsafe extern fn LoadOptions() {
     let f = ::mgldraw::AppdataOpen(cstr!("lunatic.cfg"), cstr!("rb"));
     if f.is_null() {
-        opt.sound = 1;
-        opt.music = Music::MUSIC_ON;
-        opt.playAs = PlayAs::PLAYAS_BOUAPHA;
-        opt.wonGame = 0;
-        opt.gotAllSecrets = 1;
-        opt.smoothLight = 1; // new
-        opt.discoMode = 0; // new
-
-        opt.control = [
-            [
-                84, // up
-                85, // down,
-                82, // left
-                83, // right
-                117, // hammer: CTRL
-                115, // special: shift
-            ],
-            [
-                0, // up
-                0, // down
-                0, // left
-                0, // right
-                26, // hammer: Z
-                24, // special: X
-            ]
-        ];
-
-        opt.joyCtrl = [0, 1];
+        opt = DEFAULT_OPTIONS;
     } else {
         fread(decay!(&mut opt), szof!(options_t), 1, f);
         fclose(f);
@@ -141,12 +133,12 @@ unsafe fn UpdateOptionsMenu(mgl: &mut MGLDraw) -> u8 {
             if c == 27 {
                 return 1;
             } else if c == b'u' {
-                if opt.gotAllSecrets != 0 {
-                    opt.gotAllSecrets = 0;
-                    opt.wonGame = 0;
+                if opt.gotAllSecrets {
+                    opt.gotAllSecrets = false;
+                    opt.wonGame = false;
                 } else {
-                    opt.gotAllSecrets = 1;
-                    opt.wonGame = 1;
+                    opt.gotAllSecrets = true;
+                    opt.wonGame = true;
                 }
             }
 
@@ -159,7 +151,7 @@ unsafe fn UpdateOptionsMenu(mgl: &mut MGLDraw) -> u8 {
             }
             if (c2 - oldc).intersects(CONTROL_B1 | CONTROL_B2 | CONTROL_B3) {
                 match cursor {
-                    0 => { opt.sound = 1 - opt.sound; }
+                    0 => { opt.sound = !opt.sound; }
                     1 => {
                         opt.music = opt.music.cycle();
                         ::player::PlayerSetMusicSettings(opt.music);
@@ -171,17 +163,17 @@ unsafe fn UpdateOptionsMenu(mgl: &mut MGLDraw) -> u8 {
                             ::music::CDPlay(i as c_int);
                         }
                     }
-                    2 if opt.wonGame != 0 => {
-                        opt.playAs = opt.playAs.cycle(opt.gotAllSecrets != 0);
+                    2 if opt.wonGame => {
+                        opt.playAs = opt.playAs.cycle(opt.gotAllSecrets);
                     }
-                    3 if opt.wonGame != 0 => {
-                        opt.discoMode = 1 - opt.discoMode;
+                    3 if opt.wonGame => {
+                        opt.discoMode = !opt.discoMode;
                     }
                     4 => {
-                        opt.smoothLight = 1 - opt.smoothLight;
+                        opt.smoothLight = !opt.smoothLight;
                     }
                     5 => {
-                        opt.youSuck = 1 - opt.youSuck;
+                        opt.youSuck = !opt.youSuck;
                     }
                     6 => {
                         optMode = 1;
@@ -297,7 +289,7 @@ unsafe fn RenderOptionsMenu(mgl: &mut MGLDraw) {
     mgl.FillBox(250, 80 - 1 + dy * cursor as c_int, 390, 80 + 12 + dy * cursor as c_int, 10);
     option!("Sound", onoff[opt.sound as usize]);
     option!("Music", onoff[opt.music as usize]);
-    if opt.wonGame == 0 {
+    if !opt.wonGame {
         option!("?????", cstr!());
         option!("?????", cstr!());
     } else {

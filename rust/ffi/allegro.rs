@@ -1,5 +1,5 @@
 use libc::{c_int, c_char};
-use ffi::misc::HWND;
+use ffi::win::HWND;
 
 opaque!(BITMAP);
 opaque!(SAMPLE);

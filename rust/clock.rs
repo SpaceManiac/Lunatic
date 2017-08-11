@@ -1,4 +1,4 @@
-use ffi::misc::timeGetTime;
+use ffi::win::timeGetTime;
 
 static mut START: u32 = 0;
 static mut END: u32 = 0;

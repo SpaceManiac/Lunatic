@@ -192,7 +192,7 @@ pub unsafe extern fn DrawFillBox(x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8
 
 #[no_mangle]
 pub unsafe extern fn ShowVictoryAnim(world: u8) {
-    use ffi::misc::timeGetTime;
+    use ffi::win::timeGetTime;
     use jamulfmv::FLI_play;
     use music::CDPlay;
 
@@ -255,7 +255,7 @@ unsafe fn LoadText(nm: *const c_char) {
 pub unsafe extern fn ShowImageOrFlic(input: *const c_char) {
     use std::ascii::AsciiExt;
     use sound::{make_normal_sound, Sound};
-    use ffi::misc::timeGetTime;
+    use ffi::win::timeGetTime;
 
     let input = ::std::ffi::CStr::from_ptr(input).to_string_lossy();
     let mut split = input.splitn(2, ",");

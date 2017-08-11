@@ -171,6 +171,12 @@ impl Map {
         cpp!([me as "Map*"] { delete me; });
     }
 
+    pub unsafe fn get_tile(&mut self, x: c_int, y: c_int) -> &mut mapTile_t {
+        assert!(x >= 0 && x < self.width);
+        assert!(y >= 0 && y < self.height);
+        &mut *self.map.offset((x + y * self.width) as isize)
+    }
+
     pub unsafe fn Save(&mut self, f: *mut ::libc::FILE) {
         let me = self;
         cpp!([me as "Map*", f as "FILE*"] {

@@ -1,6 +1,6 @@
 use libc::{c_int, c_char, intptr_t, strncpy};
 use mgldraw::MGLDraw;
-use ffi::misc::*;
+use ffi::win::*;
 
 const MAX_FILES: usize = 18;
 

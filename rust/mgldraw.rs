@@ -16,7 +16,7 @@ pub struct palette_t {
 pub unsafe extern fn AppdataOpen(file: *const c_char, mode: *const c_char) -> *mut ::libc::FILE {
     use libc::{mkdir, strlen, fopen};
     use std::ptr::null_mut;
-    use ffi::misc::{SHGetFolderPath, CSIDL_APPDATA};
+    use ffi::win::{SHGetFolderPath, CSIDL_APPDATA};
 
     let mut buffer = [0; 260]; // MAX_PATH
     SHGetFolderPath(null_mut(), CSIDL_APPDATA, null_mut(), 0, decay!(&mut buffer));
@@ -304,7 +304,7 @@ impl MGLDraw {
     }
 
     pub unsafe fn TeleportMouse(&mut self, x: c_int, y: c_int) {
-        use ffi::misc::{POINT, ClientToScreen, SetCursorPos};
+        use ffi::win::{POINT, ClientToScreen, SetCursorPos};
 
         let mut pt = POINT { x: x as c_long, y: y as c_long };
         ClientToScreen(win_get_window(), &mut pt);
@@ -318,7 +318,7 @@ impl MGLDraw {
             return me->LoadBMP(name);
         })*/
         use libc::{fopen, fread, fclose};
-        use ffi::misc::*;
+        use ffi::win::*;
 
         let mut bmpFHead: BITMAPFILEHEADER = ::std::mem::zeroed();
         let mut bmpIHead: BITMAPINFOHEADER = ::std::mem::zeroed();

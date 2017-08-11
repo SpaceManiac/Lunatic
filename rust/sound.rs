@@ -328,7 +328,7 @@ pub unsafe extern fn ExitSound() {
 
 #[no_mangle]
 pub unsafe extern fn MakeSound(snd: c_int, mut x: c_int, mut y: c_int, flags: u8, priority: c_int) {
-    if !SOUND_AVAILABLE || ::options::opt.sound == 0 { return }
+    if !SOUND_AVAILABLE || !::options::opt.sound { return }
 
     x >>= ::FIXSHIFT;
     y >>= ::FIXSHIFT;
@@ -348,7 +348,7 @@ pub unsafe fn make_sound(snd: Sound, x: c_int, y: c_int, flags: SoundFlags, prio
 
 #[no_mangle]
 pub unsafe extern fn MakeNormalSound(snd: c_int) {
-    if !SOUND_AVAILABLE || ::options::opt.sound == 0 { return }
+    if !SOUND_AVAILABLE || !::options::opt.sound { return }
 
     GoPlaySound(snd, 128, 255, (SND_MAXPRIORITY | SND_CUTOFF | SND_ONE).bits(), MAX_SNDPRIORITY);
 }

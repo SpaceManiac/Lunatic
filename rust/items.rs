@@ -16,7 +16,7 @@ pub const NEW_PICKUP_ITMS: c_int = 92;
 
 static mut itmSpr: *mut sprite_set_t = 0 as *mut sprite_set_t;
 static mut glowism: u8 = 0;
-static mut itmLight: u8 = 0;
+static mut itmLight: bool = false;
 
 #[no_mangle]
 pub unsafe extern fn InitItems() {
@@ -36,7 +36,7 @@ pub unsafe extern fn DrawRedX(x: c_int, y: c_int, mgl: &mut MGLDraw) {
 
 #[no_mangle]
 pub unsafe extern fn ItemLightUp() {
-    itmLight = 1 - itmLight;
+    itmLight = !itmLight;
 }
 
 #[no_mangle]
@@ -44,7 +44,7 @@ pub unsafe extern fn RenderItem(x: c_int, y: c_int, type_: u8, bright: i8) {
     use display::*;
 
     let x = x - 3;
-    let bright = if itmLight != 0 { 10 } else { bright };
+    let bright = if itmLight { 10 } else { bright };
 
     if let Some(item) = Item::from_int(type_ as usize) {
         let info = info(item);

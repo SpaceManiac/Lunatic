@@ -1,5 +1,5 @@
 use libc::{c_char, c_int, c_uint};
-use ffi::misc::*;
+use ffi::win::*;
 use std::mem;
 
 bitflags! {

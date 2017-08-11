@@ -211,7 +211,7 @@ impl Particle {
             ParticleType::PART_SMOKE | ParticleType::PART_BOOM | ParticleType::PART_STINKY => {
                 let mapx = (self.x / TILE_WIDTH) >> ::FIXSHIFT;
                 let mapy = (self.y / TILE_HEIGHT) >> ::FIXSHIFT;
-                let brt = (*map.map.offset((mapx + mapy * map.width) as isize)).templight;
+                let brt = map.get_tile(mapx, mapy).templight;
                 self.color = 64u8.wrapping_add(brt as u8);
             }
             ParticleType::PART_LIGHTNING | ParticleType::PART_GLASS => {
@@ -222,7 +222,7 @@ impl Particle {
                 let mapy = (self.y / TILE_HEIGHT) >> ::FIXSHIFT;
 
                 // brighten it appropriately
-                let brt = (*map.map.offset((mapx + mapy * map.width) as isize)).templight;
+                let brt = map.get_tile(mapx, mapy).templight;
                 let c1 = self.color & !31; // c1 is the color range
                 self.color = max(c1, min(c1 + 31, self.color.wrapping_add(brt as u8)));
             }
