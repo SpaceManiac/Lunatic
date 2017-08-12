@@ -2,8 +2,8 @@ use libc::{c_int, c_char};
 use world::MAX_MAPS;
 
 /// secondary weapon defines
-#[repr(C)]
-#[derive(FromInt)]
+#[repr(u8)]
+#[derive(FromInt, Eq, PartialEq, Copy, Clone)]
 pub enum Weapon {
     WPN_NONE,
     WPN_MISSILES,
@@ -32,7 +32,7 @@ pub enum Init {
 }
 
 /// vehicles you could be on
-#[repr(C)]
+#[repr(u8)]
 pub enum Vehicle {
     VE_NONE = 0,
     VE_MINECART = 1,
@@ -69,7 +69,7 @@ pub struct player_t {
     pub boredom: c_int,
     pub hammers: u8,
     pub hamSpeed: u8,
-    pub weapon: u8,
+    pub weapon: Weapon,
     pub ammo: c_int,
     pub reload: u8,
     pub wpnReload: u8,
@@ -78,7 +78,7 @@ pub struct player_t {
     /// for pushing pushy blocks
     pub pushPower: u8,
     pub hammerFlags: u8,
-    pub vehicle: u8,
+    pub vehicle: Vehicle,
     pub garlic: u8,
     /// accelerated
     pub speed: u8,
@@ -96,6 +96,8 @@ extern {
     pub fn PlayerHeal(amt: u8);
     pub fn PlayerGetMusicSettings() -> ::options::Music;
     pub fn PlayerSetMusicSettings(m: ::options::Music);
+    pub fn PlayerHasHammer() -> bool;
+    pub fn PlayerShield() -> u8;
     pub fn ToggleWaterwalk();
 
     pub fn PlayerLoadGame(which: u8);

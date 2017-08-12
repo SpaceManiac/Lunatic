@@ -3,7 +3,7 @@ use guy::Guy;
 use intface::RenderRage;
 use player::{Weapon, player};
 
-static mut rageWpn: u8 = 0;
+static mut rageWpn: Weapon = Weapon::WPN_NONE;
 
 #[no_mangle]
 pub unsafe extern fn ShowRage(mgl: *mut MGLDraw) {
@@ -23,23 +23,23 @@ pub unsafe extern fn StartRaging() {
     use player::Weapon::*;
 
     rageWpn = player.weapon;
-    player.rageClock = 60 + match Weapon::from_int(rageWpn as usize) {
-        Some(WPN_NONE) => 10,
-        Some(WPN_MISSILES) => 16,
-        Some(WPN_BOMBS) => 20,
-        Some(WPN_AK8087) => 40,
-        Some(WPN_FLAME) => 30,
-        Some(WPN_BIGAXE) => 50,
-        Some(WPN_LIGHTNING) => 40,
-        Some(WPN_SPEAR) => 20,
-        Some(WPN_MACHETE) => 10,
-        Some(WPN_MINES) => 33,
-        Some(WPN_MINDCONTROL) => 2,
-        Some(WPN_REFLECTOR) => 60,
-        Some(WPN_TURRET) => 64,
-        Some(WPN_JETPACK) => 12,
-        Some(WPN_SWAPGUN) => 32,
-        _ => return
+    player.rageClock = 60 + match rageWpn {
+        WPN_NONE => 10,
+        WPN_MISSILES => 16,
+        WPN_BOMBS => 20,
+        WPN_AK8087 => 40,
+        WPN_FLAME => 30,
+        WPN_BIGAXE => 50,
+        WPN_LIGHTNING => 40,
+        WPN_SPEAR => 20,
+        WPN_MACHETE => 10,
+        WPN_MINES => 33,
+        WPN_MINDCONTROL => 2,
+        WPN_REFLECTOR => 60,
+        WPN_TURRET => 64,
+        WPN_JETPACK => 12,
+        WPN_SWAPGUN => 32,
+        _ => return,
     };
 }
 
@@ -67,8 +67,8 @@ pub unsafe extern fn DoRage(me: &mut Guy) {
     if player.rageClock < 60 {
         return;
     }
-    match Weapon::from_int(rageWpn as usize) {
-        Some(WPN_NONE) => match opt.playAs {
+    match rageWpn {
+        WPN_NONE => match opt.playAs {
             PlayAs::PLAYAS_BOUAPHA => if player.rageClock % 4 == 0 {
                 HammerLaunch(me.x, me.y, me.facing, 5, (HMR_REVERSE | HMR_REFLECT).bits());
             },
@@ -81,10 +81,10 @@ pub unsafe extern fn DoRage(me: &mut Guy) {
                 HappyLaunch(me.x, me.y, me.facing, 5, (HMR_REVERSE | HMR_REFLECT).bits());
             },
         },
-        Some(WPN_MISSILES) => {
+        WPN_MISSILES => {
             fire_bullet(me.x, me.y, (player.rageClock & 7), Bullet::BLT_MISSILE, 1);
         }
-        Some(WPN_BOMBS) => {
+        WPN_BOMBS => {
             let (cx, cy) = corner();
             fire_bullet(
                 (cx + MGL_random(640)) << ::FIXSHIFT,
@@ -95,12 +95,12 @@ pub unsafe extern fn DoRage(me: &mut Guy) {
             );
             ::display::ShakeScreen(10);
         }
-        Some(WPN_AK8087) => {
+        WPN_AK8087 => {
             fire_bullet(me.x, me.y, MGL_random(8) as u8, Bullet::BLT_LASER, 1);
             fire_bullet(me.x, me.y, MGL_random(8) as u8, Bullet::BLT_LASER, 1);
             fire_bullet(me.x, me.y, MGL_random(8) as u8, Bullet::BLT_LASER, 1);
         }
-        Some(WPN_FLAME) => {
+        WPN_FLAME => {
             let (cx, cy) = corner();
             for _ in 0..3 {
                 fire_bullet(
@@ -112,13 +112,13 @@ pub unsafe extern fn DoRage(me: &mut Guy) {
                 );
             }
         }
-        Some(WPN_BIGAXE) => {
+        WPN_BIGAXE => {
             if player.rageClock % 5 == 0 {
                 sound::make_sound(Sound::SND_BOMBTHROW, me.x, me.y, sound::SND_CUTOFF, 1200);
                 fire_bullet(me.x, me.y, me.facing, Bullet::BLT_BIGAXE, 1);
             }
         }
-        Some(WPN_LIGHTNING) => {
+        WPN_LIGHTNING => {
             let (cx, cy) = corner();
             fire_bullet(
                 (cx + MGL_random(640)) << ::FIXSHIFT,
@@ -128,7 +128,7 @@ pub unsafe extern fn DoRage(me: &mut Guy) {
                 1
             );
         }
-        Some(WPN_SPEAR) => {
+        WPN_SPEAR => {
             if player.rageClock % 3 == 0 {
                 sound::make_sound(Sound::SND_BOMBTHROW, me.x, me.y, sound::SND_CUTOFF, 1200);
                 fire_bullet(me.x, me.y, (me.facing + 7) & 7, Bullet::BLT_SPEAR, 1);
@@ -136,14 +136,14 @@ pub unsafe extern fn DoRage(me: &mut Guy) {
                 fire_bullet(me.x, me.y, (me.facing + 1) & 7, Bullet::BLT_SPEAR, 1);
             }
         }
-        Some(WPN_MACHETE) => {
+        WPN_MACHETE => {
             let (cx, cy) = corner();
             for _ in 0..10 {
                 fire_bullet((cx + MGL_random(640)) << ::FIXSHIFT, cy + MGL_random(480) << ::FIXSHIFT,
                     MGL_random(8) as u8, Bullet::BLT_SLASH, 1);
             }
         }
-        Some(WPN_MINES) => {
+        WPN_MINES => {
             if player.rageClock % 8 == 0 {
                 let r = 32 * (32 / 8 - ((player.rageClock as i32 - 60) / 8) + 1);
                 for i in 0..8 {
@@ -158,22 +158,22 @@ pub unsafe extern fn DoRage(me: &mut Guy) {
                 }
             }
         }
-        Some(WPN_MINDCONTROL) => {
+        WPN_MINDCONTROL => {
             if (player.rageClock & 1) != 0 {
                 for i in 0..8 {
                     fire_bullet(me.x, me.y, i, Bullet::BLT_MINDWIPE, 1);
                 }
             }
         }
-        Some(WPN_REFLECTOR) => {
+        WPN_REFLECTOR => {
             fire_bullet(me.x, me.y, 0, Bullet::BLT_REFLECT, 1);
         }
-        Some(WPN_TURRET) | Some(WPN_SWAPGUN) => {
+        WPN_TURRET | WPN_SWAPGUN => {
             for i in 0..4 {
                 fire_bullet(me.x, me.y, (i as i32 * 64 + player.rageClock as i32) as u8, Bullet::BLT_GREEN, 1);
             }
         }
-        Some(WPN_JETPACK) => {
+        WPN_JETPACK => {
             for i in 0..8 {
                 fire_bullet(me.x, me.y, i, Bullet::BLT_FLAME, 1);
             }

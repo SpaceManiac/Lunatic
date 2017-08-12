@@ -2,11 +2,18 @@
    It knows all about the different types, as opposed to guy.cpp which
    just sort of keeps track of the list of guys. */
 
-use libc::c_int;
-use jamulspr::sprite_t;
+use libc::{c_int, c_char};
+use jamulspr::{sprite_t, sprite_set_t};
+use guy::Guy;
+use map::Map;
+use world::world_t;
+use player::{player, Weapon};
+use options::{opt, PlayAs};
+use mgldraw::MGLDraw;
 
 /// the monster types
 #[repr(u8)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum MonsterType {
     MONS_NONE = 0,
     MONS_BOUAPHA = 1,
@@ -161,7 +168,7 @@ pub enum MonsterType {
     MONS_CREEPAZOID = 130
 }
 
-pub const NUM_MONSTERS: c_int = 131;
+pub const NUM_MONSTERS: usize = 131;
 // 60 without EXPANDO
 
 /// the animations
@@ -179,10 +186,340 @@ pub enum Animation {
     NUM_ANIMS,
 }
 
+pub const NUM_ANIMS: usize = Animation::NUM_ANIMS as usize;
 pub const ANIM_LENGTH: usize = 24;
 
-// TODO: flags
+bitflags! {
+    /// flags
+    #[repr(C)]
+    pub struct MonsterFlags: u16 {
+        const EMPTY = 0;
+        const MF_FLYING = 1;
+        const MF_WATERWALK = 2;
+        const MF_ONEFACE = 4;
+        /// other enemies can stomp all over this one (but not Bouapha)
+        const MF_ENEMYWALK = 8;
+        /// doesn't move when hit
+        const MF_NOMOVE = 16;
+        /// can ONLY move on water/lava, not land
+        const MF_AQUATIC = 32;
+        /// totally invulnerable to harm
+        const MF_INVINCIBLE = 64;
+        /// use the sprite's rect for collision checks instead of standard size-box method
+        const MF_SPRITEBOX = 128;
+        /// this monster's "facing" value should just be added to the sprite number,
+        /// it's calculated by his AI (only useful for MF_ONEFACE monsters)
+        const MF_FACECMD = 256;
+        const MF_NOGRAV = 512;
+        /// Bouapha can walk right through it
+        const MF_FREEWALK = 1024;
+        /// walk through walls
+        const MF_WALLWALK = 2048;
+        /// doesn't cast a shadow
+        const MF_NOSHADOW = 4096;
+        /// draw using ghost draw
+        const MF_GHOST = 8192;
+        /// bullets pass through it
+        const MF_NOHIT = 16384;
+        /// draw using glow draw
+        const MF_GLOW = 32768;
+    }
+}
+
+pub type monsterAi_t = unsafe extern fn(me: *mut Guy, map: *mut Map, world: *mut world_t, goodguy: *mut Guy);
+
+#[repr(C)]
+pub struct monsterType_t {
+    name: [c_char; 32],
+    fromCol: u8,
+    toCol: u8,
+    brtChg: i8,
+    size: u8,
+    framesPerDir: u8,
+    hp: u16,
+    points: u16,
+    sprName: [c_char; 32],
+    spr: *mut sprite_set_t,
+    flags: MonsterFlags,
+    aiFunc: Option<monsterAi_t>,
+    anim: [[u8; ANIM_LENGTH]; NUM_ANIMS],
+}
 
 extern {
-    pub fn GetMonsterSprite(type_: MonsterType, seq: Animation, frm: u8, facing: u8) -> *mut sprite_t;
+    static mut monsType: [monsterType_t; NUM_MONSTERS];
+}
+
+#[no_mangle]
+pub unsafe extern fn InitMonsters() {
+    for ty in monsType.iter_mut() {
+        ty.spr = ::std::ptr::null_mut();
+    }
+    // just keep bouapha perma-loaded
+    let bouapha = &mut monsType[MonsterType::MONS_BOUAPHA as usize];
+    bouapha.spr = sprite_set_t::from_fname(&bouapha.sprName[0]);
+}
+
+#[no_mangle]
+pub unsafe extern fn ExitMonsters() {
+    PurgeMonsterSprites();
+    sprite_set_t::delete(monsType[MonsterType::MONS_BOUAPHA as usize].spr);
+}
+
+#[no_mangle]
+pub unsafe extern fn PurgeMonsterSprites() {
+    // note this starts at 2, skipping bouapha
+    for ty in monsType[2..].iter_mut() {
+        // repeat graphics monsters do not delete their sprites
+        if ty.spr.is_null() { continue }
+        if ty.sprName[0] as u8 != b'!' {
+            sprite_set_t::delete(ty.spr);
+        }
+        ty.spr = ::std::ptr::null_mut();
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn ChangeOffColor(type_: u8, from: u8, to: u8) {
+    monsType[type_ as usize].fromCol = from;
+    monsType[type_ as usize].toCol = to;
+}
+
+unsafe fn power_bouapha(type_: u8) -> &'static monsterType_t {
+    if type_ == MonsterType::MONS_BOUAPHA as u8 &&
+        player.weapon == Weapon::WPN_PWRARMOR
+    {
+        &monsType[MonsterType::MONS_PWRBOUAPHA as usize]
+    } else {
+        &monsType[type_ as usize]
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn MonsterSize(type_: u8) -> u8 {
+    power_bouapha(type_).size
+}
+
+#[no_mangle]
+pub unsafe extern fn MonsterAnim(type_: u8, anim: u8) -> *const u8 {
+    power_bouapha(type_).anim[anim as usize].as_ptr()
+}
+
+#[no_mangle]
+pub unsafe extern fn MonsterFlags(type_: u8) -> u16 {
+    power_bouapha(type_).flags.bits()
+}
+
+#[no_mangle]
+pub unsafe extern fn MonsterFrames(type_: u8) -> u8 {
+    power_bouapha(type_).framesPerDir
+}
+
+#[no_mangle]
+pub unsafe extern fn MonsterPoints(type_: u8) -> u16 {
+    monsType[type_ as usize].points
+}
+
+#[no_mangle]
+pub unsafe extern fn MonsterHP(type_: u8) -> u16 {
+    monsType[type_ as usize].hp
+}
+
+#[no_mangle]
+pub unsafe extern fn MonsterName(type_: u8) -> *const c_char {
+    if type_ >= NUM_MONSTERS as u8 {
+        cstr!("NULL")
+    } else {
+        monsType[type_ as usize].name.as_ptr()
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn MonsterAi(type_: u8) -> Option<monsterAi_t> {
+    monsType.get(type_ as usize).and_then(|m| m.aiFunc)
+}
+
+#[no_mangle]
+pub unsafe extern fn SetMonsterFlags(type_: u8, flags: u16) {
+    monsType[type_ as usize].flags = MonsterFlags::from_bits_truncate(flags);
+}
+
+unsafe fn LoadMySprite(type_: MonsterType) {
+    use ffi::win::timeGetTime;
+
+    if type_ == MonsterType::MONS_NONE /* || type_ >= NUM_MONSTERS as u8 */ {
+        return
+    }
+
+    let m = &mut monsType[type_ as usize];
+    if !m.spr.is_null() { return }
+
+    let start = timeGetTime();
+    if m.sprName[0] as u8 == b'!' {
+        // it's a repeat of someone else's sprite
+        let v = ::libc::atoi(decay!(&m.sprName[1]));
+        let m2 = &mut monsType[v as usize];
+        if m2.spr.is_null() {
+            m2.spr = sprite_set_t::from_fname(m2.sprName.as_ptr());
+        }
+        m.spr = m2.spr;
+    } else {
+        m.spr = sprite_set_t::from_fname(m.sprName.as_ptr());
+    }
+    ::game::AddGarbageTime(timeGetTime() - start);
+}
+
+#[no_mangle]
+pub unsafe extern fn GetMonsterSprite(mut type_: MonsterType, seq: Animation, frm: u8, facing: u8) -> *mut sprite_t {
+    if type_ == MonsterType::MONS_BOUAPHA {
+        if player.weapon == Weapon::WPN_PWRARMOR {
+            type_ = MonsterType::MONS_PWRBOUAPHA;
+        } else if opt.playAs == PlayAs::PLAYAS_LUNATIC {
+            type_ = MonsterType::MONS_DRL;
+        } else if opt.playAs == PlayAs::PLAYAS_HAPPY {
+            type_ = MonsterType::MONS_STICKMAN;
+        }
+    }
+
+    // load if not loaded
+    LoadMySprite(type_);
+
+    let m = &monsType[type_ as usize];
+    let mut v = m.anim[seq as usize][frm as usize] as c_int;
+    if v == 254 {
+        return ::std::ptr::null_mut(); // 254 means no sprite for this frame
+    }
+
+    if !m.flags.contains(MF_ONEFACE) {
+        v += facing as c_int * m.framesPerDir as c_int;
+    }
+
+    if type_ == MonsterType::MONS_EVILCLONE ||
+        (type_ == MonsterType::MONS_BOUAPHA &&
+        ::player::PlayerHasHammer())
+    {
+        v += 8 * m.framesPerDir as c_int;
+    }
+
+    if m.flags.contains(MF_FACECMD) {
+        v += facing as c_int;
+    }
+
+    (*m.spr).GetSprite(v)
+}
+
+#[no_mangle]
+pub unsafe extern fn MonsterDraw(x: c_int, y: c_int, z: c_int,
+    mut mons: MonsterType, seq: Animation, frm: u8,
+    facing: u8, bright: i8, ouch: bool, poison: bool)
+{
+    use display::*;
+    use FIXSHIFT;
+
+    let isBouapha = mons == MonsterType::MONS_BOUAPHA;
+    if isBouapha {
+        if player.weapon == Weapon::WPN_PWRARMOR {
+            mons = MonsterType::MONS_PWRBOUAPHA;
+        } else if opt.playAs == PlayAs::PLAYAS_LUNATIC {
+            mons = MonsterType::MONS_DRL;
+        } else if opt.playAs == PlayAs::PLAYAS_HAPPY {
+            mons = MonsterType::MONS_STICKMAN;
+        }
+    }
+
+    // load if not loaded
+    LoadMySprite(mons);
+
+    let m = &monsType[mons as usize];
+    let mut v = m.anim[seq as usize][frm as usize] as c_int;
+    if v == 254 { return; } // don't draw this frame
+
+    if !m.flags.contains(MF_ONEFACE) {
+        v += facing as c_int * m.framesPerDir as c_int;
+    }
+
+    if isBouapha {
+        if mons == MonsterType::MONS_BOUAPHA && ::player::PlayerHasHammer() {
+            v += 8 * m.framesPerDir as c_int;
+        }
+        let mut shld = ::player::PlayerShield();
+        if shld < 16 && (shld & 2) != 0 { // it blinks when there is 1/2 second left
+            shld = 0;
+        }
+        if shld > 0 {
+            let curSpr = (*monsType[MonsterType::MONS_BOUAPHA as usize].spr).GetSprite(464 + (shld & 7) as c_int);
+            SprDraw(x >> FIXSHIFT, (y >> FIXSHIFT) + 1, 1, 255, bright, curSpr, DISPLAY_DRAWME | DISPLAY_GLOW);
+        }
+        let curSpr = (*m.spr).GetSprite(v); // ...return if none
+        if poison {
+            if !m.flags.contains(MF_NOSHADOW) {
+                SprDraw(x >> FIXSHIFT, y >> FIXSHIFT, 0, 255, 0, curSpr, DISPLAY_DRAWME | DISPLAY_SHADOW);
+            }
+            if !ouch {
+                SprDraw(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, 1, bright - 4, curSpr, DISPLAY_DRAWME); // green
+            } else {
+                SprDraw(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, 5, bright, curSpr, DISPLAY_DRAWME); // yellow
+            }
+            return;
+        } else if player.invisibility > 0 {
+            SprDraw(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, 255, bright, curSpr, DISPLAY_DRAWME | DISPLAY_GLOW);
+            return;
+        }
+    }
+
+    if mons == MonsterType::MONS_EVILCLONE {
+        v += 8 * m.framesPerDir as c_int;
+    }
+    if m.flags.contains(MF_FACECMD) {
+        v += facing as c_int;
+    }
+
+    let curSpr = (*m.spr).GetSprite(v); // ...return if none
+    if !m.flags.contains(MF_NOSHADOW) {
+        SprDraw(x >> FIXSHIFT, y >> FIXSHIFT, 0, 255, 0, curSpr, DISPLAY_DRAWME | DISPLAY_SHADOW);
+    }
+
+    if !ouch {
+        if poison {
+            SprDraw(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, 1, bright, curSpr, DISPLAY_DRAWME); // green
+        } else if !m.flags.intersects(MF_GHOST | MF_GLOW) {
+            if m.fromCol == 255 {
+                SprDraw(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, 255, bright + m.brtChg, curSpr, DISPLAY_DRAWME);
+            } else {
+				SprDrawOff(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, m.fromCol, m.toCol,
+						bright + m.brtChg, curSpr, DISPLAY_DRAWME);
+            }
+        } else if m.flags.contains(MF_GHOST) {
+			SprDraw(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, 255, bright + m.brtChg, curSpr, DISPLAY_DRAWME | DISPLAY_GHOST);
+        } else if m.flags.contains(MF_GLOW) {
+			SprDraw(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, 255, bright + m.brtChg, curSpr, DISPLAY_DRAWME | DISPLAY_GLOW);
+        }
+    } else {
+        if !poison {
+            SprDraw(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, 4, bright, curSpr, DISPLAY_DRAWME); // red
+        } else {
+            SprDraw(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, 5, bright, curSpr, DISPLAY_DRAWME); // yellow
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn InstaRenderMonster(x: c_int, y: c_int, mons: MonsterType, bright: i8, mgl: &mut MGLDraw) {
+    // load if not loaded
+    LoadMySprite(mons);
+    let m = &monsType[mons as usize];
+    let mut v = m.anim[Animation::ANIM_IDLE as usize][0] as c_int;
+    if v == 254 { return }
+
+    if !m.flags.contains(MF_ONEFACE) {
+        v += 2 * m.framesPerDir as c_int;
+    }
+
+    let curSpr = (*m.spr).GetSprite(v);
+    // if !curSpr { return }
+
+    if m.fromCol == 255 {
+        curSpr.DrawBright(x, y, mgl, bright + m.brtChg);
+    } else {
+        curSpr.DrawOffColor(x, y, mgl, m.fromCol, m.toCol, bright + m.brtChg);
+    }
 }
