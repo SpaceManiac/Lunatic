@@ -918,12 +918,6 @@ void sprite_t::DrawShadow(int x, int y, MGLDraw *mgl)
 
 // CONSTRUCTORS & DESTRUCTORS
 
-sprite_set_t::sprite_set_t(void)
-{
-	count = 0;
-	spr = NULL;
-}
-
 sprite_set_t::sprite_set_t(const char *fname)
 {
 	count = 0;
@@ -1061,9 +1055,4 @@ sprite_t *sprite_set_t::GetSprite(int which)
 	if (spr && which <= count && spr[which])
 		return spr[which];
 	return NULL;
-}
-
-word sprite_set_t::GetCount(void)
-{
-	return count;
 }

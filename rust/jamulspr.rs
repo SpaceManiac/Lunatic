@@ -88,8 +88,6 @@ impl sprite_t {
 }
 
 impl sprite_set_t {
-    // new()
-
     pub unsafe fn from_fname(fname: *const c_char) -> *mut sprite_set_t {
         cpp!([fname as "char*"] -> *mut sprite_set_t as "sprite_set_t*" {
             return new sprite_set_t(fname);
@@ -104,14 +102,9 @@ impl sprite_set_t {
 
     // Save(fname: *const c_char) -> bool
     // Load(fname: *const c_char) -> bool
-    // Free()
 
     pub fn GetSprite(&mut self, which: c_int) -> &mut sprite_t {
         self.sprites_mut()[which as usize]
-    }
-
-    pub unsafe fn GetCount(&self) -> u16 {
-        self.count
     }
 
     pub fn sprites(&self) -> &[&sprite_t] {
