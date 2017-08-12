@@ -1,7 +1,5 @@
 use libc::{c_char, tolower};
 
-const NUM_CHEATS: usize = 13;
-
 const CHEAT_CODES: &[&[u8]] = &[
     b"zappo" as &[u8], // auto-win the level
     b"hammersplease", // max hammer up
@@ -36,7 +34,7 @@ pub unsafe extern fn CheatKey(c: c_char) {
     // and stick the new one on the end
     lastKeys[15] = tolower(c as i32) as u8;
 
-    for i in 0..NUM_CHEATS {
+    for i in 0..CHEAT_CODES.len() {
         if lastKeys.ends_with(CHEAT_CODES[i]) {
             DoCheat(i as u8);
             lastKeys[15] = 0;

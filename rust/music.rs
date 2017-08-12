@@ -4,27 +4,27 @@ use ffi::logg::*;
 
 /// these are CD audio modes for the CDPlayerUpdate
 #[repr(C)]
-#[derive(FromInt)]
+#[derive(FromInt, PartialEq)]
 pub enum AudioMode {
-    CD_OFF = 0,
+    Off = 0,
     /// continuously loop the current track
-    CD_LOOPTRACK,
+    LoopTrack,
     /// plays the chosen track, then loops the next one
-    CD_INTROLOOP,
+    IntroLoop,
     /// after current track, jump to any other at random
-    CD_RANDOM,
+    Random,
     /// just keep playing the tracks in order, loops at end of CD to beginning
-    CD_NORMAL,
+    Normal,
 }
 
-static mut currentMode: u8 = 0;
+static mut currentMode: AudioMode = AudioMode::Off;
 static mut stream: *mut LOGG_Stream = 0 as *mut LOGG_Stream;
 static mut isPlaying: bool = false;
 static mut trackNum: c_int = 0;
 
 #[no_mangle]
 pub unsafe extern fn MusicInit() -> u8 {
-    currentMode = AudioMode::CD_OFF as u8;
+    currentMode = AudioMode::Off;
     stream = ptr::null_mut();
     1
 }
@@ -55,28 +55,32 @@ pub unsafe extern fn CDPlayerUpdate(mode: u8) {
         isPlaying = logg_update_stream(stream) != 0;
     }
 
+    let mode = match AudioMode::from_int(mode as usize) {
+        Some(mode) => mode,
+        None => return,
+    };
     let modeChanged = currentMode != mode;
     currentMode = mode;
 
     if !isPlaying || modeChanged {
         use self::AudioMode::*;
-        match AudioMode::from_int(currentMode as usize) {
-            Some(CD_LOOPTRACK) => { CDPlay(trackNum); }
-            Some(CD_INTROLOOP) => {
+        match currentMode {
+            LoopTrack => { CDPlay(trackNum); }
+            IntroLoop => {
                 CDPlay(trackNum + 1);
-                currentMode = AudioMode::CD_LOOPTRACK as u8;
+                currentMode = AudioMode::LoopTrack;
             }
-            Some(CD_RANDOM) => {
+            Random => {
                 CDPlay(3 + ::mgldraw::MGL_random(15));
             }
-            Some(CD_NORMAL) => {
+            Normal => {
                 if !isPlaying {
                     let mut newTrack = trackNum + 1;
                     if newTrack > 18 { newTrack = 3; }
                     CDPlay(newTrack);
                 }
             }
-            Some(CD_OFF) | None => if isPlaying { CDStop() }
+            Off => if isPlaying { CDStop() }
         }
     }
 }

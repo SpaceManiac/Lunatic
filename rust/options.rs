@@ -98,7 +98,16 @@ static mut oldc: ::control::Controls = ::control::EMPTY;
 static mut oldBtn: u32 = 0;
 static mut controlX: u8 = 0;
 static mut controlY: u8 = 0;
-static mut optMode: u8 = 0;
+static mut optMode: OptMode = OptMode::Menu;
+
+#[repr(u8)]
+#[derive(PartialEq)]
+enum OptMode {
+    Menu,
+    Controls,
+    KeyPress,
+    JoyPress,
+}
 
 #[no_mangle]
 pub unsafe extern fn LoadOptions() {
@@ -126,7 +135,7 @@ unsafe fn UpdateOptionsMenu(mgl: &mut MGLDraw) -> u8 {
     ::game::HandleCDMusic();
 
     match optMode {
-        0 => { // just going through options
+        OptMode::Menu => { // just going through options
             let c = mgl.LastKeyPressed();
             let c2 = Controls::from_bits_truncate(GetControls() | GetArrows());
 
@@ -176,7 +185,7 @@ unsafe fn UpdateOptionsMenu(mgl: &mut MGLDraw) -> u8 {
                         opt.youSuck = !opt.youSuck;
                     }
                     6 => {
-                        optMode = 1;
+                        optMode = OptMode::Controls;
                         controlX = 0;
                         controlY = 0;
                     }
@@ -186,12 +195,12 @@ unsafe fn UpdateOptionsMenu(mgl: &mut MGLDraw) -> u8 {
             }
             oldc = c2;
         }
-        1 => { // selecting keys to configure
+        OptMode::Controls => { // selecting keys to configure
             let c = mgl.LastKeyPressed();
             let mut c2 = Controls::from_bits_truncate(GetControls() | GetArrows());
 
             if c == 27 {
-                optMode = 0;
+                optMode = OptMode::Menu;
                 controlX = 10;
                 ApplyControlSettings();
                 return 0;
@@ -215,35 +224,35 @@ unsafe fn UpdateOptionsMenu(mgl: &mut MGLDraw) -> u8 {
             }
             if (c2 - oldc).intersects(CONTROL_B1 | CONTROL_B2 | CONTROL_B3) {
                 if controlX < 2 { // keyboard
-                    optMode = 2;
+                    optMode = OptMode::KeyPress;
                     LastScanCode();
                 } else if controlY > 3 {
                     // btn = 0;
                     oldBtn = !0;
-                    optMode = 3;
+                    optMode = OptMode::JoyPress;
                 }
             }
 
             oldc = c2;
         }
-        2 => { // entering a specific key
+        OptMode::KeyPress => { // entering a specific key
             let c2 = LastScanCode();
             if c2 == 59 { // ESC key
-                optMode = 1;
+                optMode = OptMode::Controls;
                 mgl.LastKeyPressed();
                 oldc = Controls::all();
                 return 0;
             } else if c2 != 0 && c2 != 67 { // 67 = enter
                 opt.control[controlX as usize][controlY as usize] = c2;
-                optMode = 1;
+                optMode = OptMode::Controls;
                 mgl.LastKeyPressed();
                 oldc = Controls::all();
             }
         }
-        3 => { // pressing a joystick button
+        OptMode::JoyPress => { // pressing a joystick button
             let c = mgl.LastKeyPressed();
             if c == 27 {
-                optMode = 1;
+                optMode = OptMode::Controls;
                 oldc = Controls::all();
                 return 0;
             }
@@ -253,14 +262,13 @@ unsafe fn UpdateOptionsMenu(mgl: &mut MGLDraw) -> u8 {
             for i in 0..16 {
                 if (btn & j) != 0 && (oldBtn & j) == 0 {
                     opt.joyCtrl[controlY as usize - 4] = i;
-                    optMode = 1;
+                    optMode = OptMode::Controls;
                     oldc = Controls::all();
                 }
                 j <<= 1;
             }
             oldBtn = btn;
         }
-        _ => {}
     }
 
     0
@@ -323,7 +331,7 @@ unsafe fn RenderControls(x: c_int, y: c_int, mgl: &mut MGLDraw) {
 
     for i in 0..6 {
         if controlY as c_int == i && controlX < 3 {
-            if optMode == 1 {
+            if optMode == OptMode::Controls {
                 mgl.FillBox(
                     x + 99 + 100 * controlX as c_int,
                     y + 20 + 1 + i * 30,
@@ -344,15 +352,15 @@ unsafe fn RenderControls(x: c_int, y: c_int, mgl: &mut MGLDraw) {
         mgl.FillBox(x, y + 20 + 1 + i * 30, x + 98, y + 20 + 29 + i * 30, 10);
         mgl.Box(x, y + 20 + i * 30, x + 398, y + 20 + 30 + i * 30, 16);
         CenterPrint(x + 50, y + 27 + i * 30, dirName[i as usize], 0, 1);
-        if optMode == 1 || controlX != 0 || controlY as i32 != i {
+        if optMode == OptMode::Controls || controlX != 0 || controlY as i32 != i {
             CenterPrint(x + 150, y + 27 + i * 30, ScanCodeText(opt.control[0][i as usize]), 0, 1);
         }
-        if optMode == 1 || controlX != 1 || controlY as i32 != i {
+        if optMode == OptMode::Controls || controlX != 1 || controlY as i32 != i {
             CenterPrint(x + 250, y + 27 + i * 30, ScanCodeText(opt.control[1][i as usize]), 0, 1);
         }
 
         if i > 3 {
-            if optMode == 1 || controlX != 2 || controlY as i32 != i {
+            if optMode == OptMode::Controls || controlX != 2 || controlY as i32 != i {
                 sprintf!(btnTxt, "Button {}", opt.joyCtrl[i as usize - 4] + 1);
                 CenterPrint(x + 350, y + 27 + i * 30, decay!(&btnTxt), 0, 1);
             }
@@ -362,25 +370,24 @@ unsafe fn RenderControls(x: c_int, y: c_int, mgl: &mut MGLDraw) {
     }
 
     match optMode {
-        0 => {
+        OptMode::Menu => {
             CenterPrint(x + 200, 210 + 232, cstr!("Move with arrow keys, ENTER to select"), 0, 1);
             CenterPrint(x + 200, 210 + 252, cstr!("ESC to return to main menu"), 0, 1);
         }
-        1 => {
+        OptMode::Controls => {
             CenterPrint(x + 200, 210 + 232, cstr!("Select with arrow keys, ENTER to set new control"), 0, 1);
             CenterPrint(x + 200, 210 + 252, cstr!("ESC to return to options"), 0, 1);
         }
-        2 => {
+        OptMode::KeyPress => {
             sprintf!(btnTxt, "Press a key for {}", ::PctS(dirName[controlY as usize]));
             CenterPrint(x + 200, 210 + 232, decay!(&btnTxt), 0, 1);
             CenterPrint(x + 200, 210 + 252, cstr!("ESC to cancel"), 0, 1);
         }
-        3 => {
+        OptMode::JoyPress => {
             sprintf!(btnTxt, "Press a joystick button for {}", ::PctS(dirName[controlY as usize]));
             CenterPrint(x + 200, 210 + 232, decay!(&btnTxt), 0, 1);
             CenterPrint(x + 200, 210 + 252, cstr!("ESC to cancel"), 0, 1);
         }
-        _ => {}
     }
 }
 
@@ -390,7 +397,7 @@ pub unsafe extern fn OptionsMenu(mgl: &mut MGLDraw) {
     oldc = ::control::Controls::all();
     controlX = 10;
     cursor = 0;
-    optMode = 0;
+    optMode = OptMode::Menu;
     // end InitOptionsMenu
 
     let mut done = 0;

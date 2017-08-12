@@ -6,28 +6,24 @@ use map::Map;
 #[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ParticleType {
-    PART_NONE = 0,
+    None = 0,
     /// speedy snow particles, just like hammer particles but white
-    PART_SNOW2,
-    PART_SNOW,
-    PART_DIRT,
-    PART_HAMMER,
-    PART_SLIME,
-    PART_SMOKE,
-    PART_BOOM,
-    PART_WATER,
-    PART_LIGHTNING,
+    Snow2,
+    Snow,
+    Dirt,
+    Hammer,
+    Slime,
+    Smoke,
+    Boom,
+    Water,
+    Lightning,
     /// stinky lines for garlic
-    PART_STINKY,
+    Stinky,
     /// multicolored stained glass
-    PART_GLASS,
+    Glass,
     /// glowing image of the countess for when she charges
-    PART_COUNTESS,
+    Countess,
 }
-
-cpp! {{
-    #include "particle.h"
-}}
 
 #[repr(C)]
 #[derive(Clone)]
@@ -47,7 +43,7 @@ pub struct Particle {
 impl Particle {
     pub fn new() -> Particle {
         Particle {
-            size: 0, type_: ParticleType::PART_NONE, color: 0,
+            size: 0, type_: ParticleType::None, color: 0,
             x: 0, y: 0, z: 0,
             dx: 0, dy: 0, dz: 0,
             life: 0,
@@ -58,7 +54,7 @@ impl Particle {
         self.life > 0
     }
 
-    pub unsafe fn Go(&mut self, type_: ParticleType, x: c_int, y: c_int, z: c_int, angle: u8, force: u8) {
+    pub fn Go(&mut self, type_: ParticleType, x: c_int, y: c_int, z: c_int, angle: u8, force: u8) {
         if force == 0 { return }
 
         self.type_ = type_;
@@ -75,7 +71,7 @@ impl Particle {
     }
 
     pub fn GoLightning(&mut self, x: c_int, y: c_int, x2: c_int, y2: c_int) {
-        self.type_ = ParticleType::PART_LIGHTNING;
+        self.type_ = ParticleType::Lightning;
         self.x = x;
         self.y = y;
         self.dx = x2;
@@ -109,7 +105,7 @@ impl Particle {
         if self.life <= 0 { return }
         self.life -= 1;
 
-        if self.type_ != ParticleType::PART_LIGHTNING {
+        if self.type_ != ParticleType::Lightning {
             self.dz -= FIXAMT;
             self.x += self.dx;
             self.y += self.dy;
@@ -121,11 +117,11 @@ impl Particle {
         }
 
         match self.type_ {
-            ParticleType::PART_NONE => {}
-            ParticleType::PART_COUNTESS => {
+            ParticleType::None => {}
+            ParticleType::Countess => {
                 self.dz += FIXAMT; // no gravity
             }
-            ParticleType::PART_SMOKE => {
+            ParticleType::Smoke => {
                 self.dz += FIXAMT; // no gravity
                 self.z += FIXAMT;
                 self.size = (6 - self.life / 8) as u8;
@@ -134,7 +130,7 @@ impl Particle {
                 Dampen(&mut self.dx, FIXAMT / 8);
                 Dampen(&mut self.dy, FIXAMT / 8);
             }
-            ParticleType::PART_STINKY => {
+            ParticleType::Stinky => {
                 self.dz += FIXAMT; // no gravity
                 self.z += FIXAMT + FIXAMT / 2;
                 self.size = ((self.life / 2) & 3) as u8;
@@ -144,35 +140,35 @@ impl Particle {
                 Dampen(&mut self.dx, FIXAMT / 8);
                 Dampen(&mut self.dy, FIXAMT / 8);
             }
-            ParticleType::PART_BOOM => {
+            ParticleType::Boom => {
                 self.dz += FIXAMT;
                 self.z += FIXAMT;
                 self.size = (7 - self.life) as u8;
             }
-            ParticleType::PART_HAMMER => {
+            ParticleType::Hammer => {
                 self.color = 128 + min(self.life, 31 - 8) as u8;
                 self.size = life_to_size(self.life);
             }
-            ParticleType::PART_GLASS => {
+            ParticleType::Glass => {
                 self.size = life_to_size(self.life);
             }
-            ParticleType::PART_DIRT => {
+            ParticleType::Dirt => {
                 self.color = 64 + min(self.life, 31 - 8) as u8;
                 self.size = life_to_size(self.life);
             }
-            ParticleType::PART_SNOW2 => {
+            ParticleType::Snow2 => {
                 self.color = max(31 - 16, min(31, self.life * 2)) as u8;
                 self.size = life_to_size(self.life);
             }
-            ParticleType::PART_WATER => {
+            ParticleType::Water => {
                 self.color = 96 + max(8, min(31, self.life)) as u8;
                 self.size = life_to_size(self.life);
             }
-            ParticleType::PART_SLIME => {
+            ParticleType::Slime => {
                 self.color = 32 + 4 + min(self.life, 31 - 8) as u8;
                 self.size = life_to_size(self.life / 2);
             }
-            ParticleType::PART_SNOW => {
+            ParticleType::Snow => {
                 self.dx += MGL_random(65535) - FIXAMT / 2;
                 self.dy += MGL_random(65535) - FIXAMT / 2;
                 Dampen(&mut self.dx, FIXAMT / 8);
@@ -194,7 +190,7 @@ impl Particle {
                     self.life += 1; // can't die while airborne
                 }
             }
-            ParticleType::PART_LIGHTNING => {
+            ParticleType::Lightning => {
                 self.color /= 2; // get dimmer with each frame
             }
         }
@@ -208,13 +204,13 @@ impl Particle {
         }
 
         match self.type_ {
-            ParticleType::PART_SMOKE | ParticleType::PART_BOOM | ParticleType::PART_STINKY => {
+            ParticleType::Smoke | ParticleType::Boom | ParticleType::Stinky => {
                 let mapx = (self.x / TILE_WIDTH) >> ::FIXSHIFT;
                 let mapy = (self.y / TILE_HEIGHT) >> ::FIXSHIFT;
                 let brt = map.get_tile(mapx, mapy).templight;
                 self.color = 64u8.wrapping_add(brt as u8);
             }
-            ParticleType::PART_LIGHTNING | ParticleType::PART_GLASS => {
+            ParticleType::Lightning | ParticleType::Glass => {
                 // nothing to do
             }
             _ => {
@@ -234,8 +230,7 @@ fn life_to_size(life: c_int) -> u8 {
     if life > 20 { 2 } else if life < 10 { 0 } else { 1 }
 }
 
-#[no_mangle]
-pub static mut snowCount: c_int = 0;
+static mut snowCount: c_int = 0;
 static mut particleList: *mut *mut Particle = 1 as *mut *mut Particle;
 static mut maxParticles: c_int = 0;
 
@@ -372,20 +367,20 @@ pub unsafe extern fn RenderParticles() {
 
         if !p.Alive() { continue }
         match p.type_ {
-            ParticleType::PART_SMOKE => RenderSmoke(
+            ParticleType::Smoke => RenderSmoke(
                 p.x >> ::FIXSHIFT, p.y >> ::FIXSHIFT, p.z >> ::FIXSHIFT,
                 p.color as c_char, p.size),
-            ParticleType::PART_BOOM => RenderBoom(
+            ParticleType::Boom => RenderBoom(
                 p.x >> ::FIXSHIFT, p.y >> ::FIXSHIFT, p.z >> ::FIXSHIFT,
                 p.color as c_char, p.size),
-            ParticleType::PART_LIGHTNING => LightningDraw(
+            ParticleType::Lightning => LightningDraw(
                 p.x >> ::FIXSHIFT, p.y >> ::FIXSHIFT,
                 p.dx >> ::FIXSHIFT, p.dy >> ::FIXSHIFT,
                 p.color, p.size as c_char),
-            ParticleType::PART_STINKY => RenderStinky(
+            ParticleType::Stinky => RenderStinky(
                 p.x >> ::FIXSHIFT, p.y >> ::FIXSHIFT, p.z >> ::FIXSHIFT,
                 p.color as c_char, p.size),
-            ParticleType::PART_COUNTESS => SprDraw(
+            ParticleType::Countess => SprDraw(
                 p.x >> ::FIXSHIFT, p.y >> ::FIXSHIFT, p.z >> ::FIXSHIFT,
                 255, (p.life * 4 - 8) as i8,
                 ::monster::GetMonsterSprite(::monster::MonsterType::MONS_COUNTESS, ::monster::Animation::ANIM_IDLE, 0, 0),
@@ -409,7 +404,7 @@ pub unsafe extern fn BlowSmoke(x: c_int, y: c_int, z: c_int, dz: c_int) {
         p.life = 6 * 4 - MGL_random(8);
         p.size = 6;
         p.color = 64;
-        p.type_ = ParticleType::PART_SMOKE;
+        p.type_ = ParticleType::Smoke;
     })
 }
 
@@ -425,7 +420,7 @@ pub unsafe extern fn StinkySteam(x: c_int, y: c_int, z: c_int, dz: c_int) {
         p.life = 6 * 4 - MGL_random(8);
         p.size = 0;
         p.color = 64;
-        p.type_ = ParticleType::PART_STINKY;
+        p.type_ = ParticleType::Stinky;
     })
 }
 
@@ -441,7 +436,7 @@ pub unsafe extern fn CountessGlow(x: c_int, y: c_int) {
         p.life = 4;
         p.size = 0;
         p.color = 64;
-        p.type_ = ParticleType::PART_COUNTESS;
+        p.type_ = ParticleType::Countess;
     })
 }
 
@@ -457,7 +452,7 @@ pub unsafe extern fn BlowUpGuy(x: c_int, y: c_int, x2: c_int, y2: c_int, z: c_in
         p.life = 7;
         p.size = 0;
         p.color = 64;
-        p.type_ = ParticleType::PART_BOOM;
+        p.type_ = ParticleType::Boom;
         ::sound::make_sound(::sound::Sound::SND_BOMBBOOM, p.x, p.y, ::sound::SND_CUTOFF, 1800);
     })
 }
@@ -467,7 +462,7 @@ pub unsafe extern fn GlassShatter(x: c_int, y: c_int, x2: c_int, y2: c_int, z: c
     let _ = z;
     make_particle(amt, |p| {
         p.GoRandom(
-            ParticleType::PART_GLASS,
+            ParticleType::Glass,
             (x + MGL_randoml(x2 - x)) << ::FIXSHIFT,
             (y + MGL_randoml(y2 - y)) << ::FIXSHIFT,
             MGL_randoml(10 * ::FIXAMT), // maybe should be "z"?
@@ -517,7 +512,7 @@ pub unsafe extern fn MakeItSnow(_: &mut Map) {
         p.dz = 0;
         p.size = 2;
         p.life = 50 + MGL_random(50);
-        p.type_ = ParticleType::PART_SNOW;
+        p.type_ = ParticleType::Snow;
         p.color = 31;
     })
 }
@@ -533,7 +528,7 @@ pub unsafe extern fn SpecialSnow(x: c_int, y: c_int) {
         p.dz = 0;
         p.size = 2;
         p.life = 20 + MGL_random(30);
-        p.type_ = ParticleType::PART_SNOW;
+        p.type_ = ParticleType::Snow;
     })
 }
 

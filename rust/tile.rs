@@ -43,7 +43,7 @@ pub unsafe extern fn SetTiles(scrn: *const u8) {
 
 #[no_mangle]
 pub unsafe extern fn LoadTiles(f: *mut FILE) {
-    fread(decay!(&tiles), NUMTILES, szof!(tile_t), f);
+    fread(decay!(&mut tiles), NUMTILES, szof!(tile_t), f);
 }
 
 #[no_mangle]

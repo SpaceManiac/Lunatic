@@ -60,12 +60,12 @@ pub unsafe extern fn LoadWorld(world: &mut world_t, fname: *const c_char) -> u8 
     let f = fopen(fname, cstr!("rb"));
     if f.is_null() { return 0; }
 
-    fread((&mut world.numMaps) as *mut _ as *mut _, 1, 1, f);
-    fread((&mut world.totalPoints) as *mut _ as *mut _, 1, 4, f);
+    fread(decay!(&mut world.numMaps), 1, 1, f);
+    fread(decay!(&mut world.totalPoints), 1, 4, f);
 
     ::tile::LoadTiles(f);
 
-    fread((&mut world.terrain) as *mut _ as *mut _, 200, szof!(terrain_t), f);
+    fread(decay!(&mut world.terrain), 200, szof!(terrain_t), f);
 
     for map in world.map.iter_mut() {
         *map = ::std::ptr::null_mut();
@@ -101,12 +101,12 @@ pub unsafe extern fn SaveWorld(world: &mut world_t, fname: *const c_char) -> u8 
     let f = fopen(fname, cstr!("wb"));
     if f.is_null() { return 0; }
 
-    fwrite((&world.numMaps) as *const _ as *const _, 1, 1, f);
-    fwrite((&world.totalPoints) as *const _ as *const _, 1, szof!(c_int), f);
+    fwrite(decay!(&world.numMaps), 1, 1, f);
+    fwrite(decay!(&world.totalPoints), 1, szof!(c_int), f);
 
     ::tile::SaveTiles(f);
 
-    fwrite((&world.terrain) as *const _ as *const _, 200, szof!(terrain_t), f);
+    fwrite(decay!(&world.terrain), 200, szof!(terrain_t), f);
 
     for i in 0..(world.numMaps) {
         (*world.map[i as usize]).Save(f);
@@ -170,9 +170,9 @@ pub unsafe extern fn GetWorldPoints(fname: *const c_char) -> c_int {
 
     let mut i = mem::uninitialized();
     // skip over the byte
-    fread((&mut i) as *mut c_int as *mut c_void, 1, 1, f);
+    fread(decay!(&mut i), 1, 1, f);
     // read the int totalPoints
-    fread((&mut i) as *mut c_int as *mut c_void, 1, 4, f);
+    fread(decay!(&mut i), 1, 4, f);
     fclose(f);
     i
 }

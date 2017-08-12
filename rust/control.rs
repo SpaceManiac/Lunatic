@@ -40,7 +40,7 @@ static mut joyCY: c_uint = 0;
 static mut joyDeadX: c_int = 0;
 static mut joyDeadY: c_int = 0;
 
-static mut joystickOn: u8 = 1;
+static mut joystickOn: bool = true;
 static mut oldJoy: Controls = EMPTY;
 
 static mut lastScanCode: u8 = 0;
@@ -56,11 +56,11 @@ pub unsafe extern fn InitControls() {
     arrowState = EMPTY;
     arrowTap = EMPTY;
 
-    if joystickOn != 0 {
+    if joystickOn {
         let mut joyCaps = mem::zeroed();
         let result = joyGetDevCaps(JOYSTICKID1, &mut joyCaps, szof!(JOYCAPS) as u32);
         if result != JOYERR_NOERROR {
-            joystickOn = 0;
+            joystickOn = false;
             return;
         }
 
@@ -181,7 +181,7 @@ pub unsafe extern fn GetJoyState() -> Controls {
 
 #[no_mangle]
 pub unsafe extern fn GetJoyButtons() -> u32 {
-    if joystickOn == 0 {
+    if !joystickOn {
         return 0;
     }
 
@@ -197,12 +197,12 @@ pub unsafe extern fn GetJoyButtons() -> u32 {
 
 #[no_mangle]
 pub unsafe extern fn GetControls() -> u8 {
-    (keyState | if joystickOn != 0 { GetJoyState() } else { EMPTY }).bits()
+    (keyState | if joystickOn { GetJoyState() } else { EMPTY }).bits()
 }
 
 #[no_mangle]
 pub unsafe extern fn GetTaps() -> u8 {
-    if joystickOn != 0 {
+    if joystickOn {
         GetJoyState();
     }
     let tapState = keyTap | arrowTap;
@@ -223,7 +223,7 @@ pub unsafe extern fn LastScanCode() -> u8 {
 
 #[no_mangle]
 pub unsafe extern fn JoystickAvailable() -> u8 {
-    joystickOn
+    if joystickOn { 1 } else { 0 }
 }
 
 #[no_mangle]

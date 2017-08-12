@@ -42,6 +42,8 @@ macro_rules! szof {
 }
 
 macro_rules! decay {
+    (&mut $e:expr) => { (&mut $e) as *mut _ as *mut _ };
+    (&$e:expr) => { (&$e) as *const _ as *const _ };
     ($e:expr) => { $e as *const _ as *mut _ };
 }
 
