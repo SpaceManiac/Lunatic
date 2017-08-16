@@ -210,7 +210,7 @@ pub unsafe extern fn UpdatePauseMenu(mgl: &mut MGLDraw) -> u8 {
             make_normal_sound(Sound::SND_MENUCLICK);
             match cursor {
                 1 => { // Load
-                    ::game::SendMessageToGame(::game::Message::MSG_LOADGAME, 0);
+                    ::game::SendMessageToGame(::game::Message::LoadGame, 0);
                     ::player::PlayerLoadGame(subcursor);
                     make_normal_sound(Sound::SND_LOADGAME);
                     return 0;

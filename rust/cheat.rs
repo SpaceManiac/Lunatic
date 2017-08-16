@@ -56,7 +56,7 @@ pub unsafe extern fn DoCheat(w: u8) {
         0 => { // auto-win level
             make_normal_sound(SND_CHEATWIN);
             NewMessage(cstr!("Lemme out!"), 30, 0);
-            ::game::SendMessageToGame(::game::Message::MSG_WINLEVEL, 0);
+            ::game::SendMessageToGame(::game::Message::WinLevel, 0);
         }
         1 => { // max hammer up
             for _ in 0..5 {

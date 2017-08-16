@@ -81,10 +81,10 @@ unsafe extern fn closeButtonCallback() {
     closeButtonPressed = true;
 }
 unsafe extern fn switchInCallback() {
-    ::game::SetGameIdle(0);
+    ::game::SetGameIdle(false);
 }
 unsafe extern fn switchOutCallback() {
-    ::game::SetGameIdle(1);
+    ::game::SetGameIdle(true);
 }
 
 // MGLDraw class
@@ -185,7 +185,7 @@ impl MGLDraw {
     }
 
     pub unsafe fn Flip(&mut self) {
-        if ::game::GetGameIdle() != 0 {
+        if ::game::GetGameIdle() {
             ::game::GameIdle();
         }
 

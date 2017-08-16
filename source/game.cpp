@@ -18,7 +18,8 @@ word numRunsToMakeUp;
 char lastKey = 0;
 
 MGLDraw *gamemgl;
-static Map *curMap;
+Map *game_curMap;
+#define curMap game_curMap
 byte gameMode = GAMEMODE_PLAY;
 byte mapToGoTo;
 byte worldNum;
@@ -32,13 +33,9 @@ byte msgContent;
 word windingDown;
 byte windingUp;
 byte windDownReason;
-static byte idleGame = 0;
+byte game_idleGame = 0;
+#define idleGame game_idleGame
 FILE *logFile;
-
-Map* GameCurrentMap()
-{
-	return curMap;
-}
 
 void LunaticInit(MGLDraw *mgl)
 {
@@ -72,13 +69,6 @@ void LunaticExit(void)
 	ExitPlayer();
 	ExitInterface();
 	fclose(logFile);
-}
-
-byte GetCurSong(void)
-{
-	if (!curMap)
-		return 3;
-	return curMap->song;
 }
 
 byte InitLevel(byte map)
@@ -147,57 +137,6 @@ void ExitLevel(void)
 	delete curMap;
 	curMap = NULL;
 	PurgeMonsterSprites();
-}
-
-void SetGameIdle(byte b)
-{
-	idleGame = b;
-}
-
-byte GetGameIdle(void)
-{
-	return idleGame;
-}
-
-// this is run whenever the game is swapped away from
-
-void GameIdle(void)
-{
-	dword start, end;
-
-	start = timeGetTime();
-	while (idleGame)
-	{
-		HandleCDMusic();
-		if (!gamemgl->Process())
-			break;
-	}
-	end = timeGetTime();
-	AddGarbageTime(end - start);
-	player.boredom = 0;
-	return;
-}
-
-void EnterStatusScreen(void)
-{
-	gameMode = GAMEMODE_MENU;
-}
-
-void EnterPictureDisplay(void)
-{
-	gameMode = GAMEMODE_PIC;
-	GetTaps(); // clear the key tap buffer
-}
-
-void EnterRage(void)
-{
-	MakeNormalSound(SND_RAGE);
-	gameMode = GAMEMODE_RAGE;
-}
-
-void AddGarbageTime(dword t)
-{
-	garbageTime += t;
 }
 
 byte LunaticRun(int *lastTime)
@@ -364,26 +303,6 @@ byte LunaticRun(int *lastTime)
 	JamulSoundUpdate();
 
 	return LEVEL_PLAYING;
-}
-
-void HandleCDMusic(void)
-{
-	dword CDtime;
-
-	CDtime = timeGetTime();
-	switch (PlayerGetMusicSettings()) {
-		case MUSIC_OFF:
-			CDPlayerUpdate(CD_OFF);
-			break;
-		case MUSIC_ON:
-			CDPlayerUpdate(CD_LOOPTRACK);
-			break;
-		case MUSIC_RAND:
-			CDPlayerUpdate(CD_RANDOM);
-			break;
-	}
-	CDMessingTime = timeGetTime() - CDtime; // that's how long CD messing took
-	CDMessingTime += garbageTime; // time wasted with such things as playing animations
 }
 
 void LunaticDraw(void)

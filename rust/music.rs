@@ -49,16 +49,12 @@ pub unsafe extern fn CDPlay(track: c_int) {
 }
 
 #[no_mangle]
-pub unsafe extern fn CDPlayerUpdate(mode: u8) {
+pub unsafe extern fn CDPlayerUpdate(mode: AudioMode) {
     isPlaying = false;
     if !stream.is_null() {
         isPlaying = logg_update_stream(stream) != 0;
     }
 
-    let mode = match AudioMode::from_int(mode as usize) {
-        Some(mode) => mode,
-        None => return,
-    };
     let modeChanged = currentMode != mode;
     currentMode = mode;
 
