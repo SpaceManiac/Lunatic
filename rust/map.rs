@@ -1,4 +1,5 @@
 use libc::{c_int, c_char};
+use world::world_t;
 
 pub const MAX_LIGHT: i8 = 16;
 pub const MIN_LIGHT: i8 = -32;
@@ -184,7 +185,14 @@ impl Map {
         })
     }
 
-    pub unsafe fn Render(&mut self, world: *mut ::world::world_t, camX: c_int, camY: c_int, flags: u8) {
+    pub unsafe fn Init(&mut self, wrld: *mut world_t) {
+        let me = self;
+        cpp!([me as "Map*", wrld as "world_t*"] {
+            me->Init(wrld);
+        })
+    }
+
+    pub unsafe fn Render(&mut self, world: *mut world_t, camX: c_int, camY: c_int, flags: u8) {
         let me = self;
         cpp!([me as "Map*", world as "world_t*", camX as "int", camY as "int", flags as "byte"] {
             me->Render(world, camX, camY, flags);

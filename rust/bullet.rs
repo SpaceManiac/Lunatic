@@ -95,6 +95,9 @@ pub struct bullet_t {
 }
 
 extern {
+    pub fn InitBullets();
+    pub fn ExitBullets();
+
     pub fn RenderBullets();
     pub fn RenderSmoke(x: c_int, y: c_int, z: c_int, bright: i8, frm: u8);
     pub fn RenderBoom(x: c_int, y: c_int, z: c_int, bright: i8, frm: u8);

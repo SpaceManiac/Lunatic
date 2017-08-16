@@ -65,6 +65,7 @@ public:
 
 extern Guy *goodguy;
 
+extern "C" {
 void InitGuys(int max);
 void ExitGuys(void);
 void UpdateGuys(Map *map, world_t *world);
@@ -100,5 +101,6 @@ void ChangeMonster(int x, int y, byte type);
 byte SwapMe(int x, int y, byte size, Map *map);
 
 void MonsterTally(void);
+}
 
 #endif

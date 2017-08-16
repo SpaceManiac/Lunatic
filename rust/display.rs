@@ -51,7 +51,7 @@ pub unsafe fn get_camera() -> (c_int, c_int) {
 }
 
 #[no_mangle]
-pub unsafe extern fn InitDisplay(mainmgl: &mut MGLDraw) -> bool {
+pub unsafe extern fn InitDisplay(mainmgl: *mut MGLDraw) -> bool {
     mgl = mainmgl;
     if mgl.is_null() { return false; }
 

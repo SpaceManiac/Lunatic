@@ -37,108 +37,6 @@ byte game_idleGame = 0;
 #define idleGame game_idleGame
 FILE *logFile;
 
-void LunaticInit(MGLDraw *mgl)
-{
-	gamemgl = mgl;
-
-	logFile = AppdataOpen("loonylog.txt", "wt");
-	InitCosSin();
-	InitDisplay(gamemgl);
-	InitSound();
-	InitMonsters();
-	InitTiles(mgl);
-	InitItems();
-	InitInterface();
-	LoadOptions();
-	MusicInit();
-	mgl->SetLastKey(0);
-	MGL_srand(timeGetTime());
-	InitControls();
-	InitPlayer(INIT_GAME, 0, 0);
-	msgFromOtherModules = 0;
-}
-
-void LunaticExit(void)
-{
-	MusicExit();
-	ExitItems();
-	ExitSound();
-	ExitDisplay();
-	ExitTiles();
-	ExitMonsters();
-	ExitPlayer();
-	ExitInterface();
-	fclose(logFile);
-}
-
-byte InitLevel(byte map)
-{
-	JamulSoundPurge(); // each level, that should be good
-
-	if (curWorld.numMaps <= map)
-		return 0; // can't go to illegal map
-
-	// make a copy of the map to be played
-	curMap = new Map(curWorld.map[map]);
-
-	curMapFlags = curMap->flags;
-
-	switch (PlayerGetMusicSettings()) {
-		case MUSIC_OFF:
-			CDStop(); // in case it's playing for some reason
-			break;
-		case MUSIC_ON:
-			CDPlay(curMap->song);
-			break;
-		case MUSIC_RAND:
-			break; // do nothing- if there is a song currently playing, let it finish, else a new
-			// one will automatically start at the next call to CDPlayerUpdate
-	}
-
-	gameStartTime = timeGetTime();
-	tickerTime = timeGetTime();
-	updFrameCount = 0;
-	visFrameCount = 0;
-	numRunsToMakeUp = 0;
-	frmRate = 30.0f;
-	visFrms = 0;
-	if (msgFromOtherModules != MSG_NEWFEATURE)
-		msgFromOtherModules = 0;
-
-	InitGuys(256);
-	InitBullets();
-	InitPlayer(INIT_LEVEL, 0, map);
-	InitMessage();
-	NewBigMessage(curMap->name, 100);
-	InitParticles(512);
-	lastKey = 0;
-	curMap->Init(&curWorld);
-
-	windingDown = 0;
-	windingUp = 30;
-	ResetInterface();
-	InitCheater();
-
-	SetGiveUpText((byte) (map != 0));
-
-	return 1;
-}
-
-void ExitLevel(void)
-{
-	// exit everything
-	ExitGuys();
-	ExitBullets();
-	ExitParticles();
-
-	if (PlayerGetMusicSettings() == MUSIC_ON)
-		CDStop(); // don't stop it if it's on random
-
-	delete curMap;
-	curMap = NULL;
-	PurgeMonsterSprites();
-}
-
 byte LunaticRun(int *lastTime)
 {
 	numRunsToMakeUp = 0;
@@ -449,12 +347,6 @@ byte WorldPickerPause(void)
 	return exitcode;
 }
 
-void SendMessageToGame(byte msg, int content)
-{
-	msgFromOtherModules = msg;
-	msgContent = content;
-}
-
 void HandleKeyPresses(void)
 {
 	char k;
@@ -672,15 +564,5 @@ void LunaticGame(MGLDraw *mgl, byte load)
 			break;
 		}
 	}
-	ExitPlayer();
-}
-
-void TrainingGame(MGLDraw *mgl)
-{
-	InitPlayer(INIT_GAME, 0, 0);
-	SetCustomName("training.dlw");
-	if (LunaticWorld(5, "worlds\\training.dlw") == WORLD_LOAD)
-		LunaticGame(mgl, 1);
-	mgl->LastKeyPressed(); // just to clear key buffer
 	ExitPlayer();
 }

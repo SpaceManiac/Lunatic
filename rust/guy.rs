@@ -60,4 +60,7 @@ impl Guy {
 
 extern {
     pub static mut goodguy: *mut Guy;
+
+    pub fn InitGuys(max: c_int);
+    pub fn ExitGuys();
 }

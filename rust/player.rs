@@ -26,17 +26,17 @@ pub enum Weapon {
 /// initializing constants (pass to InitPlayer)
 #[repr(C)]
 pub enum Init {
-    INIT_GAME = 2,
-    INIT_WORLD = 1,
-    INIT_LEVEL = 0,
+    Game = 2,
+    World = 1,
+    Level = 0,
 }
 
 /// vehicles you could be on
 #[repr(u8)]
 pub enum Vehicle {
-    VE_NONE = 0,
-    VE_MINECART = 1,
-    VE_RAFT = 2,
+    None = 0,
+    Minecart = 1,
+    Raft = 2,
 }
 
 /// the most custom worlds it will handle
@@ -90,6 +90,9 @@ pub struct player_t {
 
 extern {
     pub static mut player: player_t;
+
+    pub fn InitPlayer(initWhat: Init, world: u8, level: u8);
+    pub fn ExitPlayer();
 
     pub fn PlayerGetItem(itm: u8, x: c_int, y: c_int) -> u8;
     pub fn PlayerSetWorldWorth(world: u8, amt: c_int);
