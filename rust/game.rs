@@ -173,9 +173,9 @@ pub unsafe extern fn AddGarbageTime(t: u32) {
 pub unsafe extern fn HandleCDMusic() {
     let start = timeGetTime();
     ::music::CDPlayerUpdate(match ::player::PlayerGetMusicSettings() {
-        ::options::Music::MUSIC_OFF => ::music::AudioMode::Off,
-        ::options::Music::MUSIC_ON => ::music::AudioMode::LoopTrack,
-        ::options::Music::MUSIC_RAND => ::music::AudioMode::Random,
+        ::options::Music::Off => ::music::AudioMode::Off,
+        ::options::Music::On => ::music::AudioMode::LoopTrack,
+        ::options::Music::Random => ::music::AudioMode::Random,
     });
     CDMessingTime = timeGetTime() - start; // that's how long CD messing took
     CDMessingTime += garbageTime; // time wasted with such things as playing animations

@@ -81,10 +81,10 @@ pub unsafe extern fn RenderPauseMenu() {
     CenterPrint(320, 110, cstr!("Load Game"), if cursor == 1 { 16 } else { 0 }, 0);
     CenterPrint(320, 170, cstr!("Save Game"), if cursor == 2 { 16 } else { 0 }, 0);
 
-    let message = match Music::from_int(player::PlayerGetMusicSettings() as usize) {
-        Some(Music::MUSIC_OFF) => cstr!("Music: Off"),
-        Some(Music::MUSIC_ON) => cstr!("Music: On"),
-        _ => cstr!("Music: Rnd"),
+    let message = match player::PlayerGetMusicSettings() {
+        Music::Off => cstr!("Music: Off"),
+        Music::On => cstr!("Music: On"),
+        Music::Random => cstr!("Music: Rnd"),
     };
     CenterPrint(320, 230, message, if cursor == 3 { 16 } else { 0 }, 0);
 
@@ -180,7 +180,7 @@ pub unsafe extern fn UpdatePauseMenu(mgl: &mut MGLDraw) -> u8 {
                     ::music::CDStop();
                     let mus = ::player::PlayerGetMusicSettings().cycle();
                     ::player::PlayerSetMusicSettings(mus);
-                    if mus == ::options::Music::MUSIC_ON {
+                    if mus == ::options::Music::On {
                         ::music::CDPlay(::game::GetCurSong() as c_int);
                     }
                     ::options::opt.music = mus;

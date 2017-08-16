@@ -199,7 +199,7 @@ pub unsafe extern fn ShowVictoryAnim(world: u8) {
     let mgl_ = &mut *mgl;
 
     let start = timeGetTime();
-    let music_on = ::player::PlayerGetMusicSettings() == ::options::Music::MUSIC_ON;
+    let music_on = ::player::PlayerGetMusicSettings() == ::options::Music::On;
     if music_on {
         if world < 4 {
             CDPlay(19); // standard victory theme

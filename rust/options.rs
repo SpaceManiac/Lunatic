@@ -4,18 +4,18 @@ use libc::{fread, fwrite, fclose, c_int};
 #[repr(u8)]
 #[derive(FromInt, Copy, Clone, PartialEq, Eq)]
 pub enum Music {
-    MUSIC_OFF = 0,
-    MUSIC_ON,
-    MUSIC_RAND,
+    Off = 0,
+    On,
+    Random,
 }
 
 impl Music {
     pub fn cycle(self) -> Self {
         use self::Music::*;
         match self {
-            MUSIC_OFF => MUSIC_ON,
-            MUSIC_ON => MUSIC_RAND,
-            MUSIC_RAND => MUSIC_OFF,
+            Off => On,
+            On => Random,
+            Random => Off,
         }
     }
 }
@@ -23,19 +23,19 @@ impl Music {
 #[repr(u8)]
 #[derive(FromInt, Copy, Clone, PartialEq, Eq)]
 pub enum PlayAs {
-    PLAYAS_BOUAPHA = 0,
-    PLAYAS_LUNATIC,
-    PLAYAS_HAPPY,
+    Bouapha = 0,
+    Lunatic,
+    Happy,
 }
 
 impl PlayAs {
     pub fn cycle(self, secrets: bool) -> Self {
         use self::PlayAs::*;
         match (self, secrets) {
-            (PLAYAS_BOUAPHA, _) => PLAYAS_LUNATIC,
-            (PLAYAS_HAPPY, _) |
-            (PLAYAS_LUNATIC, false) => PLAYAS_BOUAPHA,
-            (PLAYAS_LUNATIC, true) => PLAYAS_HAPPY,
+            (Bouapha, _) => Lunatic,
+            (Happy, _) |
+            (Lunatic, false) => Bouapha,
+            (Lunatic, true) => Happy,
         }
     }
 }
@@ -60,8 +60,8 @@ pub struct options_t {
 
 const DEFAULT_OPTIONS: options_t = options_t {
     sound: true,
-    music: Music::MUSIC_ON,
-    playAs: PlayAs::PLAYAS_BOUAPHA,
+    music: Music::On,
+    playAs: PlayAs::Bouapha,
     wonGame: false,
     gotAllSecrets: false,
     smoothLight: true, // new
@@ -166,7 +166,7 @@ unsafe fn UpdateOptionsMenu(mgl: &mut MGLDraw) -> u8 {
                         ::player::PlayerSetMusicSettings(opt.music);
                         ::music::CDNeedsUpdating();
                         ::music::CDStop();
-                        if opt.music == Music::MUSIC_ON {
+                        if opt.music == Music::On {
                             let i = ::game::GetCurSong();
                             let i = if i == 3 { 2 } else { i };
                             ::music::CDPlay(i as c_int);

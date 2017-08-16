@@ -69,15 +69,15 @@ pub unsafe extern fn DoRage(me: &mut Guy) {
     }
     match rageWpn {
         WPN_NONE => match opt.playAs {
-            PlayAs::PLAYAS_BOUAPHA => if player.rageClock % 4 == 0 {
+            PlayAs::Bouapha => if player.rageClock % 4 == 0 {
                 HammerLaunch(me.x, me.y, me.facing, 5, (HMR_REVERSE | HMR_REFLECT).bits());
             },
-            PlayAs::PLAYAS_LUNATIC => if player.rageClock % 4 == 0 {
+            PlayAs::Lunatic => if player.rageClock % 4 == 0 {
                 for _ in 0..10 {
                     fire_bullet(me.x, me.y, MGL_random(8) as u8, Bullet::BLT_BALLLIGHTNING, 1);
                 }
             },
-            PlayAs::PLAYAS_HAPPY => if player.rageClock % 4 == 0 {
+            PlayAs::Happy => if player.rageClock % 4 == 0 {
                 HappyLaunch(me.x, me.y, me.facing, 5, (HMR_REVERSE | HMR_REFLECT).bits());
             },
         },

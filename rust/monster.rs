@@ -373,9 +373,9 @@ pub unsafe extern fn GetMonsterSprite(mut type_: MonsterType, seq: Animation, fr
     if type_ == MonsterType::MONS_BOUAPHA {
         if player.weapon == Weapon::WPN_PWRARMOR {
             type_ = MonsterType::MONS_PWRBOUAPHA;
-        } else if opt.playAs == PlayAs::PLAYAS_LUNATIC {
+        } else if opt.playAs == PlayAs::Lunatic {
             type_ = MonsterType::MONS_DRL;
-        } else if opt.playAs == PlayAs::PLAYAS_HAPPY {
+        } else if opt.playAs == PlayAs::Happy {
             type_ = MonsterType::MONS_STICKMAN;
         }
     }
@@ -419,9 +419,9 @@ pub unsafe extern fn MonsterDraw(x: c_int, y: c_int, z: c_int,
     if isBouapha {
         if player.weapon == Weapon::WPN_PWRARMOR {
             mons = MonsterType::MONS_PWRBOUAPHA;
-        } else if opt.playAs == PlayAs::PLAYAS_LUNATIC {
+        } else if opt.playAs == PlayAs::Lunatic {
             mons = MonsterType::MONS_DRL;
-        } else if opt.playAs == PlayAs::PLAYAS_HAPPY {
+        } else if opt.playAs == PlayAs::Happy {
             mons = MonsterType::MONS_STICKMAN;
         }
     }
