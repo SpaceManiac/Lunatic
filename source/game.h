@@ -4,7 +4,6 @@
 #include "winpch.h"
 #include "mgldraw.h"
 #include "display.h"
-#include "clock.h"
 #include "monster.h"
 #include "sound.h"
 #include "guy.h"

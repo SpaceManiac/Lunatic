@@ -587,8 +587,7 @@ byte WorldPicker(MGLDraw *mgl)
 	{
 		HandleCDMusic();
 
-		lastTime += TimeLength();
-		StartClock();
+		int start = timeGetTime();
 		exitcode = PickerRun(&lastTime, mgl);
 		if (numRunsToMakeUp > 0)
 			PickerDraw(mgl);
@@ -597,7 +596,7 @@ byte WorldPicker(MGLDraw *mgl)
 		{
 			exitcode = 255;
 		}
-		EndClock();
+		lastTime += timeGetTime() - start;
 	}
 	if (pickerpos == 5) // custom world
 		player.worldNum = curCustom;

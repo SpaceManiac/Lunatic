@@ -1501,8 +1501,7 @@ byte LunaticEditor(MGLDraw *mgl)
 	exitcode = CONTINUE;
 	while (exitcode == CONTINUE)
 	{
-		lastTime += TimeLength();
-		StartClock();
+		int start = timeGetTime();
 		HandleKeyPresses();
 		exitcode = EditorRun(&lastTime);
 		EditorDraw();
@@ -1512,7 +1511,7 @@ byte LunaticEditor(MGLDraw *mgl)
 
 		if (!editmgl->Process())
 			exitcode = QUITGAME;
-		EndClock();
+		lastTime += timeGetTime() - start;
 	}
 
 	ExitEditor();

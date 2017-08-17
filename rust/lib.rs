@@ -115,7 +115,6 @@ pub const FIXAMT: c_int = 65536;
 // modules
 pub mod bullet;
 pub mod cheat;
-pub mod clock;
 pub mod control;
 pub mod cossin;
 pub mod display;
