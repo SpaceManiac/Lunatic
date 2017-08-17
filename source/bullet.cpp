@@ -652,10 +652,10 @@ void HitBadguys(bullet_t *me, Map *map, world_t *world)
 			}
 			break;
 		case BLT_SPORE:
-			if (FindVictim(me->x >> FIXSHIFT, me->y >> FIXSHIFT, 4, me->dx / 2, me->dy / 2, 1, map, world, me->friendly))
+			if (Guy* hit = FindVictim(me->x >> FIXSHIFT, me->y >> FIXSHIFT, 4, me->dx / 2, me->dy / 2, 1, map, world, me->friendly))
 			{
 
-				PoisonVictim(GetLastGuyHit(), 30);
+				PoisonVictim(hit, 30);
 				me->type = BLT_NONE; // go away
 			}
 			break;
@@ -780,9 +780,9 @@ void HitBadguys(bullet_t *me, Map *map, world_t *world)
 			}
 			break;
 		case BLT_MINDWIPE:
-			if (FindVictim(me->x >> FIXSHIFT, me->y >> FIXSHIFT, 8, me->dx, me->dy, 0, map, world, me->friendly))
+			if (Guy* hit = FindVictim(me->x >> FIXSHIFT, me->y >> FIXSHIFT, 8, me->dx, me->dy, 0, map, world, me->friendly))
 			{
-				if (ControlMind(GetLastGuyHit()))
+				if (ControlMind(hit))
 				{
 					MakeSound(SND_ROBOBOUAPHAON, me->x, me->y, SND_CUTOFF, 1400);
 				}

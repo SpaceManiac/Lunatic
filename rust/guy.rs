@@ -65,7 +65,6 @@ extern {
 
     static mut guys: *mut *mut Guy;
     static mut maxGuys: c_int;
-    static mut guyHit: *mut Guy;
     static mut nobody: *mut Guy;
 }
 

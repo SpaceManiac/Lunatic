@@ -7,7 +7,6 @@
 Guy **guys;
 Guy *goodguy;
 int maxGuys;
-Guy *guyHit;
 Guy *nobody;
 
 // ------------------------------------------------------------------------
@@ -1311,12 +1310,7 @@ byte CheckHit(byte size, int xx, int yy, Guy *him)
 	return 0;
 }
 
-Guy *GetLastGuyHit(void)
-{
-	return guyHit;
-}
-
-byte FindVictim(int x, int y, byte size, int dx, int dy, byte damage, Map *map, world_t *world, byte friendly)
+Guy* FindVictim(int x, int y, byte size, int dx, int dy, byte damage, Map *map, world_t *world, byte friendly)
 {
 	int i;
 
@@ -1333,20 +1327,19 @@ byte FindVictim(int x, int y, byte size, int dx, int dy, byte damage, Map *map, 
 				}
 				else
 					guys[i]->GetShot(dx, dy, damage, map, world);
-				guyHit = guys[i];
-				return 1;
+				return guys[i];
 			}
 		}
 
-	return 0;
+	return NULL;
 }
 
 // this doesn't quit when it finds one victim, it keeps going
 
-byte FindVictims(int x, int y, byte size, int dx, int dy, byte damage, Map *map, world_t *world, byte friendly)
+Guy* FindVictims(int x, int y, byte size, int dx, int dy, byte damage, Map *map, world_t *world, byte friendly)
 {
 	int i;
-	byte result = 0;
+	Guy* result = NULL;
 
 	for (i = 0; i < maxGuys; i++)
 		if (guys[i]->type && guys[i]->hp && (guys[i]->friendly != friendly))
@@ -1354,8 +1347,7 @@ byte FindVictims(int x, int y, byte size, int dx, int dy, byte damage, Map *map,
 			if (CheckHit(size, x, y, guys[i]))
 			{
 				guys[i]->GetShot(dx, dy, damage, map, world);
-				guyHit = guys[i];
-				result = 1;
+				result = guys[i];
 			}
 		}
 
@@ -1364,10 +1356,10 @@ byte FindVictims(int x, int y, byte size, int dx, int dy, byte damage, Map *map,
 
 // Same as above, but won't hit someone who is currently in ouch mode (to avoid rapid rehits)
 
-byte FindVictims2(int x, int y, byte size, int dx, int dy, byte damage, Map *map, world_t *world, byte friendly)
+Guy* FindVictims2(int x, int y, byte size, int dx, int dy, byte damage, Map *map, world_t *world, byte friendly)
 {
 	int i;
-	byte result = 0;
+	Guy* result = NULL;
 
 	for (i = 0; i < maxGuys; i++)
 		if (guys[i]->type && guys[i]->hp && (guys[i]->friendly != friendly) && guys[i]->ouch == 0)
@@ -1375,8 +1367,7 @@ byte FindVictims2(int x, int y, byte size, int dx, int dy, byte damage, Map *map
 			if (CheckHit(size, x, y, guys[i]))
 			{
 				guys[i]->GetShot(dx, dy, damage, map, world);
-				guyHit = guys[i];
-				result = 1;
+				result = guys[i];
 			}
 		}
 
