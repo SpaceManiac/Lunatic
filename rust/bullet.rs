@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use libc::c_int;
 use jamulspr::sprite_set_t;
 use map::Map;

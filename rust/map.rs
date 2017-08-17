@@ -83,6 +83,7 @@ pub enum Effect {
 
 bitflags! {
     /// Map flags
+    #[repr(C)]
     pub struct MapFlags: u8 {
         const MAP_SNOWING = 1;
         const MAP_MANYITEMS = 2;
@@ -138,7 +139,7 @@ pub struct Map {
     pub map: *mut mapTile_t,
     pub name: [c_char; 32],
     pub song: u8,
-    pub flags: u8,
+    pub flags: MapFlags,
     pub badguy: [mapBadguy_t; MAX_MAPMONS],
     pub special: [special_t; MAX_SPECIAL],
     /// Gourad stuff

@@ -1,4 +1,4 @@
-use libc::{c_char, tolower};
+use libc::{tolower};
 
 const CHEAT_CODES: &[&[u8]] = &[
     b"zappo" as &[u8], // auto-win the level
@@ -26,7 +26,7 @@ pub unsafe extern fn InitCheater() {
 }
 
 #[no_mangle]
-pub unsafe extern fn CheatKey(c: c_char) {
+pub unsafe extern fn CheatKey(c: u8) {
     // scoot the existing letters over 1
     for i in 0..15 {
         lastKeys[i] = lastKeys[i + 1];

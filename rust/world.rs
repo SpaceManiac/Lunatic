@@ -79,7 +79,7 @@ pub unsafe extern fn LoadWorld(world: &mut world_t, fname: *const c_char) -> u8 
     for i in 0..(world.numMaps) {
         let flags = (*world.map[i as usize]).flags;
         if player.levelPassed[player.worldNum as usize][i as usize] != 0 &&
-            (flags & ::map::MAP_SECRET.bits()) == 0
+            !flags.contains(::map::MAP_SECRET)
         {
             player.levelsPassed += 1;
         }

@@ -94,12 +94,17 @@ extern {
     pub fn InitPlayer(initWhat: Init, world: u8, level: u8);
     pub fn ExitPlayer();
 
+    pub fn GetCustomName() -> *const c_char;
+    pub fn PlayerWinLevel(w: u8, l: u8, isSecret: bool);
+    pub fn PlayerResetScore();
+
     pub fn PlayerGetItem(itm: u8, x: c_int, y: c_int) -> u8;
     pub fn PlayerSetWorldWorth(world: u8, amt: c_int);
     pub fn PlayerHeal(amt: u8);
     pub fn PlayerGetMusicSettings() -> ::options::Music;
     pub fn PlayerSetMusicSettings(m: ::options::Music);
     pub fn PlayerHasHammer() -> bool;
+    pub fn PlayerHasLunacyKey(world: u8) -> bool;
     pub fn PlayerShield() -> u8;
     pub fn ToggleWaterwalk();
 

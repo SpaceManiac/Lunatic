@@ -271,8 +271,8 @@ pub unsafe extern fn RenderParticle(x: c_int, y: c_int, mut scrn: *mut u8, color
         2 => { // big particle
             if x < 2 || x > 637 || y < 2 || y > 477 { return }
 
-            let c1 = max(color - 2, color & !31); // subtract 2, but only within the same color group
-            let c2 = max(c1 - 2, c1 & !31); // subtract 2, but only within the same color group
+            let c1 = max(color.saturating_sub(2), color & !31); // subtract 2, but only within the same color group
+            let c2 = max(c1.saturating_sub(2), c1 & !31); // subtract 2, but only within the same color group
 
             incr!((x + (y - 2) * 640) as isize);
             *scrn = c2; incr!(639);
@@ -296,7 +296,7 @@ pub unsafe extern fn RenderParticle(x: c_int, y: c_int, mut scrn: *mut u8, color
         1 => { // normal particle
             if x < 1 || x > 638 || y < 1 || y > 478 { return }
 
-            let c1 = max(color - 2, color & 224); // subtract 2, but only within the same color group
+            let c1 = max(color.saturating_sub(2), color & !31); // subtract 2, but only within the same color group
 
             incr!((x + (y - 1) * 640) as isize);
             *scrn = c1; incr!(639);
