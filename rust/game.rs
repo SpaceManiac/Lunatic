@@ -115,6 +115,7 @@ pub unsafe extern fn LunaticInit(mgl: *mut MGLDraw) {
     ::sound::InitSound();
     ::monster::InitMonsters();
     ::tile::InitTiles(mgl);
+    ::items::InitItems();
     ::intface::InitInterface();
     ::options::LoadOptions();
     ::music::MusicInit();
