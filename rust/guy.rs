@@ -1,4 +1,5 @@
 use libc::c_int;
+use monster::MonsterType;
 
 #[repr(C)]
 pub enum Action {
@@ -7,6 +8,7 @@ pub enum Action {
 }
 
 #[repr(C)]
+#[derive(Clone)]
 pub struct Guy {
     pub x: c_int,
     pub y: c_int,
@@ -42,7 +44,7 @@ pub struct Guy {
     pub target: *mut Guy,
     pub parent: *mut Guy,
     pub hp: c_int,
-    pub type_: u8,
+    pub type_: MonsterType,
     /// for collision checks
     pub rectx: c_int,
     pub recty: c_int,
@@ -61,6 +63,85 @@ impl Guy {
 extern {
     pub static mut goodguy: *mut Guy;
 
-    pub fn InitGuys(max: c_int);
-    pub fn ExitGuys();
+    static mut guys: *mut *mut Guy;
+    static mut maxGuys: c_int;
+    static mut guyHit: *mut Guy;
+    static mut nobody: *mut Guy;
+}
+
+#[no_mangle]
+pub unsafe extern fn InitGuys(max: c_int) {
+    maxGuys = max;
+
+    let mut vec = vec![Box::new(Guy::new()); max as usize];
+    guys = vec.as_mut_ptr() as *mut *mut Guy;
+    ::std::mem::forget(vec);
+}
+
+#[no_mangle]
+pub unsafe extern fn ExitGuys() {
+    let len = maxGuys as usize;
+    Vec::from_raw_parts(guys as *mut Box<Guy>, len, len);
+}
+
+unsafe fn guy_list<'a>() -> &'a mut [&'a mut Guy] {
+    ::std::slice::from_raw_parts_mut(guys as *mut _, maxGuys as usize)
+}
+
+unsafe fn DeleteGuy2(g: *mut Guy) {
+    (*g).type_ = MonsterType::MONS_NONE;
+    for guy in guy_list() {
+        if guy.parent == g {
+            DeleteGuy2(*guy);
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn DeleteGuy(x: c_int, y: c_int, type_: MonsterType) {
+    for guy in guy_list() {
+        if guy.type_ == type_ && guy.x == x && guy.y == y {
+            DeleteGuy2(*guy);
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn GetGuyPos(guy: u16, x: *mut c_int, y: *mut c_int) -> bool {
+    if guy == 65535 { return false }
+    // guys[guy] should never be null?
+
+    let guy = &guy_list()[guy as usize];
+    *x = guy.x;
+    *y = guy.y;
+    true
+}
+
+#[no_mangle]
+pub unsafe extern fn MonsterExists(type_: MonsterType) -> bool {
+    guy_list().iter().any(|g| g.type_ == type_)
+}
+
+#[no_mangle]
+pub unsafe extern fn GetGuy(w: u16) -> *mut Guy {
+    guy_list()[w as usize]
+}
+
+#[no_mangle]
+pub unsafe extern fn HealGoodguy(amt: u8) {
+    if goodguy.is_null() { return }
+
+    (*goodguy).hp = ::std::cmp::min(128, (*goodguy).hp + amt as c_int);
+}
+
+/// this checks to see if there is any moss on the chosen tile (x,y in tile coords)
+#[no_mangle]
+pub unsafe extern fn MossCheck(x: c_int, y: c_int) -> bool {
+    use monster::MonsterType::*;
+    guy_list().iter().any(|g| {
+        [MONS_MOSS, MONS_MOSSGRANDE, MONS_MOSS2].contains(&g.type_) &&
+        g.hp > 0 &&
+        (g.x >> ::FIXSHIFT) / ::tile::TILE_WIDTH == x &&
+        (g.y >> ::FIXSHIFT) / ::tile::TILE_HEIGHT == y
+    })
 }

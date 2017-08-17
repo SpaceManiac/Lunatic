@@ -649,7 +649,7 @@ void Guy::MonsterControl(Map *map, world_t *world)
 		printf("null AI on %s\n", MonsterName(type));
 		return;
 	}
-	
+
 	ai(this, map, world, target);
 }
 
@@ -846,30 +846,6 @@ void Guy::GetShot(int dx, int dy, byte damage, Map *map, world_t *world)
 }
 
 // -----------------------------------------------------------------------
-
-void InitGuys(int max)
-{
-	int i;
-
-	maxGuys = max;
-
-	guys = (Guy **) malloc(sizeof (Guy *) * maxGuys);
-	for (i = 0; i < maxGuys; i++)
-		guys[i] = new Guy();
-	goodguy = NULL;
-	oldPlayAs = opt.playAs;
-}
-
-void ExitGuys(void)
-{
-	int i;
-
-	for (i = 0; i < maxGuys; i++)
-		delete guys[i];
-
-	free(guys);
-	opt.playAs = oldPlayAs;
-}
 
 void UpdateGuys(Map *map, world_t *world)
 {
@@ -1253,32 +1229,6 @@ Guy *AddGuy(int x, int y, int z, byte type)
 	return NULL;
 }
 
-void DeleteGuy2(Guy *g)
-{
-	int i;
-
-	g->type = MONS_NONE;
-	for (i = 0; i < maxGuys; i++)
-		if (guys[i] && guys[i]->parent == g)
-		{
-			DeleteGuy2(guys[i]);
-		}
-}
-
-void DeleteGuy(int x, int y, byte type)
-{
-	int i, j;
-
-	for (i = 0; i < maxGuys; i++)
-		if ((guys[i]->type == type) && (guys[i]->x == x) && (guys[i]->y == y))
-		{
-			guys[i]->type = MONS_NONE;
-			for (j = 0; j < maxGuys; j++)
-				if (guys[j]->parent == guys[i]) // kill all the kids too
-					DeleteGuy2(guys[j]);
-		}
-}
-
 void AddMapGuys(Map *map)
 {
 	int i, j;
@@ -1522,61 +1472,6 @@ word LockOnGood2(int x, int y)
 		}
 	}
 	return 65535;
-}
-
-byte GetGuyPos(word guy, int *x, int *y)
-{
-	if (guy == 65535)
-		return 0;
-	if (guys[guy] == NULL)
-		return 0;
-
-	*x = guys[guy]->x;
-	*y = guys[guy]->y;
-
-	return 1;
-}
-
-byte MonsterExists(byte type)
-{
-	int i;
-
-	for (i = 0; i < maxGuys; i++)
-		if (guys[i]->type == type)
-			return 1;
-
-	return 0;
-}
-
-Guy *GetGuy(word w)
-{
-	return guys[w];
-}
-
-void HealGoodguy(byte amt)
-{
-	if (!goodguy)
-		return;
-
-	if (goodguy->hp + amt < 128)
-		goodguy->hp += amt;
-	else
-		goodguy->hp = 128;
-}
-
-// this checks to see if there is any moss on the chosen tile (x,y in tile coords)
-
-byte MossCheck(int x, int y)
-{
-	int i;
-
-	for (i = 0; i < maxGuys; i++)
-		if ((guys[i]) && ((guys[i]->type == MONS_MOSS) || (guys[i]->type == MONS_MOSSGRANDE) ||
-				(guys[i]->type == MONS_MOSS2))
-				&& (guys[i]->hp > 0) && ((guys[i]->x >> FIXSHIFT) / TILE_WIDTH == x) &&
-				((guys[i]->y >> FIXSHIFT) / TILE_HEIGHT == y))
-			return 1; // moss is in the way
-	return 0;
 }
 
 void KillKids(Guy *g)
