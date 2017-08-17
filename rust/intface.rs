@@ -151,10 +151,10 @@ pub unsafe extern fn RenderInterface(
         ($v:ident -> $target:expr, $by:expr) => {{
             let t = $target;
             if t > $v {
-                $v += $by;
+                $v = $v.saturating_add($by);
                 if t < $v { $v = t }
             } else if t < $v {
-                $v -= $by;
+                $v = $v.saturating_sub($by);
                 if t > $v { $v = t }
             }
         }}
