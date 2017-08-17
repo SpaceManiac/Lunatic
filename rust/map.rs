@@ -172,7 +172,13 @@ impl Map {
         cpp!([me as "Map*"] { delete me; });
     }
 
-    pub unsafe fn get_tile(&mut self, x: c_int, y: c_int) -> &mut mapTile_t {
+    pub unsafe fn get_tile(&self, x: c_int, y: c_int) -> &mapTile_t {
+        assert!(x >= 0 && x < self.width);
+        assert!(y >= 0 && y < self.height);
+        &*self.map.offset((x + y * self.width) as isize)
+    }
+
+    pub unsafe fn get_tile_mut(&mut self, x: c_int, y: c_int) -> &mut mapTile_t {
         assert!(x >= 0 && x < self.width);
         assert!(y >= 0 && y < self.height);
         &mut *self.map.offset((x + y * self.width) as isize)

@@ -37,34 +37,7 @@ bullet_t bullet[MAX_BULLETS];
 sprite_set_t *bulletSpr;
 byte reflect = 0;
 
-void InitBullets(void)
-{
-	bulletSpr = new sprite_set_t("graphics\\bullets.jsp");
-
-	memset(bullet, 0, MAX_BULLETS * sizeof (bullet_t));
-}
-
-void ExitBullets(void)
-{
-	delete bulletSpr;
-}
-
-byte Bulletable(Map *map, int x, int y)
-{
-	if (map->map[x + y * map->width].wall ||
-			(map->map[x + y * map->width].item >= MAX_SHOOTABLE_ITMS &&
-			map->map[x + y * map->width].item < NEW_PICKUP_ITMS))
-		return 0;
-
-	return 1;
-}
-
-void OffScreenBulletDie(bullet_t *me, Map *map)
-{
-	if (me->x < 0 || me->y < 0 || me->x >= (map->width * TILE_WIDTH * FIXAMT) ||
-			me->y >= (map->height * TILE_HEIGHT * FIXAMT))
-		me->type = BLT_NONE;
-}
+extern "C" void OffScreenBulletDie(bullet_t *me, Map *map);
 
 byte BulletCanGo(int xx, int yy, Map *map, byte size)
 {
@@ -1244,21 +1217,6 @@ void UpdateBullet(bullet_t *me, Map *map, world_t *world)
 			HitBadguys(me, map, world);
 			break;
 	}
-}
-
-void RenderSmoke(int x, int y, int z, char bright, byte frm)
-{
-	SprDraw(x, y, z, 255, bright - 64, bulletSpr->GetSprite(SPR_SMOKE + frm), DISPLAY_DRAWME | DISPLAY_GHOST);
-}
-
-void RenderBoom(int x, int y, int z, char bright, byte frm)
-{
-	SprDraw(x, y, z, 255, bright - 64, bulletSpr->GetSprite(SPR_BOOM + frm), DISPLAY_DRAWME | DISPLAY_GLOW);
-}
-
-void RenderStinky(int x, int y, int z, char bright, byte frm)
-{
-	SprDraw(x, y, z, 255, bright - 64, bulletSpr->GetSprite(SPR_STINKY + frm), DISPLAY_DRAWME | DISPLAY_GHOST);
 }
 
 void RenderBullet(bullet_t *me)
