@@ -3,6 +3,8 @@ use mgldraw::MGLDraw;
 extern {
     pub fn SplashScreen(mgl: *mut MGLDraw, fname: *const c_char, delay: c_int, sound: u8);
     pub fn MainMenu(mgl: *mut MGLDraw) -> u8;
+    pub fn VictoryText(mgl: &mut MGLDraw);
+    pub fn Credits(mgl: &mut MGLDraw);
 
     pub fn ReScanWorldNames();
     pub fn WorldPicker(mgl: *mut MGLDraw) -> u8;

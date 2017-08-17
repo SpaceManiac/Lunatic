@@ -65,7 +65,9 @@ impl Guy {
 extern {
     pub static mut goodguy: *mut Guy;
 
-    pub fn UpdateGuys(map: *mut Map, world: *mut world_t);
+    pub fn EditorUpdateGuys(map: &mut Map);
+    pub fn UpdateGuys(map: &mut Map, world: *mut world_t);
+    pub fn RenderGuys(light: bool);
 
     static mut guys: *mut *mut Guy;
     static mut maxGuys: c_int;

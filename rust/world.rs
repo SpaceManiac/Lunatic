@@ -27,6 +27,7 @@ bitflags! {
 }
 
 #[repr(C)]
+#[derive(Copy, Clone)]
 pub struct terrain_t {
     pub flags: u16,
     pub next: u8,
@@ -39,6 +40,13 @@ pub struct world_t {
     pub map: [*mut Map; MAX_MAPS],
     pub terrain: [terrain_t; 200],
 }
+
+pub const ZERO_WORLD: world_t = world_t {
+    numMaps: 0,
+    totalPoints: 0,
+    map: [0 as *mut Map; MAX_MAPS],
+    terrain: [terrain_t { flags: 0, next: 0 }; 200],
+};
 
 #[no_mangle]
 pub unsafe extern fn NewWorld(world: &mut world_t, mgl: &mut MGLDraw) -> u8 {

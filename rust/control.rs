@@ -201,14 +201,14 @@ pub unsafe extern fn GetControls() -> u8 {
 }
 
 #[no_mangle]
-pub unsafe extern fn GetTaps() -> u8 {
+pub unsafe extern fn GetTaps() -> Controls {
     if joystickOn {
         GetJoyState();
     }
     let tapState = keyTap | arrowTap;
     keyTap = EMPTY;
     arrowTap = EMPTY;
-    tapState.bits()
+    tapState
 }
 
 #[no_mangle]

@@ -39,7 +39,7 @@ pub enum Message {
 /// if you die, the level just starts over, so that isn't included
 /// playing isn't an outcome, it's just used to keep the level going
 #[repr(u8)]
-#[derive(PartialEq)]
+#[derive(PartialEq, Copy, Clone)]
 pub enum LevelOutcome {
     Abort = 0,
     Win,
@@ -61,48 +61,42 @@ pub enum WorldOutcome {
     QuitGame
 }
 
-#[allow(dead_code)]
-extern {
-    pub static mut curWorld: world_t;
-    pub static mut logFile: *mut FILE;
+#[no_mangle]
+pub static mut curWorld: world_t = ::world::ZERO_WORLD;
+#[no_mangle]
+pub static mut logFile: *mut FILE = 0 as *mut FILE;
 
-    pub fn LunaticRun(lastTime: *mut u32) -> LevelOutcome;
-    pub fn LunaticDraw();
+static mut showStats: bool = false;
+static mut gameStartTime: u32 = 0;
+static mut visFrameCount: u32 = 0;
+static mut updFrameCount: u32 = 0;
+static mut tickerTime: u32 = 0;
+/// how long the CD messing with took, take it out of the time budget, because
+/// it can bog the game, but it should just freeze the action
+static mut CDMessingTime: u32 = 0;
+static mut garbageTime: u32 = 0;
 
-    static mut showStats: u8;
-    static mut gameStartTime: u32;
-    static mut visFrameCount: u32;
-    static mut updFrameCount: u32;
-    static mut tickerTime: u32;
-    /// how long the CD messing with took, take it out of the time budget, because
-    /// it can bog the game, but it should just freeze the action
-    static mut CDMessingTime: u32;
-    static mut garbageTime: u32;
+static mut visFrms: c_int = 0;
+static mut frmRate: f32 = 0.0;
+static mut numRunsToMakeUp: u16 = 0;
 
-    static mut visFrms: c_int;
-    static mut frmRate: f32;
-    static mut numRunsToMakeUp: u16;
+static mut lastKey: u8 = 0;
 
-    static mut lastKey: u8;
+static mut gamemgl: *mut MGLDraw = 0 as *mut MGLDraw;
+static mut curMap: *mut Map = 0 as *mut Map;
+static mut gameMode: GameMode = GameMode::Play;
+static mut mapToGoTo: u8 = 0;
+static mut worldNum: u8 = 0;
+static mut mapNum: u8 = 0;
+static mut curMapFlags: MapFlags = ::map::MAP_EMPTY;
 
-    static mut gamemgl: *mut MGLDraw;
-    #[link_name="game_curMap"]
-    static mut curMap: *mut Map;
-    static mut gameMode: GameMode;
-    static mut mapToGoTo: u8;
-    static mut worldNum: u8;
-    static mut mapNum: u8;
-    static mut curMapFlags: MapFlags;
+static mut msgFromOtherModules: Message = Message::None;
+static mut msgContent: u8 = 0;
 
-    static mut msgFromOtherModules: Message;
-    static mut msgContent: u8;
-
-    static mut windingDown: u16;
-    static mut windingUp: u8;
-    static mut windDownReason: u8;
-    #[link_name="game_idleGame"]
-    static mut idleGame: bool;
-}
+static mut windingDown: u16 = 0;
+static mut windingUp: u8 = 0;
+static mut windDownReason: LevelOutcome = LevelOutcome::Playing;
+static mut idleGame: bool = false;
 
 /// replaces extern Map *curMap
 #[no_mangle]
@@ -269,7 +263,151 @@ pub unsafe extern fn AddGarbageTime(t: u32) {
     garbageTime += t;
 }
 
-// LunaticRun
+
+unsafe fn LunaticRun(lastTime: &mut u32) -> LevelOutcome {
+    numRunsToMakeUp = 0;
+    if *lastTime > TIME_PER_FRAME * 30 {
+        *lastTime = TIME_PER_FRAME * 30;
+    }
+
+    while *lastTime >= TIME_PER_FRAME {
+        if !(*gamemgl).Process() {
+            mapToGoTo = 255;
+            return LevelOutcome::Abort;
+        }
+
+        match gameMode {
+            GameMode::Play => {
+                // update everything here
+                if windingDown != 0 {
+                    (*curMap).Update(::map::UpdateMode::FadeOut, &mut curWorld);
+                    ::guy::EditorUpdateGuys(&mut *curMap);
+                } else if windingUp != 0 {
+                    (*curMap).Update(::map::UpdateMode::FadeIn, &mut curWorld);
+                    ::guy::EditorUpdateGuys(&mut *curMap);
+                    windingUp -= 1;
+                } else {
+                    (*curMap).Update(::map::UpdateMode::Game, &mut curWorld);
+                    ::guy::UpdateGuys(&mut *curMap, &mut curWorld);
+                    ::bullet::UpdateBullets(&mut *curMap, &mut curWorld);
+                    ::map::SpecialAnytimeCheck(&mut *curMap);
+                }
+
+                ::particle::UpdateParticles(&mut *curMap);
+                ::message::UpdateMessage();
+
+                if (*curMap).flags.contains(::map::MAP_SNOWING) {
+                    ::particle::MakeItSnow(&mut *curMap);
+                }
+
+                if windingDown > 0 {
+                    windingDown -= 1;
+                    if windingDown == 0 {
+                        return windDownReason;
+                    }
+                }
+            },
+            GameMode::Menu => match ::pause::UpdatePauseMenu(&mut *gamemgl) {
+                0 => {
+                    lastKey = 0;
+                    gameMode = GameMode::Play;
+                },
+                1 => {},
+                2 => {
+                    if mapNum > 0 {
+                        mapToGoTo = 0;
+                    } else {
+                        mapToGoTo = 255;
+                    }
+                    lastKey = 0;
+                    return LevelOutcome::Abort;
+                }
+                3 => {
+                    mapToGoTo = 255;
+                    lastKey = 0;
+                    return LevelOutcome::QuitGame; // dump out altogether
+                }
+                _ => {},
+            },
+            GameMode::Pic => {
+                if ::control::GetTaps().intersects(::control::CONTROL_B1 | ::control::CONTROL_B2) {
+                    gameMode = GameMode::Play;
+                    // restore the palette
+                    (*gamemgl).LoadBMP(cstr!("graphics/title.bmp"));
+                }
+            },
+            GameMode::Rage => {
+                use guy::goodguy;
+
+                ::rage::UpdateRage(&mut *gamemgl);
+                if player.rageClock > 0 {
+                    player.rageClock -= 1;
+                } else {
+                    gameMode = GameMode::Play;
+                    ::rage::StartRaging();
+                }
+                if !goodguy.is_null() {
+                    (*goodguy).facing = ((*goodguy).facing + 1) & 7;
+                }
+            }
+        }
+
+        match ::std::mem::replace(&mut msgFromOtherModules, Message::None) {
+            Message::None => {}
+            Message::NewFeature => {
+                ::message::NewMessage(cstr!("** NEW FEATURE ADDED!! **"), 120, 1);
+            },
+            Message::GotoMap => {
+                mapToGoTo = msgContent;
+                windingDown = 30;
+                windDownReason = LevelOutcome::Abort;
+            },
+            Message::WinLevel => {
+                mapToGoTo = msgContent;
+                windingDown = 40;
+                windDownReason = LevelOutcome::Win;
+                if player.worldNum == 4 && player.levelNum == 6 {
+                    ::display::ShowVictoryAnim(4); // you killed him.
+                    SendMessageToGame(Message::WinGame, 0);
+                }
+                player.boredom = 0;
+            },
+            Message::Reset => {
+                ::message::NewBigMessage(if ::options::opt.youSuck {
+                    cstr!("You Suck")
+                } else {
+                    cstr!("Try Again!")
+                }, 30);
+                windingDown = 30;
+                windDownReason = LevelOutcome::Reset;
+            },
+            Message::LoadGame => {
+                ::message::NewBigMessage(cstr!("Loading Game"), 30);
+                windingDown = 30;
+                windDownReason = LevelOutcome::Loading;
+            },
+            Message::WinGame => {
+                mapToGoTo = 0;
+                windingDown = 1;
+                windDownReason = LevelOutcome::Win;
+                let CDtime = timeGetTime();
+                ::title::VictoryText(&mut *gamemgl);
+                ::title::Credits(&mut *gamemgl);
+                garbageTime += timeGetTime() - CDtime;
+                player.boredom = 0;
+            }
+        }
+
+        *lastTime -= TIME_PER_FRAME;
+        numRunsToMakeUp += 1;
+        updFrameCount += 1;
+    }
+    HandleCDMusic();
+    garbageTime = 0;
+    ::jamulsound::JamulSoundUpdate();
+
+    LevelOutcome::Playing
+}
 
 #[no_mangle]
 pub unsafe extern fn HandleCDMusic() {
@@ -283,7 +421,41 @@ pub unsafe extern fn HandleCDMusic() {
     CDMessingTime += garbageTime; // time wasted with such things as playing animations
 }
 
-// LunaticDraw
+unsafe fn LunaticDraw() {
+    // add all the sprites to the list
+    if gameMode != GameMode::Pic {
+        ::guy::RenderGuys(true);
+        ::bullet::RenderBullets();
+        ::particle::RenderParticles();
+        ::display::RenderItAll(&mut curWorld, &mut *curMap,
+            ::map::MAP_SHOWLIGHTS | ::map::MAP_SHOWITEMS | ::map::MAP_SHOWWALLS);
+        ::map::RenderSpecialXes(&mut *gamemgl, &mut *curMap, worldNum);
+        ::message::RenderMessage();
+        ::player::PlayerRenderInterface(&mut *gamemgl);
+        if gameMode == GameMode::Menu {
+            ::pause::RenderPauseMenu();
+        } else if gameMode == GameMode::Rage {
+            ::rage::ShowRage(&mut *gamemgl);
+        }
+    } // else nothing to do
+
+    if showStats {
+        use display::Print;
+        let seconds = (timeGetTime() - gameStartTime) as f32 / 1000.0;
+
+        let mut s = [0; 32];
+        sprintf!(s, "QFPS {:02.2}", frmRate);
+        Print(0, 180, decay!(&s), 6, 0);
+        sprintf!(s, "VFPS {:02.2}", visFrameCount as f32 / seconds);
+        Print(0, 10, decay!(&s), 6, 0);
+        sprintf!(s, "GFPS {:02.2}", updFrameCount as f32 / seconds);
+        Print(0, 50, decay!(&s), 5, 0);
+        sprintf!(s, "Runs {}", numRunsToMakeUp);
+        Print(0, 100, decay!(&s), 6, 0);
+    }
+
+    draw_common();
+}
 
 unsafe fn WorldPauseRun(lastTime: &mut u32) -> LevelOutcome {
     numRunsToMakeUp = 0;
@@ -331,7 +503,10 @@ unsafe fn WorldPauseRun(lastTime: &mut u32) -> LevelOutcome {
 unsafe fn WorldPauseDraw() {
     (*gamemgl).ClearScreen();
     ::pause::RenderPauseMenu();
+    draw_common();
+}
 
+unsafe fn draw_common() {
     // update statistics
     let d = timeGetTime();
     if d - tickerTime > 999 {
@@ -413,7 +588,7 @@ pub unsafe fn PlayALevel(map: u8) -> LevelOutcome {
     // this will force the camera into the right position
 	// it also makes everybody animate by one frame, but no one will
 	// ever notice
-    ::guy::UpdateGuys(curMap, &mut curWorld);
+    ::guy::UpdateGuys(&mut *curMap, &mut curWorld);
 
     let mut lastTime = 0;
     while exitcode == LevelOutcome::Playing {

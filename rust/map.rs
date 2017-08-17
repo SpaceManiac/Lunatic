@@ -1,5 +1,6 @@
 use libc::{c_int, c_char};
 use world::world_t;
+use mgldraw::MGLDraw;
 
 pub const MAX_LIGHT: i8 = 16;
 pub const MIN_LIGHT: i8 = -32;
@@ -10,6 +11,7 @@ pub const MAX_SPECIAL: usize = 32;
 
 bitflags! {
     /// flags for calling map render
+    #[repr(C)]
     pub struct RenderFlags: u8 {
         const MAP_SHOWLIGHTS = 1;
         const MAP_SHOWWALLS = 2;
@@ -85,6 +87,7 @@ bitflags! {
     /// Map flags
     #[repr(C)]
     pub struct MapFlags: u8 {
+        const MAP_EMPTY = 0;
         const MAP_SNOWING = 1;
         const MAP_MANYITEMS = 2;
         const MAP_SECRET = 4;
@@ -94,12 +97,12 @@ bitflags! {
 }
 
 /// map updating modes
-#[repr(C)]
+#[repr(u8)]
 pub enum UpdateMode {
-    UPDATE_GAME = 0,
-    UPDATE_EDIT,
-    UPDATE_FADE,
-    UPDATE_FADEIN,
+    Game = 0,
+    Edit,
+    FadeOut,
+    FadeIn,
 }
 
 #[repr(C)]
@@ -144,6 +147,11 @@ pub struct Map {
     pub special: [special_t; MAX_SPECIAL],
     /// Gourad stuff
     pub smoothLight: [i8; 9],
+}
+
+extern {
+    pub fn RenderSpecialXes(mgl: &mut MGLDraw, map: &mut Map, world: u8);
+    pub fn SpecialAnytimeCheck(map: &mut Map);
 }
 
 cpp! {{
@@ -199,10 +207,17 @@ impl Map {
         })
     }
 
-    pub unsafe fn Render(&mut self, world: *mut world_t, camX: c_int, camY: c_int, flags: u8) {
+    pub unsafe fn Render(&mut self, world: *mut world_t, camX: c_int, camY: c_int, flags: RenderFlags) {
         let me = self;
         cpp!([me as "Map*", world as "world_t*", camX as "int", camY as "int", flags as "byte"] {
             me->Render(world, camX, camY, flags);
+        })
+    }
+
+    pub unsafe fn Update(&mut self, mode: UpdateMode, world: &mut world_t) {
+        let me = self;
+        cpp!([me as "Map*", mode as "byte", world as "world_t*"] {
+            me->Update(mode, world);
         })
     }
 

@@ -3,6 +3,7 @@
 use libc::c_int;
 use jamulspr::sprite_set_t;
 use map::Map;
+use world::world_t;
 
 #[repr(u8)]
 pub enum Bullet {
@@ -100,6 +101,7 @@ pub struct bullet_t {
 
 extern {
     pub fn RenderBullets();
+    pub fn UpdateBullets(map: &mut Map, world: &mut world_t);
 
     pub fn FireBullet(x: c_int, y: c_int, facing: u8, type_: u8, friendly: u8);
     pub fn HammerLaunch(x: c_int, y: c_int, facing: u8, count: u8, flags: u8);

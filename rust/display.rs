@@ -6,7 +6,7 @@ use libc::{c_int, c_char};
 use mgldraw::MGLDraw;
 use jamulfont::*;
 use jamulspr::sprite_t;
-use map::Map;
+use map::{Map, RenderFlags};
 use tile::TILE_HEIGHT;
 
 pub const MAX_DISPLAY_OBJS: usize = 1024;
@@ -326,7 +326,7 @@ pub unsafe extern fn UpdateCamera(x: c_int, y: c_int, facing: u8, map: &Map) {
 }
 
 #[no_mangle]
-pub unsafe extern fn RenderItAll(world: *mut ::world::world_t, map: &mut Map, flags: u8) {
+pub unsafe extern fn RenderItAll(world: *mut ::world::world_t, map: &mut Map, flags: RenderFlags) {
     if shakeTimer > 0 {
         shakeTimer -= 1;
         scrx -= 2 + ::mgldraw::MGL_random(5);

@@ -1,5 +1,6 @@
 use libc::{c_int, c_char};
 use world::MAX_MAPS;
+use mgldraw::MGLDraw;
 
 /// secondary weapon defines
 #[repr(u8)]
@@ -97,6 +98,7 @@ extern {
     pub fn GetCustomName() -> *const c_char;
     pub fn PlayerWinLevel(w: u8, l: u8, isSecret: bool);
     pub fn PlayerResetScore();
+    pub fn PlayerRenderInterface(mgl: &mut MGLDraw);
 
     pub fn PlayerGetItem(itm: u8, x: c_int, y: c_int) -> u8;
     pub fn PlayerSetWorldWorth(world: u8, amt: c_int);
