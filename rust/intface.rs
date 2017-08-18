@@ -140,7 +140,7 @@ unsafe fn DrawLitGauge(x: c_int, y: c_int, c: u8) {
 
 #[no_mangle]
 pub unsafe extern fn RenderInterface(
-    life: u8, rage: u8, hmrFlags: u8, hammers: u8,
+    life: u8, rage: u8, hmrFlags: ::bullet::HammerFlags, hammers: u8,
     brains: c_int, score: c_int, wpn: u8, ammo: c_int,
     hamSpeed: u8, mgl: &mut MGLDraw,
 ) {
@@ -178,13 +178,13 @@ pub unsafe extern fn RenderInterface(
 
     // hammer reverse indicator
     intfaceSpr.GetSprite(SPR_MINIGAUGE).Draw(148, 3, mgl);
-    if (hmrFlags & 1) != 0 {
+    if hmrFlags.contains(::bullet::HMR_REVERSE) {
         DrawLitGauge(150, 8, 112);
     }
 
     // hammer reflect indicator
     intfaceSpr.GetSprite(SPR_MINIGAUGE).Draw(157, 3, mgl);
-    if (hmrFlags & 2) != 0 {
+    if hmrFlags.contains(::bullet::HMR_REFLECT) {
         DrawLitGauge(159, 8, 175);
     }
 
@@ -238,10 +238,10 @@ pub unsafe extern fn RenderInterface(
     keych!(i > 0, 4);
     keych!(i > 1, 5);
     keych!(i > 2, 6);
-    keych!(PlayerKeyChain(0) != 0, 7);
-    keych!(PlayerKeyChain(1) != 0, 8);
-    keych!(PlayerKeyChain(2) != 0, 9);
-    keych!(PlayerKeyChain(3) != 0, 10);
+    keych!(PlayerKeyChain(0), 7);
+    keych!(PlayerKeyChain(1), 8);
+    keych!(PlayerKeyChain(2), 9);
+    keych!(PlayerKeyChain(3), 10);
 
     // the brainometer
     intfaceSpr.GetSprite(SPR_BRAINOMETER).Draw(617, 342, mgl);

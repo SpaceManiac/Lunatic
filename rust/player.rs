@@ -1,6 +1,8 @@
-use libc::{c_int, c_char};
+use libc::{c_int, c_char, strncpy};
 use world::MAX_MAPS;
 use mgldraw::MGLDraw;
+use bullet::HammerFlags;
+use guy::{Guy, goodguy};
 
 /// secondary weapon defines
 #[repr(u8)]
@@ -46,7 +48,7 @@ pub const MAX_CUSTOM: usize = 128;
 #[repr(C)]
 pub struct player_t {
     // values for the overall game
-    pub musicSettings: u8,
+    pub musicSettings: ::options::Music,
     /// so you can lose all your points when you die
     pub prevScore: c_int,
     pub score: c_int,
@@ -78,7 +80,7 @@ pub struct player_t {
     pub brains: c_int,
     /// for pushing pushy blocks
     pub pushPower: u8,
-    pub hammerFlags: u8,
+    pub hammerFlags: HammerFlags,
     pub vehicle: Vehicle,
     pub garlic: u8,
     /// accelerated
@@ -91,28 +93,221 @@ pub struct player_t {
 
 extern {
     pub static mut player: player_t;
+    static mut playerGlow: u8; // for torch-lit levels, and for exciting moments
+    static mut tportclock: u8;
 
     pub fn InitPlayer(initWhat: Init, world: u8, level: u8);
-    pub fn ExitPlayer();
 
-    pub fn GetCustomName() -> *const c_char;
     pub fn PlayerWinLevel(w: u8, l: u8, isSecret: bool);
-    pub fn PlayerResetScore();
-    pub fn PlayerRenderInterface(mgl: &mut MGLDraw);
 
     pub fn PlayerGetItem(itm: u8, x: c_int, y: c_int) -> u8;
-    pub fn PlayerSetWorldWorth(world: u8, amt: c_int);
     pub fn PlayerHeal(amt: u8);
-    pub fn PlayerGetMusicSettings() -> ::options::Music;
-    pub fn PlayerSetMusicSettings(m: ::options::Music);
-    pub fn PlayerHasHammer() -> bool;
-    pub fn PlayerHasLunacyKey(world: u8) -> bool;
-    pub fn PlayerShield() -> u8;
-    pub fn ToggleWaterwalk();
 
     pub fn PlayerLoadGame(which: u8);
     pub fn PlayerSaveGame(which: u8);
-
-    pub fn PlayerKeys(w: u8) -> u8;
-    pub fn PlayerKeyChain(w: u8) -> u8;
 }
+
+// InitPlayer
+
+#[no_mangle]
+pub unsafe extern fn ExitPlayer() {
+}
+
+// PlayerLoadGame
+// PlayerSaveGame
+
+#[no_mangle]
+pub unsafe extern fn PlayerSetWorldWorth(world: u8, amt: c_int) {
+    player.totalCompletion[world as usize] = amt;
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerRenderInterface(mgl: &mut MGLDraw) {
+    let mut b = ::map::TotalBrains();
+    if b != 0 {
+        b = 128 - (player.brains * 128 / b);
+    }
+    ::intface::RenderInterface(player.life, (player.rage / 256) as u8,
+        player.hammerFlags, player.hammers, b, player.score, player.weapon as u8,
+        player.ammo, player.hamSpeed, mgl);
+}
+
+#[no_mangle]
+pub unsafe extern fn SetCustomName(name: *const c_char) {
+    strncpy(player.customName[player.worldNum as usize].as_mut_ptr(), name, 32);
+}
+
+#[no_mangle]
+pub unsafe extern fn GetCustomName() -> *mut c_char {
+    player.customName[player.worldNum as usize].as_mut_ptr()
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerGetPercent(world: u8) -> f32 {
+    if player.totalCompletion[world as usize] == 0 {
+        1.0
+    } else {
+        player.complete[world as usize] as f32 / player.totalCompletion[world as usize] as f32
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerGetGamePercent() -> f32 {
+    let (mut amt, mut total) = (0, 0);
+    for i in 0..5 {
+        total += player.totalCompletion[i];
+        amt += player.complete[i];
+    }
+    amt as f32 / total as f32
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerShield() -> u8 {
+    player.shield
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerHasHammer() -> bool {
+    player.hammers > 0
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerBrains() -> c_int {
+    player.brains
+}
+
+#[no_mangle]
+pub unsafe extern fn PoisonVictim(me: *mut Guy, amt: u8) {
+    if me == goodguy && player.shield > 0 {
+        return; // can't be poisoned while invulnerable
+    }
+    (*me).poison = (*me).poison.saturating_add(amt);
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerResetScore() {
+    player.score = player.prevScore;
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerPassedLevel(world: u8, map: u8) -> u8 {
+    player.levelPassed[world as usize][map as usize]
+}
+
+// PlayerWinLevel
+
+#[no_mangle]
+pub unsafe extern fn GetPlayerWorld() -> u8 {
+    player.worldNum
+}
+
+#[no_mangle]
+pub unsafe extern fn SetPlayerHP(hp: c_int) {
+    player.life = hp as u8;
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerLevelsPassed() -> u8 {
+    player.levelsPassed
+}
+
+#[no_mangle]
+pub unsafe extern fn KeyChainAllCheck() {
+    if player.keychain[player.worldNum as usize].iter().all(|&b| b == 1) {
+        ::message::NewBigMessage(cstr!("I collected all four!"), 30);
+    }
+}
+
+// PlayerGetItem
+
+#[no_mangle]
+pub unsafe extern fn ToggleWaterwalk() {
+    player.hammerFlags ^= ::bullet::HMR_WATERWALK;
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerCanWaterwalk() -> bool {
+    player.hammerFlags.contains(::bullet::HMR_WATERWALK)
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerPushMore() -> bool {
+    player.pushPower += 2;
+    if player.pushPower >= 5 {
+        player.pushPower = 0;
+        true
+    } else {
+        false
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerHasLunacyKey(w: u8) -> bool {
+    player.lunacyKey[w as usize] != 0
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerLoseKey(w: u8) {
+    if player.keys[w as usize] > 0 {
+        player.keys[w as usize] -= 1;
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerKeyChain(w: u8) -> bool {
+    player.keychain[player.worldNum as usize][w as usize] != 0
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerKeys(w: u8) -> u8 {
+    player.keys[w as usize]
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerGetPoints(amt: c_int) {
+    player.score += amt;
+}
+
+#[no_mangle]
+pub unsafe extern fn GetPlayerGlow() -> u8 {
+    playerGlow
+}
+
+#[no_mangle]
+pub unsafe extern fn SetPlayerGlow(v: u8) {
+    playerGlow = v;
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerGetMusicSettings() -> ::options::Music {
+    player.musicSettings
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerSetMusicSettings(m: ::options::Music) {
+    if ::music::CDLoaded() != 0 {
+        player.musicSettings = m;
+    } else {
+        player.musicSettings = ::options::Music::Off;
+    }
+}
+
+// PlayerThrowHammer
+// PlayerHeal
+
+#[no_mangle]
+pub unsafe extern fn GetTportClock() -> u8 {
+    tportclock
+}
+
+#[no_mangle]
+pub unsafe extern fn SetTportClock(tp: u8) {
+    tportclock = tp;
+}
+
+// DoPlayerFacing
+// PlayerFireWeapon
+// PlayerFirePowerArmor
+// PlayerControlMe
+// PlayerControlPowerArmor
+// StealWeapon

@@ -75,6 +75,7 @@ pub const MAX_BULLETS: usize = 256;
 
 bitflags! {
     /// the special hammer flags for different powerups
+    #[repr(C)]
     pub struct HammerFlags: u8 {
         const HMR_REVERSE = 1;
         const HMR_REFLECT = 2;

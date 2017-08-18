@@ -152,6 +152,8 @@ pub struct Map {
 extern {
     pub fn RenderSpecialXes(mgl: &mut MGLDraw, map: &mut Map, world: u8);
     pub fn SpecialAnytimeCheck(map: &mut Map);
+
+    pub fn TotalBrains() -> c_int;
 }
 
 cpp! {{

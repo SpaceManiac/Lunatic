@@ -75,10 +75,6 @@ void InitPlayer(byte initWhat, byte world, byte level)
 		player.musicSettings = MUSIC_OFF;
 }
 
-void ExitPlayer(void)
-{
-}
-
 void PlayerLoadGame(byte which)
 {
 	FILE *f;
@@ -125,90 +121,6 @@ void PlayerSaveGame(byte which)
 	fclose(f);
 }
 
-void PlayerSetWorldWorth(byte world, int amt)
-{
-	player.totalCompletion[world] = amt;
-}
-
-void PlayerRenderInterface(MGLDraw *mgl)
-{
-	int b;
-
-	b = TotalBrains();
-	if (b != 0)
-		b = 128 - (player.brains * 128 / b);
-
-	RenderInterface(player.life, player.rage / 256, player.hammerFlags, player.hammers, b, player.score,
-			player.weapon, player.ammo, player.hamSpeed, mgl);
-}
-
-void SetCustomName(const char *name)
-{
-	strncpy(player.customName[player.worldNum], name, 32);
-}
-
-char *GetCustomName(void)
-{
-	return player.customName[player.worldNum];
-}
-
-float PlayerGetPercent(byte world)
-{
-	if (player.totalCompletion[world] == 0)
-		return 1.0;
-	else
-		return (float) player.complete[world] / (float) player.totalCompletion[world];
-}
-
-float PlayerGetGamePercent(void)
-{
-	int i, amt, total;
-
-	amt = 0;
-	total = 0;
-	for (i = 0; i < 5; i++)
-	{
-		total += player.totalCompletion[i];
-		amt += player.complete[i];
-	}
-	return (float) amt / (float) total;
-}
-
-byte PlayerShield(void)
-{
-	return player.shield;
-}
-
-byte PlayerHasHammer(void)
-{
-	return (player.hammers > 0);
-}
-
-int PlayerBrains(void)
-{
-	return player.brains;
-}
-
-void PoisonVictim(Guy *me, byte amt)
-{
-	if (me == goodguy && player.shield)
-		return; // can't be poisoned when invulnerable
-	if (me->poison + amt > 255)
-		me->poison = 255;
-	else
-		me->poison += amt;
-}
-
-void PlayerResetScore(void)
-{
-	player.score = player.prevScore;
-}
-
-byte PlayerPassedLevel(byte world, byte map)
-{
-	return player.levelPassed[world][map];
-}
-
 void PlayerWinLevel(byte w, byte l, byte isSecret)
 {
 	if (!player.levelPassed[w][l])
@@ -235,29 +147,7 @@ void PlayerWinLevel(byte w, byte l, byte isSecret)
 	player.levelPassed[w][l] = 1;
 }
 
-byte GetPlayerWorld(void)
-{
-	return player.worldNum;
-}
-
-void SetPlayerHP(int hp)
-{
-	player.life = (byte) hp;
-}
-
-byte PlayerLevelsPassed(void)
-{
-	return player.levelsPassed;
-}
-
-void KeyChainAllCheck(void)
-{
-	if (player.keychain[player.worldNum][0] == 1 &&
-			player.keychain[player.worldNum][1] == 1 &&
-			player.keychain[player.worldNum][2] == 1 &&
-			player.keychain[player.worldNum][3] == 1)
-		NewBigMessage("I collected all four!", 30);
-}
+extern "C" void KeyChainAllCheck(void);
 
 byte PlayerGetItem(byte itm, int x, int y)
 {
@@ -678,77 +568,6 @@ byte PlayerGetItem(byte itm, int x, int y)
 	return 1;
 }
 
-void ToggleWaterwalk(void)
-{
-	player.hammerFlags ^= HMR_WATERWALK;
-}
-
-byte PlayerCanWaterwalk(void)
-{
-	return (player.hammerFlags & HMR_WATERWALK);
-}
-
-byte PlayerPushMore(void)
-{
-	player.pushPower += 2;
-	if (player.pushPower >= 5)
-	{
-		player.pushPower = 0;
-		return 1;
-	}
-	else
-		return 0;
-}
-
-byte PlayerHasLunacyKey(byte w)
-{
-	return player.lunacyKey[w];
-}
-
-void PlayerLoseKey(byte w)
-{
-	if (player.keys[w])
-		player.keys[w]--;
-}
-
-byte PlayerKeyChain(byte w)
-{
-	return player.keychain[player.worldNum][w];
-}
-
-byte PlayerKeys(byte w)
-{
-	return player.keys[w];
-}
-
-void PlayerGetPoints(int amt)
-{
-	player.score += amt;
-}
-
-byte GetPlayerGlow(void)
-{
-	return playerGlow;
-}
-
-void SetPlayerGlow(byte v)
-{
-	playerGlow = v;
-}
-
-byte PlayerGetMusicSettings(void)
-{
-	return player.musicSettings;
-}
-
-void PlayerSetMusicSettings(byte m)
-{
-	if (CDLoaded())
-		player.musicSettings = m;
-	else
-		player.musicSettings = MUSIC_OFF;
-}
-
 void PlayerThrowHammer(Guy *me)
 {
 	if (opt.playAs == PLAYAS_BOUAPHA)
@@ -778,16 +597,6 @@ void PlayerHeal(byte amt)
 		player.life += amt;
 	else
 		player.life = 128;
-}
-
-byte GetTportClock(void)
-{
-	return tportclock;
-}
-
-void SetTportClock(byte tp)
-{
-	tportclock = tp;
 }
 
 void DoPlayerFacing(byte c, Guy *me)
