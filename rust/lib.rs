@@ -161,7 +161,7 @@ pub unsafe extern "system" fn WinMain(_: *const c_void, _: *const c_void, _: *co
     let mainmgl = MGLDraw::new(cstr!("Dr. Lunatic"), 640, 480, windowedGame);
 
     game::LunaticInit(mainmgl);
-    title::SplashScreen(mainmgl, cstr!("graphics\\hamumu.bmp"), 128, 2);
+    title::SplashScreen(mainmgl, cstr!("graphics/hamumu.bmp"), 128, 2);
 
     loop {
         match title::MainMenu(mainmgl) {

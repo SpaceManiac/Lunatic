@@ -4,10 +4,7 @@
 #include "winpch.h"
 #include "display.h"
 
-struct title_t;
-
 extern "C" {
-byte LunaticTitle(MGLDraw *mgl);
 byte WorldPicker(MGLDraw *mgl);
 byte MainMenu(MGLDraw *mgl);
 void Credits(MGLDraw *mgl);
@@ -18,8 +15,6 @@ void DemoSplashScreens(MGLDraw *mgl);
 
 void ScanWorldNames(void);
 void ReScanWorldNames(void);
-
-byte GameSlotPicker(MGLDraw *mgl, title_t *title);
 }
 
 #endif

@@ -104,7 +104,7 @@ char credits[][48] = {
 	"$"
 };
 
-char victoryTxt[][64] = {
+char victoryTxt[][48] = {
 	"@With Dr. Lunatic vanquished, the",
 	"",
 	"",
@@ -184,32 +184,7 @@ byte starColorTable[] = {214, 81, 63, 49, 33, 21, 32, 83, 93};
 
 byte demoTextCounter;
 
-byte HandleTitleKeys(MGLDraw *mgl)
-{
-	char k;
-
-	k = mgl->LastKeyPressed();
-
-	if (k == 'e')
-		return 1; // go to the editor
-	if (k == 27)
-		return 2; // exit
-	else
-		return 0; // play the game
-}
-
-byte LunaticTitle(MGLDraw *mgl)
-{
-	mgl->LoadBMP("graphics\\title.bmp");
-	mgl->Flip();
-	while (!mgl->LastKeyPeek())
-	{
-		if (!mgl->Process())
-			return 2;
-		mgl->Flip();
-	}
-	return HandleTitleKeys(mgl);
-}
+byte GameSlotPicker(MGLDraw *mgl, title_t *title);
 
 byte HandleWorldPickerKeys(MGLDraw *mgl)
 {
@@ -1096,7 +1071,7 @@ byte GameSlotPicker(MGLDraw *mgl, title_t *title)
 		return 0;
 }
 
-void CreditsRender(int y)
+void CreditsRender(int y, char document[][48])
 {
 	int i, ypos;
 	char *s;
@@ -1104,9 +1079,9 @@ void CreditsRender(int y)
 	i = 0;
 
 	ypos = 0;
-	while (credits[i][0] != '$')
+	while (document[i][0] != '$')
 	{
-		s = credits[i];
+		s = document[i];
 		if (ypos - y>-60)
 		{
 			if (s[0] == '@')
@@ -1141,7 +1116,7 @@ void Credits(MGLDraw *mgl)
 	while (1)
 	{
 		mgl->ClearScreen();
-		CreditsRender(y);
+		CreditsRender(y, credits);
 
 		HandleCDMusic();
 
@@ -1160,42 +1135,6 @@ void Credits(MGLDraw *mgl)
 	}
 }
 
-void VictoryTextRender(int y)
-{
-	int i, ypos;
-	char *s;
-
-	i = 0;
-
-	ypos = 0;
-	while (victoryTxt[i][0] != '$')
-	{
-		s = victoryTxt[i];
-		if (ypos - y>-60)
-		{
-			if (s[0] == '@')
-			{
-				CenterPrint(320, ypos - y, &s[1], 0, 0);
-			}
-			else if (s[0] == '#')
-			{
-				DrawFillBox(320 - 200, ypos - y + 8, 320 + 200, ypos - y + 11, 255);
-			}
-			else if (s[0] == '%')
-			{
-				DrawFillBox(320 - 70, ypos - y + 8, 320 + 70, ypos - y + 9, 255);
-			}
-			else
-				CenterPrint(320, ypos - y, s, 0, 1);
-		}
-
-		ypos += 20;
-		i++;
-		if (ypos - y >= 480)
-			return;
-	}
-}
-
 void VictoryText(MGLDraw *mgl)
 {
 	int y = -470;
@@ -1205,7 +1144,7 @@ void VictoryText(MGLDraw *mgl)
 	while (1)
 	{
 		mgl->ClearScreen();
-		VictoryTextRender(y);
+		CreditsRender(y, victoryTxt);
 		HandleCDMusic();
 		y += 1;
 		mgl->Flip();
@@ -1369,14 +1308,6 @@ void HelpScreens(MGLDraw *mgl)
 		if (!SpeedSplash(mgl, name))
 			return;
 	}
-}
-
-void DemoSplashScreens(MGLDraw *mgl)
-{
-	if (!SpeedSplash(mgl, "docs\\demosplash.bmp"))
-		return;
-	if (!SpeedSplash(mgl, "docs\\demosplash2.bmp"))
-		return;
 }
 
 void SplashScreen(MGLDraw *mgl, const char *fname, int delay, byte sound)

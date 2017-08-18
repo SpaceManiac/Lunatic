@@ -149,8 +149,7 @@ pub unsafe extern fn GetCurSong() -> u8 {
 }
 
 /// these are the minor inits, called every time you enter a new map
-#[no_mangle]
-pub unsafe fn InitLevel(map: u8) -> bool {
+unsafe fn InitLevel(map: u8) -> bool {
     ::jamulsound::JamulSoundPurge(); // each level, that should be good
 
     if curWorld.numMaps <= map {
@@ -201,8 +200,7 @@ pub unsafe fn InitLevel(map: u8) -> bool {
     true
 }
 
-#[no_mangle]
-pub unsafe extern fn ExitLevel() {
+unsafe fn ExitLevel() {
     // exit everything
     ::guy::ExitGuys();
     ::bullet::ExitBullets();
@@ -242,11 +240,6 @@ pub unsafe extern fn GameIdle() {
 }
 
 #[no_mangle]
-pub unsafe extern fn EnterStatusScreen() {
-    gameMode = GameMode::Menu;
-}
-
-#[no_mangle]
 pub unsafe extern fn EnterPictureDisplay() {
     gameMode = GameMode::Pic;
     ::control::GetTaps(); // clear the key tap buffer
@@ -262,7 +255,6 @@ pub unsafe extern fn EnterRage() {
 pub unsafe extern fn AddGarbageTime(t: u32) {
     garbageTime += t;
 }
-
 
 unsafe fn LunaticRun(lastTime: &mut u32) -> LevelOutcome {
     numRunsToMakeUp = 0;
