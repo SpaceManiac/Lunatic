@@ -165,8 +165,8 @@ pub unsafe extern "system" fn WinMain(_: *const c_void, _: *const c_void, _: *co
 
     loop {
         match title::MainMenu(mainmgl) {
-            0 => game::LunaticGame(&mut *mainmgl, 0), // new game
-            1 => game::LunaticGame(&mut *mainmgl, 1), // continue
+            0 => game::LunaticGame(&mut *mainmgl, false), // new game
+            1 => game::LunaticGame(&mut *mainmgl, true), // continue
             3 => { editor::LunaticEditor(mainmgl); } // editor
             4 | 255 => {
                 game::LunaticExit();

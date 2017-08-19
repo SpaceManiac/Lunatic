@@ -113,7 +113,7 @@ const DEFAULT_ITEM: ItemInfo = ItemInfo {
 
 macro_rules! items {
     ( $( $itm:ident = $num:expr, { $($field:ident: $value:expr),* } ,)* ) => {
-        #[repr(C)]
+        #[repr(u8)]
         #[derive(FromInt)]
         pub enum Item {
             $($itm = $num,)*

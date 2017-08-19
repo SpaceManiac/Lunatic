@@ -7,6 +7,7 @@ extern {
     pub fn VictoryText(mgl: &mut MGLDraw);
     pub fn Credits(mgl: &mut MGLDraw);
 
+    pub fn ScanWorldNames();
     pub fn ReScanWorldNames();
     pub fn WorldPicker(mgl: *mut MGLDraw) -> u8;
 }

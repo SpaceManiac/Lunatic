@@ -654,12 +654,13 @@ pub unsafe extern fn LunaticWorld(world: u8, worldName: *const c_char) -> WorldO
 }
 
 #[no_mangle]
-pub unsafe extern fn LunaticGame(mgl: &mut MGLDraw, load: u8) {
+pub unsafe extern fn LunaticGame(mgl: &mut MGLDraw, load: bool) {
     let mut custName = [0; 64];
-    let mut worldResult = if load > 0 { // continuing a saved game
-        ::player::InitPlayer(::player::Init::Game, 0, 0);
+    let mut worldResult = if load { // continuing a saved game
         WorldOutcome::Load
     } else {
+        // don't do this if loading a game, it was already done and the player was filled with values
+        ::player::InitPlayer(::player::Init::Game, 0, 0);
         WorldOutcome::None
     };
 

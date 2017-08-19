@@ -12,141 +12,6 @@ player_t player;
 byte playerGlow; // for torch-lit levels, and for exciting moments
 byte tportclock;
 
-void InitPlayer(byte initWhat, byte world, byte level)
-{
-	char wrldName[5][32] = {"caverns.dlw", "icymount.dlw", "forest.dlw", "desert.dlw", "asylum.dlw"};
-	int i, j;
-
-	if (initWhat == INIT_GAME) // initialize everything, this is to start a whole new game
-	{
-		player.score = 0;
-		for (i = 0; i < MAX_CUSTOM; i++)
-		{
-			for (j = 0; j < MAX_MAPS; j++)
-				player.levelPassed[i][j] = 0;
-			for (j = 0; j < 4; j++)
-				player.keychain[i][j] = 0;
-			player.totalCompletion[i] = 100;
-			player.complete[i] = 0;
-			player.lunacyKey[i] = 0;
-			if (i > 4)
-				player.customName[i][0] = '\0';
-			else
-				strcpy(player.customName[i], wrldName[i]);
-		}
-		ScanWorldNames();
-		player.totalCompletion[0] = GetWorldPoints("caverns.dlw");
-	}
-	if (initWhat >= INIT_WORLD) // initialize the things that go with each world
-	{
-		player.levelsPassed = 0;
-		player.worldNum = world;
-	}
-
-	player.levelNum = level;
-	player.prevScore = player.score; // back up the score (if you give up or die, it is reset)
-
-	for (i = 0; i < 4; i++)
-		player.keys[i] = 0;
-
-	player.brains = 0;
-	player.boredom = 0;
-	player.hammers = 0;
-	player.hamSpeed = 16;
-	player.weapon = WPN_NONE;
-	player.ammo = 0;
-	player.reload = 10;
-	player.wpnReload = 10;
-	player.hammerFlags = 0;
-	player.life = 128;
-	player.shield = 0;
-	playerGlow = 0;
-	player.pushPower = 0;
-	player.vehicle = 0;
-	player.garlic = 0;
-	player.speed = 0;
-	player.rageClock = 0;
-	player.rage = 0;
-	player.invisibility = 0;
-	player.jetting = 0;
-
-	player.musicSettings = opt.music;
-	if (!CDLoaded())
-		player.musicSettings = MUSIC_OFF;
-}
-
-void PlayerLoadGame(byte which)
-{
-	FILE *f;
-
-	f = AppdataOpen("loony.sav", "rb");
-	if (!f)
-	{
-		InitPlayer(INIT_GAME, 0, 0);
-	}
-	else
-	{
-		fseek(f, sizeof (player_t) * which, SEEK_SET);
-		fread(&player, sizeof (player_t), 1, f);
-		fclose(f);
-	}
-}
-
-void PlayerSaveGame(byte which)
-{
-	FILE *f;
-	player_t p[3];
-	int i;
-
-	f = AppdataOpen("loony.sav", "rb");
-	if (!f)
-	{
-		memset(p, 0, sizeof (player_t)*3); // make an empty player
-		for (i = 0; i < 5; i++)
-		{
-			p[0].totalCompletion[i] = 100;
-			p[1].totalCompletion[i] = 100;
-			p[2].totalCompletion[i] = 100;
-		}
-		f = AppdataOpen("loony.sav", "wb");
-		fwrite(p, sizeof (player_t), 3, f);
-		fclose(f);
-		f = AppdataOpen("loony.sav", "rb");
-	}
-	fread(p, sizeof (player_t), 3, f);
-	fclose(f);
-	memcpy(&p[which], &player, sizeof (player_t));
-	f = AppdataOpen("loony.sav", "wb");
-	fwrite(p, sizeof (player_t), 3, f);
-	fclose(f);
-}
-
-void PlayerWinLevel(byte w, byte l, byte isSecret)
-{
-	if (!player.levelPassed[w][l])
-	{
-		player.complete[w] += 100; // get some percentage points
-		if (!isSecret)
-			player.levelsPassed++; // secret levels aren't counted in this (it's for triggering specials)
-		if (w == 4 && l == 6 && opt.wonGame == 0)
-		{
-			opt.wonGame = 1;
-			SaveOptions();
-			SendMessageToGame(MSG_NEWFEATURE, 0);
-		}
-	}
-	else
-		PlayerResetScore(); // you can't get points for a level you've already passed
-
-	if (opt.gotAllSecrets == 0 && PlayerGetGamePercent() > 0.999)
-	{
-		opt.gotAllSecrets = 1;
-		SaveOptions();
-		SendMessageToGame(MSG_NEWFEATURE, 0);
-	}
-	player.levelPassed[w][l] = 1;
-}
-
 extern "C" void KeyChainAllCheck(void);
 
 byte PlayerGetItem(byte itm, int x, int y)
@@ -568,63 +433,9 @@ byte PlayerGetItem(byte itm, int x, int y)
 	return 1;
 }
 
-void PlayerThrowHammer(Guy *me)
-{
-	if (opt.playAs == PLAYAS_BOUAPHA)
-	{
-		HammerLaunch(me->x, me->y, me->facing, player.hammers, player.hammerFlags);
-	}
-	else if (opt.playAs == PLAYAS_LUNATIC)
-	{
-		MakeSound(SND_BALLLIGHTNING, me->x, me->y, SND_CUTOFF, 600);
-		FireBullet(me->x, me->y, me->facing, BLT_BALLLIGHTNING, 1);
-		if (player.hammerFlags & HMR_REVERSE)
-			FireBullet(me->x, me->y, (byte) MGL_random(8), BLT_BALLLIGHTNING, 1);
-	}
-	else
-	{
-		HappyLaunch(me->x, me->y, me->facing, player.hammers, player.hammerFlags);
-	}
+extern "C" void PlayerThrowHammer(Guy *me);
 
-	player.reload = player.hamSpeed + 2;
-}
-
-void PlayerHeal(byte amt)
-{
-	HealGoodguy(amt);
-
-	if (player.life + amt < 128)
-		player.life += amt;
-	else
-		player.life = 128;
-}
-
-void DoPlayerFacing(byte c, Guy *me)
-{
-	if (c & CONTROL_UP)
-	{
-		me->facing = 6;
-		if (c & CONTROL_LF)
-			me->facing = 5;
-		else if (c & CONTROL_RT)
-			me->facing = 7;
-	}
-	else if (c & CONTROL_DN)
-	{
-		me->facing = 2;
-		if (c & CONTROL_LF)
-			me->facing = 3;
-		else if (c & CONTROL_RT)
-			me->facing = 1;
-	}
-	else
-	{
-		if (c & CONTROL_LF)
-			me->facing = 4;
-		else if (c & CONTROL_RT)
-			me->facing = 0;
-	}
-}
+extern "C" void DoPlayerFacing(byte c, Guy *me);
 
 void PlayerFireWeapon(Guy *me)
 {
@@ -815,36 +626,7 @@ void PlayerFireWeapon(Guy *me)
 		player.weapon = 0;
 }
 
-void PlayerFirePowerArmor(Guy *me, byte mode)
-{
-	int x, y, x2, y2;
-	byte f;
-
-	switch (mode) {
-		case 1:
-			MakeSound(SND_ARMORSHOOT, me->x, me->y, SND_CUTOFF, 1200);
-			f = me->facing * 32 - 64;
-			x = me->x + Cosine(me->facing * 32)*20;
-			y = me->y + Sine(me->facing * 32)*20;
-
-			x2 = x + Cosine(f)*32;
-			y2 = y + Sine(f)*32;
-			FireBullet(x2, y2, me->facing * 32, BLT_BIGSHELL, 1);
-			x2 = x - Cosine(f)*32;
-			y2 = y - Sine(f)*32;
-			FireBullet(x2, y2, me->facing * 32, BLT_BIGSHELL, 1);
-			if (player.ammo > 2)
-				player.ammo -= 2;
-			break;
-		case 2:
-			QuadMissile(me->x, me->y, me->facing, 1);
-			if (player.ammo > 25)
-				player.ammo -= 25;
-			else
-				player.ammo = 0;
-			break;
-	}
-}
+extern "C" void PlayerFirePowerArmor(Guy *me, byte mode);
 
 void PlayerControlMe(Guy *me, mapTile_t *mapTile, world_t *world)
 {
@@ -1370,49 +1152,4 @@ void PlayerControlPowerArmor(Guy *me, mapTile_t *mapTile, world_t *world)
 			me->frmAdvance = 128;
 		}
 	}
-}
-
-byte StealWeapon(void)
-{
-	byte r;
-
-	if (player.hammers == 0 && (player.hammerFlags & HMR_REVERSE) == 0 && (player.hammerFlags & HMR_REFLECT) == 0 &&
-			player.hamSpeed == 16)
-		return 0; // player has nothing to steal!
-
-	while (1)
-	{
-		r = (byte) MGL_random(4);
-		switch (r) {
-			case 0:
-				if (player.hammers > 0)
-				{
-					player.hammers--;
-					return ITM_HAMMERUP;
-				}
-				break;
-			case 1:
-				if (player.hamSpeed < 16)
-				{
-					player.hamSpeed += 4;
-					return ITM_PANTS;
-				}
-				break;
-			case 2:
-				if (player.hammerFlags & HMR_REVERSE)
-				{
-					player.hammerFlags &= (~HMR_REVERSE);
-					return ITM_REVERSE;
-				}
-				break;
-			case 3:
-				if (player.hammerFlags & HMR_REFLECT)
-				{
-					player.hammerFlags &= (~HMR_REFLECT);
-					return ITM_REFLECT;
-				}
-				break;
-		}
-	}
-	return 0;
 }

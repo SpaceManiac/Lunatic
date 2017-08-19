@@ -105,8 +105,9 @@ extern {
     pub fn UpdateBullets(map: &mut Map, world: &mut world_t);
 
     pub fn FireBullet(x: c_int, y: c_int, facing: u8, type_: u8, friendly: u8);
-    pub fn HammerLaunch(x: c_int, y: c_int, facing: u8, count: u8, flags: u8);
-    pub fn HappyLaunch(x: c_int, y: c_int, facing: u8, count: u8, flags: u8);
+    pub fn HammerLaunch(x: c_int, y: c_int, facing: u8, count: u8, flags: HammerFlags);
+    pub fn HappyLaunch(x: c_int, y: c_int, facing: u8, count: u8, flags: HammerFlags);
+    pub fn QuadMissile(x: c_int, y: c_int, facing: u8, friendly: u8);
 
     static mut bullet: [bullet_t; MAX_BULLETS];
     static mut bulletSpr: *mut sprite_set_t;

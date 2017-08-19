@@ -1,4 +1,4 @@
-use libc::{c_int, c_char, strncpy};
+use libc::{c_int, c_char, strncpy, fseek, fread, fwrite, fclose};
 use world::MAX_MAPS;
 use mgldraw::MGLDraw;
 use bullet::HammerFlags;
@@ -28,6 +28,7 @@ pub enum Weapon {
 
 /// initializing constants (pass to InitPlayer)
 #[repr(C)]
+#[derive(PartialEq, PartialOrd)]
 pub enum Init {
     Game = 2,
     World = 1,
@@ -36,6 +37,7 @@ pub enum Init {
 
 /// vehicles you could be on
 #[repr(u8)]
+#[derive(Copy, Clone)]
 pub enum Vehicle {
     None = 0,
     Minecart = 1,
@@ -46,6 +48,7 @@ pub enum Vehicle {
 pub const MAX_CUSTOM: usize = 128;
 
 #[repr(C)]
+#[derive(Copy)]
 pub struct player_t {
     // values for the overall game
     pub musicSettings: ::options::Music,
@@ -91,30 +94,125 @@ pub struct player_t {
     pub jetting: u8,
 }
 
+impl Clone for player_t {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
 extern {
     pub static mut player: player_t;
     static mut playerGlow: u8; // for torch-lit levels, and for exciting moments
     static mut tportclock: u8;
 
-    pub fn InitPlayer(initWhat: Init, world: u8, level: u8);
-
-    pub fn PlayerWinLevel(w: u8, l: u8, isSecret: bool);
-
     pub fn PlayerGetItem(itm: u8, x: c_int, y: c_int) -> u8;
-    pub fn PlayerHeal(amt: u8);
-
-    pub fn PlayerLoadGame(which: u8);
-    pub fn PlayerSaveGame(which: u8);
 }
 
-// InitPlayer
+#[no_mangle]
+pub unsafe extern fn InitPlayer(initWhat: Init, world: u8, level: u8) {
+    let wrldName = cstr!["caverns.dlw", "icymount.dlw", "forest.dlw", "desert.dlw", "asylum.dlw"];
+
+    if initWhat == Init::Game { // initialize everything, this is to start a whole new game
+        player.score = 0;
+        for i in 0..MAX_CUSTOM {
+            for j in 0..MAX_MAPS {
+                player.levelPassed[i][j] = 0;
+            }
+            for j in 0..4 {
+                player.keychain[i][j] = 0;
+            }
+            player.totalCompletion[i] = 100;
+            player.complete[i] = 0;
+            player.lunacyKey[i] = 0;
+            if i > 4 {
+                player.customName[i][0] = 0;
+            } else {
+                strncpy(player.customName[i].as_mut_ptr(), wrldName[i], 32);
+            }
+        }
+        ::title::ScanWorldNames();
+        player.totalCompletion[0] = ::world::GetWorldPoints(cstr!("caverns.dlw"));
+    }
+    if initWhat >= Init::World { // initialize the things that go with each world
+        player.levelsPassed = 0;
+        player.worldNum = world;
+    }
+
+    player.levelNum = level;
+    player.prevScore = player.score; // back up the score (if you give up or die, it is reset)
+
+    for i in 0..4 {
+        player.keys[i] = 0;
+    }
+
+	player.brains = 0;
+	player.boredom = 0;
+	player.hammers = 0;
+	player.hamSpeed = 16;
+	player.weapon = Weapon::WPN_NONE;
+	player.ammo = 0;
+	player.reload = 10;
+	player.wpnReload = 10;
+	player.hammerFlags = ::bullet::HammerFlags::empty();
+	player.life = 128;
+	player.shield = 0;
+	playerGlow = 0;
+	player.pushPower = 0;
+	player.vehicle = Vehicle::None;
+	player.garlic = 0;
+	player.speed = 0;
+	player.rageClock = 0;
+	player.rage = 0;
+	player.invisibility = 0;
+	player.jetting = 0;
+
+	player.musicSettings = ::options::opt.music;
+    if ::music::CDLoaded() == 0 {
+		player.musicSettings = ::options::Music::Off;
+    }
+}
 
 #[no_mangle]
 pub unsafe extern fn ExitPlayer() {
 }
 
-// PlayerLoadGame
-// PlayerSaveGame
+#[no_mangle]
+pub unsafe extern fn PlayerLoadGame(which: u8) {
+    let f = ::mgldraw::AppdataOpen(cstr!("loony.sav"), cstr!("rb"));
+    if f.is_null() {
+        InitPlayer(Init::Game, 0, 0);
+    } else {
+        fseek(f, which as i32 * szof!(player_t) as i32, ::libc::SEEK_SET);
+        fread(decay!(&mut player), szof!(player_t), 1, f);
+        fclose(f);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerSaveGame(which: u8) {
+    use mgldraw::AppdataOpen;
+
+    let mut p: [player_t; 3] = ::std::mem::zeroed();
+
+    let mut f = AppdataOpen(cstr!("loony.sav"), cstr!("rb"));
+    if f.is_null() {
+        for i in 0..5 {
+            for j in 0..3 {
+                p[j].totalCompletion[i] = 100;
+            }
+        }
+        f = AppdataOpen(cstr!("loony.sav"), cstr!("wb"));
+        fwrite(decay!(&p), szof!(player_t), 3, f);
+        fclose(f);
+        f = AppdataOpen(cstr!("loony.sav"), cstr!("rb"));
+    }
+    fread(decay!(&mut p), szof!(player_t), 3, f);
+    fclose(f);
+    p[which as usize] = player;
+    f = AppdataOpen(cstr!("loony.sav"), cstr!("wb"));
+    fwrite(decay!(&p), szof!(player_t), 3, f);
+    fclose(f);
+}
 
 #[no_mangle]
 pub unsafe extern fn PlayerSetWorldWorth(world: u8, amt: c_int) {
@@ -194,7 +292,33 @@ pub unsafe extern fn PlayerPassedLevel(world: u8, map: u8) -> u8 {
     player.levelPassed[world as usize][map as usize]
 }
 
-// PlayerWinLevel
+#[no_mangle]
+pub unsafe extern fn PlayerWinLevel(w: u8, l: u8, isSecret: bool) {
+    use options::{opt, SaveOptions};
+
+    if player.levelPassed[w as usize][l as usize] == 0 {
+        player.complete[w as usize] += 100; // get some percentage points
+        if !isSecret {
+            // secret levels aren't counted in this (it's for triggering specials)
+            player.levelsPassed += 1;
+        }
+        if w == 4 && l == 6 && !opt.wonGame {
+            opt.wonGame = true;
+            SaveOptions();
+            ::game::SendMessageToGame(::game::Message::NewFeature, 0);
+        }
+    } else {
+        PlayerResetScore(); // you can't get points for a level you've already passed
+    }
+
+    if !opt.gotAllSecrets && PlayerGetGamePercent() > 0.999 {
+        opt.gotAllSecrets = true;
+        SaveOptions();
+        ::game::SendMessageToGame(::game::Message::NewFeature, 0);
+    }
+
+    player.levelPassed[w as usize][l as usize] = 1;
+}
 
 #[no_mangle]
 pub unsafe extern fn GetPlayerWorld() -> u8 {
@@ -292,8 +416,36 @@ pub unsafe extern fn PlayerSetMusicSettings(m: ::options::Music) {
     }
 }
 
-// PlayerThrowHammer
-// PlayerHeal
+#[no_mangle]
+pub unsafe extern fn PlayerThrowHammer(me: &Guy) {
+    use options::{opt, PlayAs};
+    use bullet::{HammerLaunch, HappyLaunch, Bullet, fire_bullet};
+
+    match opt.playAs {
+        PlayAs::Bouapha => {
+            HammerLaunch(me.x, me.y, me.facing, player.hammers, player.hammerFlags);
+        }
+        PlayAs::Lunatic => {
+            ::sound::make_sound(::sound::Sound::SND_BALLLIGHTNING, me.x, me.y, ::sound::SND_CUTOFF, 600);
+            fire_bullet(me.x, me.y, me.facing, Bullet::BLT_BALLLIGHTNING, 1);
+            if player.hammerFlags.contains(::bullet::HMR_REVERSE) {
+                fire_bullet(me.x, me.y, ::mgldraw::MGL_random(8) as u8, Bullet::BLT_BALLLIGHTNING, 1);
+            }
+        }
+        PlayAs::Happy => {
+            HappyLaunch(me.x, me.y, me.facing, player.hammers, player.hammerFlags);
+        }
+    }
+
+    player.reload = player.hamSpeed + 2;
+}
+
+#[no_mangle]
+pub unsafe extern fn PlayerHeal(amt: u8) {
+    ::guy::HealGoodguy(amt);
+
+    player.life = ::std::cmp::min(128, player.life.saturating_add(amt));
+}
 
 #[no_mangle]
 pub unsafe extern fn GetTportClock() -> u8 {
@@ -305,9 +457,95 @@ pub unsafe extern fn SetTportClock(tp: u8) {
     tportclock = tp;
 }
 
-// DoPlayerFacing
+#[no_mangle]
+pub unsafe extern fn DoPlayerFacing(c: ::control::Controls, me: &mut Guy) {
+    use control::*;
+
+    if c.contains(CONTROL_UP) {
+        me.facing = 6;
+        if c.contains(CONTROL_LF) {
+            me.facing = 5;
+        } else if c.contains(CONTROL_RT) {
+            me.facing = 7;
+        }
+    } else if c.contains(CONTROL_DN) {
+        me.facing = 2;
+        if c.contains(CONTROL_LF) {
+            me.facing = 3;
+        } else if c.contains(CONTROL_RT) {
+            me.facing = 1;
+        }
+    } else if c.contains(CONTROL_LF) {
+        me.facing = 4;
+    } else if c.contains(CONTROL_RT) {
+        me.facing = 0;
+    }
+}
+
 // PlayerFireWeapon
-// PlayerFirePowerArmor
+
+#[no_mangle]
+pub unsafe extern fn PlayerFirePowerArmor(me: &mut Guy, mode: u8) {
+    use bullet::{fire_bullet, Bullet};
+    use cossin::{Cosine, Sine};
+
+    match mode {
+        1 => {
+            ::sound::MakeSound(::sound::Sound::SND_ARMORSHOOT as c_int, me.x, me.y, ::sound::SND_CUTOFF.bits(), 1200);
+            let f = (me.facing * 32).wrapping_sub(64) as c_int;
+            let x = me.x + Cosine(me.facing as c_int * 32) * 20;
+            let y = me.y + Sine(me.facing as c_int * 32) * 20;
+
+            fire_bullet(x + Cosine(f) * 32, y + Sine(f) * 32,
+                me.facing * 32, Bullet::BLT_BIGSHELL, 1);
+            fire_bullet(x - Cosine(f) * 32, y - Sine(f) * 32,
+                me.facing * 32, Bullet::BLT_BIGSHELL, 1);
+            if player.ammo > 2 {
+                player.ammo -= 2;
+            }
+        }
+        2 => {
+            ::bullet::QuadMissile(me.x, me.y, me.facing, 1);
+            player.ammo = player.ammo.saturating_sub(25);
+        }
+        _ => {}
+    }
+}
+
 // PlayerControlMe
 // PlayerControlPowerArmor
-// StealWeapon
+
+#[no_mangle]
+pub unsafe extern fn StealWeapon() -> ::items::Item {
+    use items::Item;
+    use bullet::{HMR_REVERSE, HMR_REFLECT};
+
+    if player.hammers == 0 &&
+        player.hamSpeed == 0 &&
+        !player.hammerFlags.intersects(HMR_REVERSE | HMR_REFLECT)
+    {
+        return Item::ITM_NONE; // player has nothing to steal!
+    }
+
+    loop {
+        match ::mgldraw::MGL_random(4) {
+            0 => if player.hammers > 0 {
+                player.hammers -= 1;
+                return Item::ITM_HAMMERUP;
+            },
+            1 => if player.hamSpeed < 16 {
+                player.hamSpeed += 4;
+                return Item::ITM_PANTS;
+            },
+            2 => if player.hammerFlags.contains(HMR_REVERSE) {
+                player.hammerFlags.remove(HMR_REVERSE);
+                return Item::ITM_REVERSE;
+            },
+            3 => if player.hammerFlags.contains(HMR_REFLECT) {
+                player.hammerFlags.remove(HMR_REFLECT);
+                return Item::ITM_REFLECT;
+            },
+            _ => unreachable!()
+        }
+    }
+}
