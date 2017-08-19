@@ -60,13 +60,13 @@ pub unsafe extern fn DoCheat(w: u8) {
         }
         1 => { // max hammer up
             for _ in 0..5 {
-                PlayerGetItem(ITM_HAMMERUP as u8, 0, 0);
+                PlayerGetItem(ITM_HAMMERUP, 0, 0);
             }
             for _ in 0..4 {
-                PlayerGetItem(ITM_PANTS as u8, 0, 0);
+                PlayerGetItem(ITM_PANTS, 0, 0);
             }
-            PlayerGetItem(ITM_REVERSE as u8, 0, 0);
-            PlayerGetItem(ITM_REFLECT as u8, 0, 0);
+            PlayerGetItem(ITM_REVERSE, 0, 0);
+            PlayerGetItem(ITM_REFLECT, 0, 0);
             NewMessage(cstr!("ULTRA HAMMER UP!!"), 30, 0);
         }
         2 => { // meganuke
@@ -74,18 +74,20 @@ pub unsafe extern fn DoCheat(w: u8) {
             cx -= 320;
             cy -= 240;
             for _ in 0..60 {
-                ::bullet::FireBullet((cx + MGL_random(640)) << ::FIXSHIFT, (cy + MGL_random(480)) << ::FIXSHIFT,
-                        0, ::bullet::Bullet::BLT_BOOM as u8, 1);
+                ::bullet::FireBullet(
+                    (cx + MGL_random(640)) << ::FIXSHIFT,
+                    (cy + MGL_random(480)) << ::FIXSHIFT,
+                    0, ::bullet::Bullet::BLT_BOOM, 1);
             }
             ::display::ShakeScreen(10); // make the screen shake!
         }
         3 => { // all keys
             for _ in 0..3 {
-                PlayerGetItem(ITM_KEY as u8, 0, 0);
+                PlayerGetItem(ITM_KEY, 0, 0);
             }
-            PlayerGetItem(ITM_KEYR as u8, 0, 0);
-            PlayerGetItem(ITM_KEYG as u8, 0, 0);
-            PlayerGetItem(ITM_KEYB as u8, 0, 0);
+            PlayerGetItem(ITM_KEYR, 0, 0);
+            PlayerGetItem(ITM_KEYG, 0, 0);
+            PlayerGetItem(ITM_KEYB, 0, 0);
             NewMessage(cstr!("I am the keymaster!"), 30, 0);
         }
         4 => { // restore health
@@ -94,28 +96,28 @@ pub unsafe extern fn DoCheat(w: u8) {
             make_normal_sound(SND_HEALTHCHEAT);
         }
         5 => { // shield
-            PlayerGetItem(ITM_SHIELD as u8, 0, 0);
+            PlayerGetItem(ITM_SHIELD, 0, 0);
         }
         6 => { // water-walk
             ToggleWaterwalk();
             make_normal_sound(SND_CHEATWIN);
         }
         7 => { // keychains
-            PlayerGetItem(ITM_KEYCH1 as u8, 0, 0);
-            PlayerGetItem(ITM_KEYCH2 as u8, 0, 0);
-            PlayerGetItem(ITM_KEYCH3 as u8, 0, 0);
-            PlayerGetItem(ITM_KEYCH4 as u8, 0, 0);
+            PlayerGetItem(ITM_KEYCH1, 0, 0);
+            PlayerGetItem(ITM_KEYCH2, 0, 0);
+            PlayerGetItem(ITM_KEYCH3, 0, 0);
+            PlayerGetItem(ITM_KEYCH4, 0, 0);
         }
         8 => { // brains
             for _ in 0..20 {
-                PlayerGetItem(ITM_BRAIN as u8, 0, 0);
+                PlayerGetItem(ITM_BRAIN, 0, 0);
             }
         }
         9 => { // itemlight
             ::items::ItemLightUp();
         }
         10 => { // clock invisible
-            PlayerGetItem(ITM_INVIS as u8, 0, 0);
+            PlayerGetItem(ITM_INVIS, 0, 0);
         }
         11 => { // conwiz!
             //NewBigMessage("Conspiracies", 30);

@@ -516,7 +516,7 @@ impl DisplayList {
             //let mgl_ = &mut *mgl;
 
             if o.flags.contains(DISPLAY_WALLTILE) {
-				// for tiles, DISPLAY_GHOST means lighting is disabled
+                // for tiles, DISPLAY_GHOST means lighting is disabled
                 let bright = (*(o.spr as *mut Map)).MakeSmoothLighting(o.flags.contains(DISPLAY_GHOST), o.x / 32, o.y / 24);
                 RenderWallTileFancy(x, o.y - scry, 199 + o.z2, bright);
                 RenderRoofTileFancy(x, o.y - scry - TILE_HEIGHT, o.hue as i32, o.flags.contains(DISPLAY_TRANSTILE), 0, bright);

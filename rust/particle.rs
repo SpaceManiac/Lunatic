@@ -318,10 +318,10 @@ pub unsafe extern fn RenderParticle(x: c_int, y: c_int, mut scrn: *mut u8, color
 // chomped up the stack, since that function's recursive.
 static ctab: [u8; 25] = [
     8, 3, 2, 3, 8,
-	3, 2, 1, 2, 3,
-	2, 1, 0, 1, 2,
-	3, 2, 1, 2, 3,
-	8, 3, 2, 3, 8
+    3, 2, 1, 2, 3,
+    2, 1, 0, 1, 2,
+    3, 2, 1, 2, 3,
+    8, 3, 2, 3, 8
 ];
 
 #[no_mangle]

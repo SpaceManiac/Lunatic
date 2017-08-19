@@ -104,7 +104,7 @@ extern {
     pub fn RenderBullets();
     pub fn UpdateBullets(map: &mut Map, world: &mut world_t);
 
-    pub fn FireBullet(x: c_int, y: c_int, facing: u8, type_: u8, friendly: u8);
+    pub fn FireBullet(x: c_int, y: c_int, facing: u8, type_: Bullet, friendly: u8);
     pub fn HammerLaunch(x: c_int, y: c_int, facing: u8, count: u8, flags: HammerFlags);
     pub fn HappyLaunch(x: c_int, y: c_int, facing: u8, count: u8, flags: HammerFlags);
     pub fn QuadMissile(x: c_int, y: c_int, facing: u8, friendly: u8);
@@ -143,10 +143,7 @@ const SPR_STINKY: c_int = 355;
 const SPR_GREEN: c_int = 358;
 const SPR_ORBITER: c_int = 359;
 
-pub unsafe fn fire_bullet(x: i32, y: i32, facing: u8, type_: Bullet, friendly: u8) {
-    // TODO: replace friendly with a bool or enum
-    FireBullet(x, y, facing, type_ as u8, friendly)
-}
+pub use self::FireBullet as fire_bullet;
 
 pub unsafe fn InitBullets() {
     bulletSpr = sprite_set_t::from_fname(cstr!("graphics/bullets.jsp"));

@@ -87,9 +87,9 @@ pub enum MonsterType {
     MONS_SANTA = 59,
 
     // expansion "monsters"
-    MONS_MINECART = 60,		// mine cart Bouapha rides on
-    MONS_RAFT = 61,			// raft Bouapha rides on
-    MONS_PWRBOUAPHA = 62,	// Bouapha in power armor
+    MONS_MINECART = 60,     // mine cart Bouapha rides on
+    MONS_RAFT = 61,         // raft Bouapha rides on
+    MONS_PWRBOUAPHA = 62,   // Bouapha in power armor
 
     // expansion monsters
     MONS_VAMPIRE = 63,
@@ -485,13 +485,13 @@ pub unsafe extern fn MonsterDraw(x: c_int, y: c_int, z: c_int,
             if m.fromCol == 255 {
                 SprDraw(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, 255, bright + m.brtChg, curSpr, DISPLAY_DRAWME);
             } else {
-				SprDrawOff(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, m.fromCol, m.toCol,
-						bright + m.brtChg, curSpr, DISPLAY_DRAWME);
+                SprDrawOff(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, m.fromCol, m.toCol,
+                        bright + m.brtChg, curSpr, DISPLAY_DRAWME);
             }
         } else if m.flags.contains(MF_GHOST) {
-			SprDraw(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, 255, bright + m.brtChg, curSpr, DISPLAY_DRAWME | DISPLAY_GHOST);
+            SprDraw(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, 255, bright + m.brtChg, curSpr, DISPLAY_DRAWME | DISPLAY_GHOST);
         } else if m.flags.contains(MF_GLOW) {
-			SprDraw(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, 255, bright + m.brtChg, curSpr, DISPLAY_DRAWME | DISPLAY_GLOW);
+            SprDraw(x >> FIXSHIFT, y >> FIXSHIFT, z >> FIXSHIFT, 255, bright + m.brtChg, curSpr, DISPLAY_DRAWME | DISPLAY_GLOW);
         }
     } else {
         if !poison {

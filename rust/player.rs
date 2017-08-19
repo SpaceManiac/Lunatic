@@ -105,7 +105,7 @@ extern {
     static mut playerGlow: u8; // for torch-lit levels, and for exciting moments
     static mut tportclock: u8;
 
-    pub fn PlayerGetItem(itm: u8, x: c_int, y: c_int) -> u8;
+    pub fn PlayerGetItem(itm: ::items::Item, x: c_int, y: c_int) -> u8;
 }
 
 #[no_mangle]
@@ -145,30 +145,30 @@ pub unsafe extern fn InitPlayer(initWhat: Init, world: u8, level: u8) {
         player.keys[i] = 0;
     }
 
-	player.brains = 0;
-	player.boredom = 0;
-	player.hammers = 0;
-	player.hamSpeed = 16;
-	player.weapon = Weapon::WPN_NONE;
-	player.ammo = 0;
-	player.reload = 10;
-	player.wpnReload = 10;
-	player.hammerFlags = ::bullet::HammerFlags::empty();
-	player.life = 128;
-	player.shield = 0;
-	playerGlow = 0;
-	player.pushPower = 0;
-	player.vehicle = Vehicle::None;
-	player.garlic = 0;
-	player.speed = 0;
-	player.rageClock = 0;
-	player.rage = 0;
-	player.invisibility = 0;
-	player.jetting = 0;
+    player.brains = 0;
+    player.boredom = 0;
+    player.hammers = 0;
+    player.hamSpeed = 16;
+    player.weapon = Weapon::WPN_NONE;
+    player.ammo = 0;
+    player.reload = 10;
+    player.wpnReload = 10;
+    player.hammerFlags = ::bullet::HammerFlags::empty();
+    player.life = 128;
+    player.shield = 0;
+    playerGlow = 0;
+    player.pushPower = 0;
+    player.vehicle = Vehicle::None;
+    player.garlic = 0;
+    player.speed = 0;
+    player.rageClock = 0;
+    player.rage = 0;
+    player.invisibility = 0;
+    player.jetting = 0;
 
-	player.musicSettings = ::options::opt.music;
+    player.musicSettings = ::options::opt.music;
     if ::music::CDLoaded() == 0 {
-		player.musicSettings = ::options::Music::Off;
+        player.musicSettings = ::options::Music::Off;
     }
 }
 
@@ -491,7 +491,7 @@ pub unsafe extern fn PlayerFirePowerArmor(me: &mut Guy, mode: u8) {
 
     match mode {
         1 => {
-            ::sound::MakeSound(::sound::Sound::SND_ARMORSHOOT as c_int, me.x, me.y, ::sound::SND_CUTOFF.bits(), 1200);
+            ::sound::MakeSound(::sound::Sound::SND_ARMORSHOOT, me.x, me.y, ::sound::SND_CUTOFF, 1200);
             let f = (me.facing * 32).wrapping_sub(64) as c_int;
             let x = me.x + Cosine(me.facing as c_int * 32) * 20;
             let y = me.y + Sine(me.facing as c_int * 32) * 20;

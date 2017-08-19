@@ -57,7 +57,7 @@ pub unsafe extern fn RenderItem(x: c_int, y: c_int, type_: u8, bright: i8) {
         if info.loony {
             glowism = glowism.wrapping_add(1);
             let b = (16 - (glowism as i8 & 31)).abs();
-			SprDraw(x, y, 0, glowism / 32, bright + b, sprite, DISPLAY_DRAWME);
+            SprDraw(x, y, 0, glowism / 32, bright + b, sprite, DISPLAY_DRAWME);
         } else if info.glow {
             SprDraw(x + info.ofsx, y + info.ofsy, 0, 255, bright, sprite, DISPLAY_DRAWME | DISPLAY_GLOW);
         } else if info.recolor != NO_RECOLOR {

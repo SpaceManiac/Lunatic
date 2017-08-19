@@ -122,7 +122,7 @@ pub unsafe extern fn ControlKeyUp(k: u8) {
             bit <<= 1;
         }
     }
-	// always track arrows, no matter what the keys are, for menus
+    // always track arrows, no matter what the keys are, for menus
     arrowState &= !match k {
         84 => CONTROL_UP,
         85 => CONTROL_DN,

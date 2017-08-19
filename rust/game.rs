@@ -502,9 +502,9 @@ unsafe fn draw_common() {
     // update statistics
     let d = timeGetTime();
     if d - tickerTime > 999 {
-		frmRate = (frmRate * 3.0 + (visFrms as f32 / ((d - tickerTime) as f32 / 1000.0))) / 4.0;
-		visFrms = 0;
-		tickerTime = d;
+        frmRate = (frmRate * 3.0 + (visFrms as f32 / ((d - tickerTime) as f32 / 1000.0))) / 4.0;
+        visFrms = 0;
+        tickerTime = d;
     }
 
     (*gamemgl).Flip();
@@ -578,8 +578,8 @@ pub unsafe fn PlayALevel(map: u8) -> LevelOutcome {
     garbageTime = 0;
 
     // this will force the camera into the right position
-	// it also makes everybody animate by one frame, but no one will
-	// ever notice
+    // it also makes everybody animate by one frame, but no one will
+    // ever notice
     ::guy::UpdateGuys(&mut *curMap, &mut curWorld);
 
     let mut lastTime = 0;

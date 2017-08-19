@@ -72,22 +72,22 @@ unsafe fn DrawLifeMeter(x: c_int, y: c_int, amt: u8) {
     };
 
     let mgl = GetDisplayMGL();
-	mgl.FillBox(x, y + 1, x, y + 12, c - 6);
-	mgl.FillBox(x + amt, y + 1, x + amt, y + 12, c - 6);
-	if amt > 1 {
-		mgl.FillBox(x + 1, y + 1, x + 1, y + 12, c - 1);
-		mgl.FillBox(x + amt - 1, y + 1, x + amt - 1, y + 12, c - 1);
-		if amt > 3 {
-			// here's the short parts on top and bottom
-			mgl.FillBox(x + 2, y, x + (amt - 2), y, c - 3);
-			mgl.FillBox(x + 2, y + 13, x + (amt - 2), y + 13, c - 3);
-			// and here's the normal part
-			mgl.FillBox(x + 2, y + 1, x + amt - 2, y + 1, c);
-			mgl.FillBox(x + 2, y + 12, x + amt - 2, y + 12, c);
-			mgl.FillBox(x + 2, y + 2, x + amt - 2, y + 2, c + 8);
-			mgl.FillBox(x + 2, y + 3, x + amt - 2, y + 11, c + 4);
-		}
-	}
+    mgl.FillBox(x, y + 1, x, y + 12, c - 6);
+    mgl.FillBox(x + amt, y + 1, x + amt, y + 12, c - 6);
+    if amt > 1 {
+        mgl.FillBox(x + 1, y + 1, x + 1, y + 12, c - 1);
+        mgl.FillBox(x + amt - 1, y + 1, x + amt - 1, y + 12, c - 1);
+        if amt > 3 {
+            // here's the short parts on top and bottom
+            mgl.FillBox(x + 2, y, x + (amt - 2), y, c - 3);
+            mgl.FillBox(x + 2, y + 13, x + (amt - 2), y + 13, c - 3);
+            // and here's the normal part
+            mgl.FillBox(x + 2, y + 1, x + amt - 2, y + 1, c);
+            mgl.FillBox(x + 2, y + 12, x + amt - 2, y + 12, c);
+            mgl.FillBox(x + 2, y + 2, x + amt - 2, y + 2, c + 8);
+            mgl.FillBox(x + 2, y + 3, x + amt - 2, y + 11, c + 4);
+        }
+    }
 }
 
 unsafe fn DrawRageMeter(x: c_int, y: c_int, enuf: u8, amt: u8) {
@@ -132,10 +132,10 @@ unsafe fn DrawHammerSpeed(x: c_int, y: c_int, spd: u8) {
 
 unsafe fn DrawLitGauge(x: c_int, y: c_int, c: u8) {
     let mgl = GetDisplayMGL();
-	mgl.FillBox(x + 1, y, x + 1, y + 13, c + 2);
-	mgl.FillBox(x + 2, y, x + 2, y + 13, c);
-	mgl.FillBox(x, y + 1, x, y + 12, c - 4);
-	mgl.FillBox(x + 3, y + 1, x + 3, y + 12, c - 4);
+    mgl.FillBox(x + 1, y, x + 1, y + 13, c + 2);
+    mgl.FillBox(x + 2, y, x + 2, y + 13, c);
+    mgl.FillBox(x, y + 1, x, y + 12, c - 4);
+    mgl.FillBox(x + 3, y + 1, x + 3, y + 12, c - 4);
 }
 
 #[no_mangle]
