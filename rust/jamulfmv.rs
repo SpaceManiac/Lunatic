@@ -1,12 +1,5 @@
 use flic::*;
 use mgldraw::*;
-use libc::c_char;
-use std::ffi::CStr;
-
-#[no_mangle]
-pub unsafe extern fn FLI_play(name: *const c_char, loop_: u8, wait: u16, mgl: &mut MGLDraw) {
-    play_flic(CStr::from_ptr(name).to_str().unwrap(), loop_ != 0, wait, mgl)
-}
 
 pub unsafe fn play_flic(name: &str, loop_: bool, wait: u16, mgl: &mut MGLDraw) {
     let mut flic = FlicFile::open(name.as_ref()).unwrap();

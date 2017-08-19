@@ -7,6 +7,7 @@ pub const MAX_MAPS: usize = 24;
 
 bitflags! {
     /// terrain flags
+    #[repr(C)]
     pub struct TerrainFlags: u16 {
         const TF_SOLID = 1;
         const TF_ICE = 2;
@@ -29,7 +30,7 @@ bitflags! {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct terrain_t {
-    pub flags: u16,
+    pub flags: TerrainFlags,
     pub next: u8,
 }
 
@@ -45,7 +46,7 @@ pub const ZERO_WORLD: world_t = world_t {
     numMaps: 0,
     totalPoints: 0,
     map: [0 as *mut Map; MAX_MAPS],
-    terrain: [terrain_t { flags: 0, next: 0 }; 200],
+    terrain: [terrain_t { flags: TerrainFlags { bits: 0 }, next: 0 }; 200],
 };
 
 #[no_mangle]

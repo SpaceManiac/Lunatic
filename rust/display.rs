@@ -193,7 +193,7 @@ pub unsafe extern fn DrawFillBox(x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8
 #[no_mangle]
 pub unsafe extern fn ShowVictoryAnim(world: u8) {
     use ffi::win::timeGetTime;
-    use jamulfmv::FLI_play;
+    use jamulfmv::play_flic;
     use music::CDPlay;
 
     let mgl_ = &mut *mgl;
@@ -210,19 +210,19 @@ pub unsafe extern fn ShowVictoryAnim(world: u8) {
         }
     }
     match world {
-        0 => FLI_play(cstr!("graphics/caverns.flc"), 0, 80, mgl_),
-        1 => FLI_play(cstr!("graphics/icy.flc"), 0, 60, mgl_),
-        2 => FLI_play(cstr!("graphics/forest.flc"), 0, 60, mgl_),
-        3 => FLI_play(cstr!("graphics/desert.flc"), 0, 60, mgl_),
+        0 => play_flic("graphics/caverns.flc", false, 80, mgl_),
+        1 => play_flic("graphics/icy.flc", false, 60, mgl_),
+        2 => play_flic("graphics/forest.flc", false, 60, mgl_),
+        3 => play_flic("graphics/desert.flc", false, 60, mgl_),
         4 => { // the final victory!
             if music_on {
                 CDPlay(22); // ending music, deedeleedo
             }
-            FLI_play(cstr!("graphics/asylum.flc"), 0, 60, mgl_);
+            play_flic("graphics/asylum.flc", false, 60, mgl_);
         }
-        10 => FLI_play(cstr!("graphics/transfrm.flc"), 0, 60, mgl_),
-        11 => FLI_play(cstr!("graphics/asylumno.flc"), 0, 40, mgl_),
-        12 => FLI_play(cstr!("graphics/asylumys.flc"), 0, 40, mgl_),
+        10 => play_flic("graphics/transfrm.flc", false, 60, mgl_),
+        11 => play_flic("graphics/asylumno.flc", false, 40, mgl_),
+        12 => play_flic("graphics/asylumys.flc", false, 40, mgl_),
         _ => {}
     }
     mgl_.LoadBMP(cstr!("graphics/title.bmp"));
@@ -283,7 +283,7 @@ pub unsafe extern fn ShowImageOrFlic(input: *const c_char) {
     } else {
         // assume it's an flc for now
         let start = timeGetTime();
-        ::jamulfmv::FLI_play(decay!(&nm), 0, speed, &mut *mgl);
+        ::jamulfmv::play_flic(&format!("graphics/{}", fname), false, speed, &mut *mgl);
         (*mgl).LoadBMP(cstr!("graphics/title.bmp"));
         ::game::AddGarbageTime(timeGetTime() - start);
     }
