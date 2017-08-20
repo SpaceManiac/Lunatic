@@ -366,42 +366,17 @@ impl MGLDraw {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn MGLDraw_Process(mgl: &mut MGLDraw) -> bool {
-    mgl.Process()
-}
-
-#[no_mangle]
-pub unsafe extern fn MGLDraw_Flip(mgl: &mut MGLDraw) {
-    mgl.Flip()
+cpp_export! {
+    MGLDraw_Process: Process(mgl: &mut MGLDraw) -> bool;
+    MGLDraw_Flip: Flip(mgl: &mut MGLDraw) -> ();
+    MGLDraw_Box: Box(mgl: &mut MGLDraw, x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) -> ();
+    MGLDraw_FillBox: FillBox(mgl: &mut MGLDraw, x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) -> ();
+    MGLDraw_TeleportMouse: TeleportMouse(mgl: &mut MGLDraw, x: c_int, y: c_int) -> ();
+    MGLDraw_LoadBMP: LoadBMP(mgl: &mut MGLDraw, name: *const c_char) -> bool;
+    MGLDraw_GammaCorrect: GammaCorrect(mgl: &mut MGLDraw, gamma: u8) -> ();
 }
 
 #[no_mangle]
 pub unsafe extern fn MGLDraw_SetPalette(mgl: &mut MGLDraw, palette: *const palette_t) {
     mgl.set_palette(::std::slice::from_raw_parts(palette, 256));
-}
-
-#[no_mangle]
-pub unsafe extern fn MGLDraw_Box(mgl: &mut MGLDraw, x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) {
-    mgl.Box(x, y, x2, y2, c)
-}
-
-#[no_mangle]
-pub unsafe extern fn MGLDraw_FillBox(mgl: &mut MGLDraw, x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) {
-    mgl.FillBox(x, y, x2, y2, c)
-}
-
-#[no_mangle]
-pub unsafe extern fn MGLDraw_TeleportMouse(mgl: &mut MGLDraw, x: c_int, y: c_int) {
-    mgl.TeleportMouse(x, y)
-}
-
-#[no_mangle]
-pub unsafe extern fn MGLDraw_LoadBMP(mgl: &mut MGLDraw, name: *const c_char) -> bool {
-    mgl.LoadBMP(name)
-}
-
-#[no_mangle]
-pub unsafe extern fn MGLDraw_GammaCorrect(mgl: &mut MGLDraw, gamma: u8) {
-    mgl.GammaCorrect(gamma)
 }

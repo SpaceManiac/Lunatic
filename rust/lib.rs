@@ -47,6 +47,17 @@ macro_rules! decay {
     ($e:expr) => { $e as *const _ as *mut _ };
 }
 
+macro_rules! cpp_export {
+    ($($cname:ident: $method:ident($id1:ident: $ty1:ty $(, $id2:ident: $ty2:ty)*) -> $o:ty;)*) => (
+        $(
+            #[no_mangle]
+            pub unsafe extern fn $cname($id1: $ty1 $(, $id2: $ty2)*) -> $o {
+                $id1.$method($($id2),*)
+            }
+        )*
+    )
+}
+
 struct PctS { ptr: *const c_char }
 unsafe fn PctS(ptr: *const c_char) -> PctS { PctS { ptr } }
 impl std::fmt::Display for PctS {
