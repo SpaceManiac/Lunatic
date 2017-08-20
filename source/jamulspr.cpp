@@ -36,17 +36,6 @@ count data chunks:
 // ****************************** SPRITE_T *********************************
 // -------------------------------------------------------------------------
 
-// Helper shenanigans for C stuff
-static const int constrainX = 0, constrainY = 0, constrainX2 = 639, constrainY2 = 479;
-
-extern "C" {
-	byte SprModifyColor(byte color, byte hue);
-	byte SprGetColor(byte color);
-	byte SprModifyLight(byte color, char bright);
-	byte SprModifyGhost(byte src, byte dst, char bright);
-	byte SprModifyGlow(byte src, byte dst, char bright);
-}
-
 // CONSTRUCTORS & DESTRUCTORS
 
 sprite_t::sprite_t(void)

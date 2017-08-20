@@ -1,5 +1,38 @@
-use libc::{c_char, c_int};
+use libc::{c_char, c_int, free, malloc};
 use mgldraw::MGLDraw;
+
+// the sprites are 12 bytes, not including the data itself
+// note that the value here is 16 - there are four bytes of
+// garbage between each sprite header
+const SPRITE_INFO_SIZE: c_int = 16;
+
+
+/*
+Jamul Sprite - JSP
+
+header:
+count		1 word	how many frames in this sprite
+data:
+count structures:
+	width	1 word		width of sprite in pixels
+	height	1 word		height of sprite in pixels
+	ofsX	1 short		x-coord of hotspot relative to left
+	ofsY	1 short		y-coord of hotspot relative to top
+	size	1 dword		how big the sprite data is in bytes
+
+count data chunks:
+	data	size bytes	transparency RLE'd sprite data
+
+	The RLE format is as follows:
+
+	count	1 byte	if count is positive, this is considered
+			a run of data, negative is a run of
+			transparency.  If the run is data, it is
+			followed by count bytes of data.  If
+			it is transparent, the next RLE tag
+			simply follows it.
+			Runs do not cross line boundaries.
+ */
 
 #[repr(C)]
 pub struct sprite_t {
@@ -26,12 +59,12 @@ impl sprite_t {
     // SaveData
     // GetHeader
 
-    pub unsafe fn Draw(&mut self, x: c_int, y: c_int, mgl: &mut MGLDraw) {
+    pub fn Draw(&self, x: c_int, y: c_int, mgl: &mut MGLDraw) {
         sprite_draw(self, x, y, mgl, |src, _| src);
     }
 
     // bright: how much to darken or lighten the whole thing (-16 to +16 reasonable)
-    pub unsafe fn DrawBright(&mut self, x: c_int, y: c_int, mgl: &mut MGLDraw, bright: i8) {
+    pub fn DrawBright(&self, x: c_int, y: c_int, mgl: &mut MGLDraw, bright: i8) {
         if bright == 0 {
             return self.Draw(x, y, mgl); // don't waste time
         }
@@ -41,11 +74,11 @@ impl sprite_t {
 
     // color:  which hue (0-7) to use for the entire thing, ignoring its real hue
     // bright: how much to darken or lighten the whole thing (-16 to +16 reasonable)
-    pub unsafe fn DrawColored(&mut self, x: c_int, y: c_int, mgl: &mut MGLDraw, hue: u8, bright: i8) {
+    pub fn DrawColored(&self, x: c_int, y: c_int, mgl: &mut MGLDraw, hue: u8, bright: i8) {
         sprite_draw(self, x, y, mgl, |src, _| SprModifyLight(SprModifyColor(src, hue), bright));
     }
 
-    pub unsafe fn DrawOffColor(&mut self, x: c_int, y: c_int, mgl: &mut MGLDraw, from: u8, to: u8, bright: i8) {
+    pub fn DrawOffColor(&self, x: c_int, y: c_int, mgl: &mut MGLDraw, from: u8, to: u8, bright: i8) {
         if from == to && bright == 0 {
             return self.Draw(x, y, mgl); // don't waste time
         }
@@ -64,16 +97,16 @@ impl sprite_t {
     // (color 1-31).  Wherever those colors occur, they are instead used as the
     // degree to which the background should be brightened instead of drawn over.
     //   bright: how much to darken or lighten the whole thing (-16 to +16 reasonable)
-    pub unsafe fn DrawGhost(&mut self, x: c_int, y: c_int, mgl: &mut MGLDraw, bright: i8) {
+    pub fn DrawGhost(&self, x: c_int, y: c_int, mgl: &mut MGLDraw, bright: i8) {
         sprite_draw(self, x, y, mgl, |src, dst| SprModifyGhost(src, dst, bright));
     }
 
-    pub unsafe fn DrawGlow(&mut self, x: c_int, y: c_int, mgl: &mut MGLDraw, bright: i8) {
+    pub fn DrawGlow(&self, x: c_int, y: c_int, mgl: &mut MGLDraw, bright: i8) {
         sprite_draw(self, x, y, mgl, |src, dst| SprModifyGlow(src, dst, bright));
     }
 
     /// this makes half-height tilted black shadows (they darken by 4)
-    pub unsafe fn DrawShadow(&mut self, x: c_int, y: c_int, mgl: &mut MGLDraw) {
+    pub fn DrawShadow(&mut self, x: c_int, y: c_int, mgl: &mut MGLDraw) {
         sprite_draw_shadow(self, x, y, mgl);
     }
 
@@ -124,17 +157,17 @@ impl sprite_set_t {
 }
 
 #[no_mangle]
-pub unsafe extern fn SprModifyColor(color: u8, hue: u8) -> u8 {
+pub extern fn SprModifyColor(color: u8, hue: u8) -> u8 {
     (hue << 5) | (color & 31)
 }
 
 #[no_mangle]
-pub unsafe extern fn SprGetColor(color: u8) -> u8 {
+pub extern fn SprGetColor(color: u8) -> u8 {
     color >> 5
 }
 
 #[no_mangle]
-pub unsafe extern fn SprModifyLight(color: u8, bright: i8) -> u8 {
+pub extern fn SprModifyLight(color: u8, bright: i8) -> u8 {
     let mut value = (color & 31).wrapping_add(bright as u8);
     if value > 128 { value = 0; } // since byte is unsigned...
     else if value > 31 { value = 31; }
@@ -142,7 +175,7 @@ pub unsafe extern fn SprModifyLight(color: u8, bright: i8) -> u8 {
 }
 
 #[no_mangle]
-pub unsafe extern fn SprModifyGhost(src: u8, dst: u8, bright: i8) -> u8 {
+pub extern fn SprModifyGhost(src: u8, dst: u8, bright: i8) -> u8 {
     if src < 31 {
         SprModifyLight(dst, src as i8)
     } else {
@@ -151,22 +184,22 @@ pub unsafe extern fn SprModifyGhost(src: u8, dst: u8, bright: i8) -> u8 {
 }
 
 #[no_mangle]
-pub unsafe extern fn SprModifyGlow(src: u8, dst: u8, bright: i8) -> u8 {
+pub extern fn SprModifyGlow(src: u8, dst: u8, bright: i8) -> u8 {
     SprModifyLight(src, (dst & 31) as i8 + bright)
 }
 
 const MIN_X: c_int = 0;
 const MIN_Y: c_int = 0;
-const MAX_X: c_int = 639;
-const MAX_Y: c_int = 479;
+const MAX_X: c_int = 640;
+const MAX_Y: c_int = 480;
 
-unsafe fn sprite_draw<F: Fn(u8, u8) -> u8>(
+fn sprite_draw<F: Fn(u8, u8) -> u8>(
     spr: &sprite_t, mut x: c_int, mut y: c_int, mgl: &mut MGLDraw, f: F
 ) {
     x -= spr.ofsx as c_int;
     y -= spr.ofsy as c_int;
 
-    if x > MAX_X || y > MAX_Y {
+    if x >= MAX_X || y >= MAX_Y {
         return; // whole sprite is offscreen
     }
 
@@ -186,7 +219,7 @@ unsafe fn sprite_draw<F: Fn(u8, u8) -> u8>(
         }}
     }
 
-    let end_y = ::std::cmp::min(MAX_Y + 1, spr.height as c_int + y);
+    let end_y = ::std::cmp::min(MAX_Y, spr.height as c_int + y);
     while srcy < end_y {
         if src[0] & 128 != 0 { // transparent run
             let b = (src[0] & 127) as c_int;
@@ -196,7 +229,7 @@ unsafe fn sprite_draw<F: Fn(u8, u8) -> u8>(
         } else { // solid run
             let mut b = src[0] as c_int;
             src.advance(1);
-            if srcx < MIN_X - b || srcx > MAX_X {
+            if srcx < MIN_X - b || srcx >= MAX_X {
                 // don't draw this line
             } else if srcx < MIN_X {
                 // skip some of the beginning
@@ -205,16 +238,14 @@ unsafe fn sprite_draw<F: Fn(u8, u8) -> u8>(
                 src.advance(skip);
                 dst_idx += skip;
                 b -= skip;
-                if srcx > MAX_X - b {
-                    let skip = (b - (MAX_X - srcx)) - 1;
-                    apply!(b - skip);
+                if srcx >= MAX_X - b {
+                    apply!(MAX_X - srcx);
                 } else {
                     apply!(b);
                 }
-            } else if srcx > MAX_X - b {
+            } else if srcx >= MAX_X - b {
                 // skip some of the end
-                let skip = (srcx - (MAX_X - b)) - 1;
-                apply!(b - skip);
+                apply!(MAX_X - srcx);
             } else {
                 // do it all!
                 apply!(b);
@@ -234,13 +265,13 @@ unsafe fn sprite_draw<F: Fn(u8, u8) -> u8>(
     }
 }
 
-unsafe fn sprite_draw_shadow(
+fn sprite_draw_shadow(
     spr: &sprite_t, mut x: c_int, mut y: c_int, mgl: &mut MGLDraw
 ) {
     x -= spr.ofsx as c_int + spr.height as c_int / 2;
     y -= spr.ofsy as c_int / 2;
 
-    if x > MAX_X || y > MAX_Y {
+    if x >= MAX_X || y >= MAX_Y {
         return; // whole sprite is offscreen
     }
 
@@ -263,7 +294,7 @@ unsafe fn sprite_draw_shadow(
         }}
     }
 
-    let end_y = ::std::cmp::min(MAX_Y + 1, spr.height as c_int / 2 + y);
+    let end_y = ::std::cmp::min(MAX_Y, spr.height as c_int / 2 + y);
     while srcy < end_y {
         if src[0] & 128 != 0 { // transparent run
             let b = (src[0] & 127) as c_int;
@@ -273,7 +304,7 @@ unsafe fn sprite_draw_shadow(
         } else { // solid run
             let mut b = src[0] as c_int;
             src.advance(1);
-            if srcx < MIN_X - b || srcx > MAX_X {
+            if srcx < MIN_X - b || srcx >= MAX_X {
                 // don't draw this line
             } else if srcx < MIN_X {
                 // skip some of the beginning
@@ -282,16 +313,14 @@ unsafe fn sprite_draw_shadow(
                 src.advance(skip);
                 dst_idx += skip;
                 b -= skip;
-                if srcx > MAX_X - b {
-                    let skip = (b - (MAX_X - srcx)) - 1;
-                    apply!(b - skip);
+                if srcx >= MAX_X - b {
+                    apply!(MAX_X - srcx);
                 } else {
                     apply!(b);
                 }
-            } else if srcx > MAX_X - b {
+            } else if srcx >= MAX_X - b {
                 // skip some of the end
-                let skip = (srcx - (MAX_X - b)) - 1;
-                apply!(b - skip);
+                apply!(MAX_X - srcx);
             } else {
                 // do it all!
                 apply!(b);
