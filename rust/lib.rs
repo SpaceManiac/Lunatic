@@ -9,6 +9,7 @@ extern crate libc;
 extern crate flic;
 extern crate mersenne_twister;
 extern crate rand;
+extern crate byteorder;
 use libc::*;
 
 macro_rules! cstr {
@@ -56,16 +57,16 @@ macro_rules! cpp_alloc {
             Box::into_raw(Box::new(::std::mem::uninitialized()))
         }
         #[no_mangle]
-        pub unsafe extern fn $destruct(this: *mut sprite_t) {
+        pub unsafe extern fn $destruct(this: *mut $t) {
             ::std::ptr::drop_in_place(this);
         }
         #[no_mangle]
-        pub unsafe extern fn $dealloc(this: *mut sprite_t) {
+        pub unsafe extern fn $dealloc(this: *mut $t) {
             ::std::mem::forget(*Box::from_raw(this));
         }
         $(
             #[no_mangle]
-            pub unsafe extern fn $new(this: *mut sprite_t $(, $arg: $argT)*) {
+            pub unsafe extern fn $new(this: *mut $t $(, $arg: $argT)*) {
                 ::std::ptr::write(this, <$t>::$new2($($arg),*))
             }
         )*

@@ -45,6 +45,9 @@ public:
 	~sprite_set_t(void);
 
 	sprite_t *GetSprite(int which);
+
+	void* operator new(size_t);
+	void operator delete(void*, size_t);
 private:
 	bool Save(const char *fname);
 	bool Load(const char *fname);

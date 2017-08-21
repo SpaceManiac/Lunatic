@@ -1,10 +1,12 @@
 use libc::{c_char, c_int, free, malloc, FILE};
 use mgldraw::MGLDraw;
+use std::io;
+use byteorder::LittleEndian as BO;
 
 // the sprites are 12 bytes, not including the data itself
 // note that the value here is 16 - there are four bytes of
 // garbage between each sprite header
-const SPRITE_INFO_SIZE: c_int = 16;
+const SPRITE_INFO_SIZE: usize = 16;
 
 /*
 Jamul Sprite - JSP
@@ -50,7 +52,31 @@ pub struct sprite_set_t {
 }
 
 impl sprite_t {
-    // from_header
+    fn from_header(mut header: &[u8]) -> sprite_t {
+        use byteorder::ReadBytesExt;
+
+        assert_eq!(header.len(), SPRITE_INFO_SIZE);
+        sprite_t {
+            width: header.read_u16::<BO>().unwrap(),
+            height: header.read_u16::<BO>().unwrap(),
+            ofsx: header.read_i16::<BO>().unwrap(),
+            ofsy: header.read_i16::<BO>().unwrap(),
+            size: header.read_u32::<BO>().unwrap(),
+            data: 0 as *mut u8,
+        }
+    }
+
+    fn write_header<W: io::Write>(&self, dst: &mut W) -> io::Result<()> {
+        use byteorder::WriteBytesExt;
+
+        dst.write_u16::<BO>(self.width)?;
+        dst.write_u16::<BO>(self.height)?;
+        dst.write_i16::<BO>(self.ofsx)?;
+        dst.write_i16::<BO>(self.ofsy)?;
+        dst.write_u32::<BO>(self.size)?;
+        dst.write_u32::<BO>(0)?;
+        Ok(())
+    }
 
     pub unsafe fn LoadData(&mut self, f: *mut FILE) -> bool {
         let size = self.size as usize;
@@ -65,17 +91,6 @@ impl sprite_t {
 
         ::libc::fread(decay!(self.data), 1, size, f) == size
     }
-
-    pub unsafe fn SaveData(&mut self, f: *mut FILE) -> bool {
-        let size = self.size as usize;
-        if size == 0 || self.data.is_null() {
-            return true;
-        }
-
-        ::libc::fwrite(decay!(self.data), 1, size, f) == size
-    }
-
-    // GetHeader
 
     pub fn Draw(&self, x: c_int, y: c_int, mgl: &mut MGLDraw) {
         sprite_draw(self, x, y, mgl, |src, _| src);
@@ -124,7 +139,7 @@ impl sprite_t {
     }
 
     /// this makes half-height tilted black shadows (they darken by 4)
-    pub fn DrawShadow(&mut self, x: c_int, y: c_int, mgl: &mut MGLDraw) {
+    pub fn DrawShadow(&self, x: c_int, y: c_int, mgl: &mut MGLDraw) {
         sprite_draw_shadow(self, x, y, mgl);
     }
 
@@ -149,19 +164,100 @@ impl Drop for sprite_t {
 
 impl sprite_set_t {
     pub unsafe fn from_fname(fname: *const c_char) -> *mut sprite_set_t {
-        cpp!([fname as "char*"] -> *mut sprite_set_t as "sprite_set_t*" {
-            return new sprite_set_t(fname);
-        })
+        Box::into_raw(Box::new(sprite_set_t::load_unwrap(fname)))
     }
 
     pub unsafe fn delete(me: *mut sprite_set_t) {
-        cpp!([me as "sprite_set_t*"] {
-            delete me;
+        Box::from_raw(me);
+    }
+
+    pub unsafe fn load(fname: *const c_char) -> Option<sprite_set_t> {
+        use libc::{fopen, fread, fclose};
+
+        let f = fopen(fname, cstr!("rb"));
+        if f.is_null() { return None; }
+
+        // read the count
+        let mut count = 0u16;
+        fread(decay!(&mut count), 2, 1, f);
+        let count = count as usize;
+
+        #[cfg(debug_assertions)] {
+            println!("loading {}, count = {}", ::PctS(fname), count);
+        }
+
+        let spr = malloc(szof!(*mut sprite_t) * count as usize) as *mut *mut sprite_t;
+        if spr.is_null() {
+            fclose(f);
+            return None;
+        }
+
+        // allocate a buffer to load sprites into
+        let buffer = malloc(SPRITE_INFO_SIZE * count);
+        if buffer.is_null() {
+            fclose(f);
+            free(spr as *mut _);
+            return None;
+        }
+
+        // read in the sprite headers
+        if fread(buffer, SPRITE_INFO_SIZE, count, f) != count {
+            fclose(f);
+            free(spr as *mut _);
+            free(buffer as *mut _);
+            return None;
+        }
+
+        // allocate the sprites and read in the data for them
+        for i in 0..(count as usize) {
+            let header = ::std::slice::from_raw_parts(
+                buffer.offset((i * SPRITE_INFO_SIZE) as isize) as *const u8,
+                SPRITE_INFO_SIZE);
+            let mut sprite = Box::new(sprite_t::from_header(header));
+            if !sprite.LoadData(f) {
+                fclose(f);
+                // TODO: free stuff here..?
+                return None;
+            }
+            *spr.offset(i as isize) = Box::into_raw(sprite);
+        }
+        free(buffer);
+        fclose(f);
+
+        Some(sprite_set_t {
+            count: count as u16,
+            spr: spr,
         })
     }
 
+    pub unsafe fn load_unwrap(fname: *const c_char) -> sprite_set_t {
+        sprite_set_t::load(fname).unwrap_or_else(|| panic!("bad sprites: {}", ::PctS(fname)))
+    }
+
+    pub fn save(&self, fname: &str) -> io::Result<()> {
+        use std::fs::File;
+        use std::io::{Write, BufWriter};
+        use byteorder::WriteBytesExt;
+
+        let mut f = BufWriter::new(File::create(fname)?);
+
+        // write the count
+        f.write_u16::<BO>(self.count)?;
+
+        // write the sprites out
+        for spr in self.sprites() {
+            spr.write_header(&mut f)?;
+        }
+
+        // write the sprite data
+        for spr in self.sprites() {
+            f.write_all(spr.data())?;
+        }
+
+        Ok(())
+    }
+
     // Save(fname: *const c_char) -> bool
-    // Load(fname: *const c_char) -> bool
 
     pub fn GetSprite(&mut self, which: c_int) -> &mut sprite_t {
         self.sprites_mut()[which as usize]
@@ -178,6 +274,17 @@ impl sprite_set_t {
         assert!(!self.spr.is_null());
         unsafe {
             ::std::slice::from_raw_parts_mut(self.spr as *mut &mut sprite_t, self.count as usize)
+        }
+    }
+}
+
+impl Drop for sprite_set_t {
+    fn drop(&mut self) {
+        unsafe {
+            for i in 0..self.count {
+                Box::from_raw(*self.spr.offset(i as isize));
+            }
+            free(self.spr as *mut _);
         }
     }
 }
@@ -380,22 +487,23 @@ cpp_alloc! {
 }
 cpp_methods! {
     sprite_t;
-    fn Sprite_LoadData = LoadData(f: *mut FILE) -> bool;
-    fn Sprite_SaveData = SaveData(f: *mut FILE) -> bool;
     fn Sprite_Draw = Draw(x: c_int, y: c_int, mgl: &mut MGLDraw) -> ();
     fn Sprite_DrawBright = DrawBright(x: c_int, y: c_int, mgl: &mut MGLDraw, bright: i8) -> ();
+}
+
+cpp_alloc! {
+    sprite_set_t: SpriteSet_Alloc, SpriteSet_Destruct, SpriteSet_Dealloc;
+    fn SpriteSet_Load = load_unwrap(fname: *const c_char);
 }
 
 trait Advance {
     fn advance(&mut self, by: c_int);
 }
-
 impl<'a, T> Advance for &'a [T] {
     fn advance(&mut self, by: c_int) {
         *self = &self[by as usize..];
     }
 }
-
 impl<'a, T> Advance for &'a mut [T] {
     fn advance(&mut self, by: c_int) {
         *self = &mut ::std::mem::replace(self, &mut [])[by as usize..];

@@ -3,6 +3,7 @@ name = "lunatic"
 version = "0.1.0"
 dependencies = [
  "bitflags 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cpp 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cpp_build 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "enum-derive 0.1.0",
