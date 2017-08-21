@@ -196,8 +196,8 @@ pub unsafe extern fn GetJoyButtons() -> u32 {
 }
 
 #[no_mangle]
-pub unsafe extern fn GetControls() -> u8 {
-    (keyState | if joystickOn { GetJoyState() } else { EMPTY }).bits()
+pub unsafe extern fn GetControls() -> Controls {
+    (keyState | if joystickOn { GetJoyState() } else { EMPTY })
 }
 
 #[no_mangle]
@@ -212,8 +212,8 @@ pub unsafe extern fn GetTaps() -> Controls {
 }
 
 #[no_mangle]
-pub unsafe extern fn GetArrows() -> u8 {
-    arrowState.bits()
+pub unsafe extern fn GetArrows() -> Controls {
+    arrowState
 }
 
 #[no_mangle]

@@ -136,7 +136,7 @@ pub unsafe extern fn UpdatePauseMenu(mgl: &mut MGLDraw) -> u8 {
         cursor = 0;
     }
 
-    let c = Controls::from_bits_truncate(GetControls() | GetArrows());
+    let c = GetControls() | GetArrows();
 
     reptCounter += 1;
     if oldc.is_empty() || reptCounter > 10 {

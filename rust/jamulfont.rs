@@ -26,6 +26,14 @@ pub struct mfont_t {
     chars: [*mut u8; FONT_MAX_CHARS],
 }
 
+impl Drop for mfont_t {
+    fn drop(&mut self) {
+        if !self.data.is_null() {
+            unsafe { ::libc::free(self.data as *mut ::libc::c_void); }
+        }
+    }
+}
+
 // each character in the font is stored as:
 // width    1 byte       width of the character in pixels
 // data     width*height bytes of actual data
@@ -59,9 +67,7 @@ pub unsafe extern fn FontExit() {}
 
 #[no_mangle]
 pub unsafe extern fn FontFree(font: *mut mfont_t) {
-    if !(*font).data.is_null() {
-        ::libc::free((*font).data as *mut ::libc::c_void);
-    }
+    ::std::ptr::drop_in_place(font);
 }
 
 pub unsafe fn load_font(fname: *const c_char) -> Result<Box<mfont_t>, FontError> {

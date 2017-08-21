@@ -137,7 +137,7 @@ unsafe fn UpdateOptionsMenu(mgl: &mut MGLDraw) -> u8 {
     match optMode {
         OptMode::Menu => { // just going through options
             let c = mgl.LastKeyPressed();
-            let c2 = Controls::from_bits_truncate(GetControls() | GetArrows());
+            let c2 = GetControls() | GetArrows();
 
             if c == 27 {
                 return 1;
@@ -197,7 +197,7 @@ unsafe fn UpdateOptionsMenu(mgl: &mut MGLDraw) -> u8 {
         }
         OptMode::Controls => { // selecting keys to configure
             let c = mgl.LastKeyPressed();
-            let mut c2 = Controls::from_bits_truncate(GetControls() | GetArrows());
+            let mut c2 = GetControls() | GetArrows();
 
             if c == 27 {
                 optMode = OptMode::Menu;

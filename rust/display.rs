@@ -79,7 +79,7 @@ pub unsafe extern fn ExitDisplay() {
     if !gameFont[1].is_null() {
         FontFree(gameFont[1]);
         Box::from_raw(gameFont[1]);
-        gameFont[0] = 1 as *mut _;
+        gameFont[1] = 0 as *mut _;
     }
     Box::from_raw(dispList);
 }
