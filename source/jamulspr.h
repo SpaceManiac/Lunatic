@@ -12,6 +12,9 @@ public:
 
 	~sprite_t(void);
 
+	void* operator new(size_t);
+	void operator delete(void*, size_t);
+
 	bool LoadData(FILE *f);
 	bool SaveData(FILE *f);
 	void GetHeader(byte *buffer);

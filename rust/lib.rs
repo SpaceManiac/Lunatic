@@ -47,12 +47,37 @@ macro_rules! decay {
     ($e:expr) => { $e as *const _ as *mut _ };
 }
 
-macro_rules! cpp_export {
-    ($($cname:ident: $method:ident($id1:ident: $ty1:ty $(, $id2:ident: $ty2:ty)*) -> $o:ty;)*) => (
+macro_rules! cpp_alloc {
+    ($t:ty: $alloc:ident, $destruct:ident, $dealloc:ident;
+        $(fn $new:ident = $new2:ident($( $arg:ident: $argT:ty ),*);)*
+    ) => {
+        #[no_mangle]
+        pub unsafe extern fn $alloc() -> *mut $t {
+            Box::into_raw(Box::new(::std::mem::uninitialized()))
+        }
+        #[no_mangle]
+        pub unsafe extern fn $destruct(this: *mut sprite_t) {
+            ::std::ptr::drop_in_place(this);
+        }
+        #[no_mangle]
+        pub unsafe extern fn $dealloc(this: *mut sprite_t) {
+            ::std::mem::forget(*Box::from_raw(this));
+        }
         $(
             #[no_mangle]
-            pub unsafe extern fn $cname($id1: $ty1 $(, $id2: $ty2)*) -> $o {
-                $id1.$method($($id2),*)
+            pub unsafe extern fn $new(this: *mut sprite_t $(, $arg: $argT)*) {
+                ::std::ptr::write(this, <$t>::$new2($($arg),*))
+            }
+        )*
+    }
+}
+
+macro_rules! cpp_methods {
+    ($ty1:ty; $(fn $cname:ident = $method:ident($($id2:ident: $ty2:ty),*) -> $o:ty;)*) => (
+        $(
+            #[no_mangle]
+            pub unsafe extern fn $cname(this: &mut $ty1 $(, $id2: $ty2)*) -> $o {
+                this.$method($($id2),*)
             }
         )*
     )

@@ -366,14 +366,15 @@ impl MGLDraw {
     }
 }
 
-cpp_export! {
-    MGLDraw_Process: Process(mgl: &mut MGLDraw) -> bool;
-    MGLDraw_Flip: Flip(mgl: &mut MGLDraw) -> ();
-    MGLDraw_Box: Box(mgl: &mut MGLDraw, x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) -> ();
-    MGLDraw_FillBox: FillBox(mgl: &mut MGLDraw, x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) -> ();
-    MGLDraw_TeleportMouse: TeleportMouse(mgl: &mut MGLDraw, x: c_int, y: c_int) -> ();
-    MGLDraw_LoadBMP: LoadBMP(mgl: &mut MGLDraw, name: *const c_char) -> bool;
-    MGLDraw_GammaCorrect: GammaCorrect(mgl: &mut MGLDraw, gamma: u8) -> ();
+cpp_methods! {
+    MGLDraw;
+    fn MGLDraw_Process = Process() -> bool;
+    fn MGLDraw_Flip = Flip() -> ();
+    fn MGLDraw_Box = Box(x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) -> ();
+    fn MGLDraw_FillBox = FillBox(x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) -> ();
+    fn MGLDraw_TeleportMouse = TeleportMouse(x: c_int, y: c_int) -> ();
+    fn MGLDraw_LoadBMP = LoadBMP(name: *const c_char) -> bool;
+    fn MGLDraw_GammaCorrect = GammaCorrect(gamma: u8) -> ();
 }
 
 #[no_mangle]

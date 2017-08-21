@@ -1,11 +1,10 @@
-use libc::{c_char, c_int, free, malloc};
+use libc::{c_char, c_int, free, malloc, FILE};
 use mgldraw::MGLDraw;
 
 // the sprites are 12 bytes, not including the data itself
 // note that the value here is 16 - there are four bytes of
 // garbage between each sprite header
 const SPRITE_INFO_SIZE: c_int = 16;
-
 
 /*
 Jamul Sprite - JSP
@@ -36,12 +35,12 @@ count data chunks:
 
 #[repr(C)]
 pub struct sprite_t {
-    pub width: u16,
-    pub height: u16,
-    pub ofsx: i16,
-    pub ofsy: i16,
-    pub size: u32,
-    pub data: *mut u8,
+    width: u16,
+    height: u16,
+    ofsx: i16,
+    ofsy: i16,
+    size: u32,
+    data: *mut u8,
 }
 
 #[repr(C)]
@@ -51,12 +50,31 @@ pub struct sprite_set_t {
 }
 
 impl sprite_t {
-    // new()
-    // from_header(header: *mut u8)
-    // delete()
+    // from_header
 
-    // LoadData
-    // SaveData
+    pub unsafe fn LoadData(&mut self, f: *mut FILE) -> bool {
+        let size = self.size as usize;
+        if size == 0 {
+            return true;
+        }
+
+        self.data = malloc(size) as *mut u8;
+        if self.data.is_null() {
+            return false;
+        }
+
+        ::libc::fread(decay!(self.data), 1, size, f) == size
+    }
+
+    pub unsafe fn SaveData(&mut self, f: *mut FILE) -> bool {
+        let size = self.size as usize;
+        if size == 0 || self.data.is_null() {
+            return true;
+        }
+
+        ::libc::fwrite(decay!(self.data), 1, size, f) == size
+    }
+
     // GetHeader
 
     pub fn Draw(&self, x: c_int, y: c_int, mgl: &mut MGLDraw) {
@@ -118,6 +136,14 @@ impl sprite_t {
     pub fn data(&self) -> &[u8] {
         assert!(!self.data.is_null());
         unsafe { ::std::slice::from_raw_parts(self.data, self.size as usize) }
+    }
+}
+
+impl Drop for sprite_t {
+    fn drop(&mut self) {
+        if !self.data.is_null() {
+            unsafe { free(self.data as *mut _); }
+        }
     }
 }
 
@@ -349,9 +375,15 @@ fn apply<F: Fn(u8, u8) -> u8>(dst: &mut [u8], src: &[u8], len: i32, f: &F) {
     }
 }
 
-cpp_export! {
-    Sprite_Draw: Draw(spr: &mut sprite_t, x: c_int, y: c_int, mgl: &mut MGLDraw) -> ();
-    Sprite_DrawBright: DrawBright(spr: &mut sprite_t, x: c_int, y: c_int, mgl: &mut MGLDraw, bright: i8) -> ();
+cpp_alloc! {
+    sprite_t: Sprite_Alloc, Sprite_Destruct, Sprite_Dealloc;
+}
+cpp_methods! {
+    sprite_t;
+    fn Sprite_LoadData = LoadData(f: *mut FILE) -> bool;
+    fn Sprite_SaveData = SaveData(f: *mut FILE) -> bool;
+    fn Sprite_Draw = Draw(x: c_int, y: c_int, mgl: &mut MGLDraw) -> ();
+    fn Sprite_DrawBright = DrawBright(x: c_int, y: c_int, mgl: &mut MGLDraw, bright: i8) -> ();
 }
 
 trait Advance {

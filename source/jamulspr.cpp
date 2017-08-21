@@ -38,15 +38,16 @@ count data chunks:
 
 // CONSTRUCTORS & DESTRUCTORS
 
-sprite_t::sprite_t(void)
-{
-	width = 0;
-	height = 0;
-	ofsx = 0;
-	ofsy = 0;
-	size = 0;
-	data = NULL;
-}
+extern "C" sprite_t* Sprite_Alloc();
+extern "C" void Sprite_Destruct(sprite_t*);
+extern "C" void Sprite_Dealloc(void*);
+
+extern "C" void Sprite_New(sprite_t*);
+
+extern "C" bool Sprite_LoadData(sprite_t*, FILE*);
+extern "C" bool Sprite_SaveData(sprite_t*, FILE*);
+extern "C" void Sprite_Draw(sprite_t*, int, int, MGLDraw*);
+extern "C" void Sprite_DrawBright(sprite_t*, int, int, MGLDraw*, char);
 
 sprite_t::sprite_t(byte *info)
 {
@@ -57,43 +58,26 @@ sprite_t::sprite_t(byte *info)
 	memcpy(&size, &info[8], 4);
 }
 
-sprite_t::~sprite_t(void)
-{
-	if (data)
-		free(data);
+sprite_t::~sprite_t(void) {
+	Sprite_Destruct(this);
+}
+
+void* sprite_t::operator new(size_t) {
+	return Sprite_Alloc();
+}
+
+void sprite_t::operator delete(void* p, size_t) {
+	Sprite_Dealloc(p);
 }
 
 // REGULAR MEMBER FUNCTIONS
 
-bool sprite_t::LoadData(FILE *f)
-{
-	if (size == 0)
-		return TRUE;
-
-	data = (byte *) malloc(size);
-	if (!data)
-		return FALSE;
-
-	if (fread(data, 1, size, f) != size)
-	{
-		return FALSE;
-	}
-	return TRUE;
+bool sprite_t::LoadData(FILE *f) {
+	return Sprite_LoadData(this, f);
 }
 
-bool sprite_t::SaveData(FILE *f)
-{
-	if (size == 0)
-		return TRUE;
-
-	if (!data)
-		return TRUE;
-
-	if (fwrite(data, 1, size, f) != size)
-	{
-		return FALSE;
-	}
-	return TRUE;
+bool sprite_t::SaveData(FILE *f) {
+	return Sprite_SaveData(this, f);
 }
 
 void sprite_t::GetHeader(byte *buffer)
@@ -105,8 +89,6 @@ void sprite_t::GetHeader(byte *buffer)
 	memcpy(&buffer[8], &size, 4);
 }
 
-extern "C" void Sprite_Draw(sprite_t*, int, int, MGLDraw*);
-extern "C" void Sprite_DrawBright(sprite_t*, int, int, MGLDraw*, char);
 void sprite_t::Draw(int x, int y, MGLDraw *mgl) {
 	Sprite_Draw(this, x, y, mgl);
 }
