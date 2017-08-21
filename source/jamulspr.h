@@ -34,8 +34,9 @@ public:
 	word height;
 	short ofsx;
 	short ofsy;
-	dword size;
+private:
 	byte *data;
+	dword size;
 };
 
 class sprite_set_t
@@ -53,8 +54,8 @@ private:
 	bool Load(const char *fname);
 	void Free(void);
 
-	word count;
 	sprite_t **spr;
+	dword count;
 };
 
 #endif

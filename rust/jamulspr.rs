@@ -37,33 +37,35 @@ count data chunks:
 
 #[repr(C)]
 pub struct sprite_t {
+    // synced with C
     width: u16,
     height: u16,
     ofsx: i16,
     ofsy: i16,
-    size: u32,
-    data: *mut u8,
+    // unsynced
+    data: Box<[u8]>,
 }
 
 #[repr(C)]
 pub struct sprite_set_t {
-    count: u16,
-    spr: *mut *mut sprite_t,
+    spr: Box<[Box<sprite_t>]>,
 }
 
 impl sprite_t {
-    fn from_header(mut header: &[u8]) -> sprite_t {
+    fn load<R: io::Read>(mut header: &[u8], src: &mut R) -> io::Result<sprite_t> {
         use byteorder::ReadBytesExt;
 
         assert_eq!(header.len(), SPRITE_INFO_SIZE);
-        sprite_t {
-            width: header.read_u16::<BO>().unwrap(),
-            height: header.read_u16::<BO>().unwrap(),
-            ofsx: header.read_i16::<BO>().unwrap(),
-            ofsy: header.read_i16::<BO>().unwrap(),
-            size: header.read_u32::<BO>().unwrap(),
-            data: 0 as *mut u8,
-        }
+        let width = header.read_u16::<BO>()?;
+        let height = header.read_u16::<BO>()?;
+        let ofsx = header.read_i16::<BO>()?;
+        let ofsy = header.read_i16::<BO>()?;
+        let size = header.read_u32::<BO>()?;
+
+        let mut data = vec![0; size as usize].into_boxed_slice();
+        src.read_exact(&mut data[..])?;
+
+        Ok(sprite_t { width, height, ofsx, ofsy, data })
     }
 
     fn write_header<W: io::Write>(&self, dst: &mut W) -> io::Result<()> {
@@ -73,23 +75,18 @@ impl sprite_t {
         dst.write_u16::<BO>(self.height)?;
         dst.write_i16::<BO>(self.ofsx)?;
         dst.write_i16::<BO>(self.ofsy)?;
-        dst.write_u32::<BO>(self.size)?;
+        dst.write_u32::<BO>(self.data.len() as u32)?;
         dst.write_u32::<BO>(0)?;
         Ok(())
     }
 
-    pub unsafe fn LoadData(&mut self, f: *mut FILE) -> bool {
-        let size = self.size as usize;
-        if size == 0 {
-            return true;
-        }
+    fn data(&self) -> &[u8] {
+        &self.data[..]
+    }
 
-        self.data = malloc(size) as *mut u8;
-        if self.data.is_null() {
-            return false;
-        }
-
-        ::libc::fread(decay!(self.data), 1, size, f) == size
+    pub fn get_coords(&self, x: c_int, y: c_int) -> (c_int, c_int, c_int, c_int) {
+        let (rx, ry) = (x - self.ofsx as c_int, y - self.ofsy as c_int);
+        (rx, ry, rx + self.width as c_int, ry + self.height as c_int)
     }
 
     pub fn Draw(&self, x: c_int, y: c_int, mgl: &mut MGLDraw) {
@@ -142,24 +139,6 @@ impl sprite_t {
     pub fn DrawShadow(&self, x: c_int, y: c_int, mgl: &mut MGLDraw) {
         sprite_draw_shadow(self, x, y, mgl);
     }
-
-    pub fn get_coords(&self, x: c_int, y: c_int) -> (c_int, c_int, c_int, c_int) {
-        let (rx, ry) = (x - self.ofsx as c_int, y - self.ofsy as c_int);
-        (rx, ry, rx + self.width as c_int, ry + self.height as c_int)
-    }
-
-    pub fn data(&self) -> &[u8] {
-        assert!(!self.data.is_null());
-        unsafe { ::std::slice::from_raw_parts(self.data, self.size as usize) }
-    }
-}
-
-impl Drop for sprite_t {
-    fn drop(&mut self) {
-        if !self.data.is_null() {
-            unsafe { free(self.data as *mut _); }
-        }
-    }
 }
 
 impl sprite_set_t {
@@ -171,67 +150,42 @@ impl sprite_set_t {
         Box::from_raw(me);
     }
 
-    pub unsafe fn load(fname: *const c_char) -> Option<sprite_set_t> {
-        use libc::{fopen, fread, fclose};
+    pub fn load(fname: &str) -> io::Result<sprite_set_t> {
+        use std::fs::File;
+        use std::io::{Read, BufRead, BufReader};
+        use byteorder::ReadBytesExt;
 
-        let f = fopen(fname, cstr!("rb"));
-        if f.is_null() { return None; }
+        let mut f = File::open(fname)?;
 
         // read the count
-        let mut count = 0u16;
-        fread(decay!(&mut count), 2, 1, f);
-        let count = count as usize;
+        let count = f.read_u16::<BO>()? as usize;
 
         #[cfg(debug_assertions)] {
-            println!("loading {}, count = {}", ::PctS(fname), count);
-        }
-
-        let spr = malloc(szof!(*mut sprite_t) * count as usize) as *mut *mut sprite_t;
-        if spr.is_null() {
-            fclose(f);
-            return None;
+            println!("loading {}, count = {}", fname, count);
         }
 
         // allocate a buffer to load sprites into
-        let buffer = malloc(SPRITE_INFO_SIZE * count);
-        if buffer.is_null() {
-            fclose(f);
-            free(spr as *mut _);
-            return None;
-        }
+        let mut buffer = vec![0; SPRITE_INFO_SIZE * count];
 
         // read in the sprite headers
-        if fread(buffer, SPRITE_INFO_SIZE, count, f) != count {
-            fclose(f);
-            free(spr as *mut _);
-            free(buffer as *mut _);
-            return None;
-        }
+        f.read_exact(&mut buffer[..])?;
 
         // allocate the sprites and read in the data for them
-        for i in 0..(count as usize) {
-            let header = ::std::slice::from_raw_parts(
-                buffer.offset((i * SPRITE_INFO_SIZE) as isize) as *const u8,
-                SPRITE_INFO_SIZE);
-            let mut sprite = Box::new(sprite_t::from_header(header));
-            if !sprite.LoadData(f) {
-                fclose(f);
-                // TODO: free stuff here..?
-                return None;
-            }
-            *spr.offset(i as isize) = Box::into_raw(sprite);
+        let mut spr = Vec::with_capacity(count);
+        for i in 0..count {
+            let header = &buffer[i * SPRITE_INFO_SIZE .. (i + 1) * SPRITE_INFO_SIZE];
+            spr.push(Box::new(
+                sprite_t::load(header, &mut f)?
+            ));
         }
-        free(buffer);
-        fclose(f);
 
-        Some(sprite_set_t {
-            count: count as u16,
-            spr: spr,
-        })
+        Ok(sprite_set_t { spr: spr.into_boxed_slice() })
     }
 
     pub unsafe fn load_unwrap(fname: *const c_char) -> sprite_set_t {
-        sprite_set_t::load(fname).unwrap_or_else(|| panic!("bad sprites: {}", ::PctS(fname)))
+        let fname2 = ::std::ffi::CStr::from_ptr(fname).to_str().unwrap();
+        sprite_set_t::load(fname2).unwrap_or_else(|e|
+            panic!("bad sprites {}: {}", ::PctS(fname), e))
     }
 
     pub fn save(&self, fname: &str) -> io::Result<()> {
@@ -242,7 +196,7 @@ impl sprite_set_t {
         let mut f = BufWriter::new(File::create(fname)?);
 
         // write the count
-        f.write_u16::<BO>(self.count)?;
+        f.write_u16::<BO>(self.spr.len() as u16)?;
 
         // write the sprites out
         for spr in self.sprites() {
@@ -257,34 +211,19 @@ impl sprite_set_t {
         Ok(())
     }
 
-    // Save(fname: *const c_char) -> bool
-
     pub fn GetSprite(&mut self, which: c_int) -> &mut sprite_t {
         self.sprites_mut()[which as usize]
     }
 
     pub fn sprites(&self) -> &[&sprite_t] {
-        assert!(!self.spr.is_null());
         unsafe {
-            ::std::slice::from_raw_parts(self.spr as *const &sprite_t, self.count as usize)
+            ::std::slice::from_raw_parts(self.spr.as_ptr() as *const &sprite_t, self.spr.len())
         }
     }
 
     pub fn sprites_mut(&mut self) -> &mut [&mut sprite_t] {
-        assert!(!self.spr.is_null());
         unsafe {
-            ::std::slice::from_raw_parts_mut(self.spr as *mut &mut sprite_t, self.count as usize)
-        }
-    }
-}
-
-impl Drop for sprite_set_t {
-    fn drop(&mut self) {
-        unsafe {
-            for i in 0..self.count {
-                Box::from_raw(*self.spr.offset(i as isize));
-            }
-            free(self.spr as *mut _);
+            ::std::slice::from_raw_parts_mut(self.spr.as_mut_ptr() as *mut &mut sprite_t, self.spr.len())
         }
     }
 }
