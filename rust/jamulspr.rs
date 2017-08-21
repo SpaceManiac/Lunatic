@@ -1,4 +1,4 @@
-use libc::{c_char, c_int, free, malloc, FILE};
+use libc::{c_char, c_int};
 use mgldraw::MGLDraw;
 use std::io;
 use byteorder::LittleEndian as BO;
@@ -152,10 +152,10 @@ impl sprite_set_t {
 
     pub fn load(fname: &str) -> io::Result<sprite_set_t> {
         use std::fs::File;
-        use std::io::{Read, BufRead, BufReader};
+        use std::io::{Read, BufReader};
         use byteorder::ReadBytesExt;
 
-        let mut f = File::open(fname)?;
+        let mut f = BufReader::new(File::open(fname)?);
 
         // read the count
         let count = f.read_u16::<BO>()? as usize;
