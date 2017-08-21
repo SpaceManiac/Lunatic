@@ -115,11 +115,7 @@ impl Drop for MGLDraw {
 }
 
 impl MGLDraw {
-    pub unsafe fn new(name: *const c_char, xRes: c_int, yRes: c_int, window: bool) -> *mut MGLDraw {
-        Box::into_raw(Box::new(MGLDraw::inner_new(name, xRes, yRes, window)))
-    }
-
-    unsafe fn inner_new(name: *const c_char, xRes: c_int, yRes: c_int, window: bool) -> MGLDraw {
+    pub unsafe fn new(name: *const c_char, xRes: c_int, yRes: c_int, window: bool) -> MGLDraw {
         allegro_init();
         install_keyboard();
         install_mouse();
@@ -155,10 +151,6 @@ impl MGLDraw {
             lastKeyPressed: 0,
             mouseDown: 0,
         }
-    }
-
-    pub unsafe fn delete(mgl: *mut MGLDraw) {
-        Box::from_raw(mgl);
     }
 
     pub unsafe fn Process(&mut self) -> bool {
@@ -202,14 +194,10 @@ impl MGLDraw {
         self.Process();
     }
 
-    pub unsafe fn ClearScreen(&mut self) {
-        for i in 0..self.xRes * self.yRes {
-            *self.scrn.offset(i as isize) = 0u8;
+    pub fn ClearScreen(&mut self) {
+        for pixel in self.get_screen() {
+            *pixel = 0;
         }
-    }
-
-    pub unsafe fn GetScreen(&mut self) -> *mut u8 {
-        self.scrn
     }
 
     pub fn get_screen(&mut self) -> &mut [u8] {
@@ -313,10 +301,6 @@ impl MGLDraw {
     }
 
     pub unsafe fn LoadBMP(&mut self, name: *const c_char) -> bool {
-        /*let me = self;
-        cpp!([me as "MGLDraw*", name as "const char*"] -> bool as "bool" {
-            return me->LoadBMP(name);
-        })*/
         use libc::{fopen, fread, fclose};
         use ffi::win::*;
 

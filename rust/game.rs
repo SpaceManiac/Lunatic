@@ -157,7 +157,7 @@ unsafe fn InitLevel(map: u8) -> bool {
     }
 
     // make a copy of the map to be played
-    curMap = Map::from_map(curWorld.map[map as usize]);
+    curMap = Map::from_map(&*curWorld.map[map as usize]);
     curMapFlags = (*curMap).flags;
 
     match ::player::PlayerGetMusicSettings() {

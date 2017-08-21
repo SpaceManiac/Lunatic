@@ -53,7 +53,7 @@ pub const ZERO_WORLD: world_t = world_t {
 pub unsafe extern fn NewWorld(world: &mut world_t, mgl: &mut MGLDraw) -> u8 {
     world.numMaps = 1;
     mgl.LoadBMP(cstr!("graphics\\forestTiles.bmp"));
-    ::tile::SetTiles(mgl.GetScreen());
+    ::tile::set_tiles(mgl.get_screen());
 
     // reset all the terrain
     world.terrain = mem::zeroed();

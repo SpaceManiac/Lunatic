@@ -157,14 +157,14 @@ pub unsafe fn ExitBullets() {
 }
 
 #[no_mangle]
-pub unsafe extern fn Bulletable(map: &Map, x: c_int, y: c_int) -> bool {
+pub extern fn Bulletable(map: &Map, x: c_int, y: c_int) -> bool {
     let tile = map.get_tile(x, y);
     !(tile.wall != 0 ||
         (tile.item >= ::items::MAX_SHOOTABLE_ITMS as u8 && tile.item < ::items::NEW_PICKUP_ITMS as u8))
 }
 
 #[no_mangle]
-pub unsafe extern fn OffScreenBulletDie(me: &mut bullet_t, map: &Map) {
+pub extern fn OffScreenBulletDie(me: &mut bullet_t, map: &Map) {
     if me.x < 0 || me.y < 0 ||
         me.x >= map.width * ::tile::TILE_WIDTH * ::FIXAMT ||
         me.y >= map.height * ::tile::TILE_HEIGHT * ::FIXAMT

@@ -91,11 +91,6 @@ pub unsafe extern fn GetDisplayMGL<'a>() -> &'a mut MGLDraw {
 }
 
 #[no_mangle]
-pub unsafe extern fn GetDisplayScreen() -> *mut u8 {
-    (*mgl).GetScreen()
-}
-
-#[no_mangle]
 pub unsafe extern fn GetGamma() -> u8 {
     gammaCorrection
 }
@@ -344,12 +339,12 @@ pub unsafe extern fn RenderItAll(world: *mut ::world::world_t, map: &mut Map, fl
 
 // these calls return whether they worked or not, but frankly, we don't care
 #[no_mangle]
-pub unsafe extern fn SprDraw(x: c_int, y: c_int, z: c_int, hue: u8, bright: i8, spr: *mut sprite_t, flags: DisplayFlags) {
+pub unsafe extern fn SprDraw(x: c_int, y: c_int, z: c_int, hue: u8, bright: i8, spr: *const sprite_t, flags: DisplayFlags) {
     (*dispList).DrawSprite(x, y, z, 0, hue, bright, spr, flags);
 }
 
 #[no_mangle]
-pub unsafe extern fn SprDrawOff(x: c_int, y: c_int, z: c_int, fromHue: u8, hue: u8, bright: i8, spr: *mut sprite_t, flags: DisplayFlags) {
+pub unsafe extern fn SprDrawOff(x: c_int, y: c_int, z: c_int, fromHue: u8, hue: u8, bright: i8, spr: *const sprite_t, flags: DisplayFlags) {
     (*dispList).DrawSprite(x, y, z, fromHue as i32, hue, bright, spr, flags | DISPLAY_OFFCOLOR);
 }
 
@@ -383,7 +378,7 @@ struct displayObj_t {
     y: c_int,
     z: c_int,
     z2: c_int,
-    spr: *mut sprite_t,
+    spr: *const sprite_t,
     hue: u8,
     bright: i8,
     flags: DisplayFlags,
@@ -469,7 +464,7 @@ impl DisplayList {
 
     fn DrawSprite(&mut self,
         x: c_int, y: c_int, z: c_int, z2: c_int,
-        hue: u8, bright: i8, spr: *mut sprite_t, flags: DisplayFlags
+        hue: u8, bright: i8, spr: *const sprite_t, flags: DisplayFlags
     ) -> bool {
         let (scrx_, scry_) = unsafe { (scrx, scry) };
         if (x - scrx_ + 320) < -DISPLAY_XBORDER ||
@@ -526,9 +521,9 @@ impl DisplayList {
             } else if o.flags.contains(DISPLAY_SHADOW) {
                 (*o.spr).DrawShadow(x, y, mgl_);
             } else if o.flags.contains(DISPLAY_PARTICLE) {
-                RenderParticle(x, y, mgl_.GetScreen(), o.hue, o.bright as u8);
+                RenderParticle(x, y, mgl_.get_screen(), o.hue, o.bright as u8);
             } else if o.flags.contains(DISPLAY_LIGHTNING) {
-                RenderLightningParticle(x, o.y - scry, o.z - scrx, o.z2 - scry, o.bright as c_int, o.hue, mgl_.GetScreen());
+                RenderLightningParticle(x, o.y - scry, o.z - scrx, o.z2 - scry, o.bright as c_int, o.hue, mgl_.get_screen());
             } else if o.flags.contains(DISPLAY_GHOST) {
                 (*o.spr).DrawGhost(x, y, mgl_, o.bright);
             } else if o.flags.contains(DISPLAY_GLOW) {

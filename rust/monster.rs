@@ -369,7 +369,7 @@ unsafe fn LoadMySprite(type_: MonsterType) {
 }
 
 #[no_mangle]
-pub unsafe extern fn GetMonsterSprite(mut type_: MonsterType, seq: Animation, frm: u8, facing: u8) -> *mut sprite_t {
+pub unsafe extern fn GetMonsterSprite(mut type_: MonsterType, seq: Animation, frm: u8, facing: u8) -> *const sprite_t {
     if type_ == MonsterType::MONS_BOUAPHA {
         if player.weapon == Weapon::WPN_PWRARMOR {
             type_ = MonsterType::MONS_PWRBOUAPHA;

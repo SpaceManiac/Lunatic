@@ -257,9 +257,10 @@ pub unsafe extern fn UpdateParticles(map: &mut Map) {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn RenderParticle(x: c_int, y: c_int, mut scrn: *mut u8, color: u8, size: u8) {
+pub unsafe fn RenderParticle(x: c_int, y: c_int, scrn: &mut [u8], color: u8, size: u8) {
     use std::cmp::max;
+
+    let mut scrn = scrn.as_mut_ptr();
 
     macro_rules! incr {
         ($by:expr) => { scrn = scrn.offset($by) }
@@ -324,11 +325,11 @@ static ctab: [u8; 25] = [
     8, 3, 2, 3, 8
 ];
 
-#[no_mangle]
-pub unsafe extern fn RenderLightningParticle(
+pub unsafe fn RenderLightningParticle(
     x1: c_int, y1: c_int, x2: c_int, y2: c_int,
-    range: c_int, bright: u8, mut scrn: *mut u8,
+    range: c_int, bright: u8, scrn_: &mut [u8],
 ) {
+    let mut scrn = scrn_.as_mut_ptr();
     // base case: draw the (x1, y1) pixel
     if x1 - x2 < 2 && x1 - x2 > -2 && y1 - y2 < 2 && y1 - y2 > -2 {
         if x1 >= 0 && x1 < 635 && y1 >= 0 && y1 < 475 {
@@ -354,8 +355,8 @@ pub unsafe extern fn RenderLightningParticle(
         let range = ::std::cmp::max(1, range);
         let midx = (x1 + x2) / 2 + MGL_random(range) - range / 2;
         let midy = (y1 + y2) / 2 + MGL_random(range) - range / 2;
-        RenderLightningParticle(x1, y1, midx, midy, range * 3 / 4, bright, scrn);
-        RenderLightningParticle(midx, midy, x2, y2, range * 3 / 4, bright, scrn);
+        RenderLightningParticle(x1, y1, midx, midy, range * 3 / 4, bright, scrn_);
+        RenderLightningParticle(midx, midy, x2, y2, range * 3 / 4, bright, scrn_);
     }
 }
 

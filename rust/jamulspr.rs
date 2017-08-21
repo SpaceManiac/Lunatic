@@ -211,8 +211,8 @@ impl sprite_set_t {
         Ok(())
     }
 
-    pub fn GetSprite(&mut self, which: c_int) -> &mut sprite_t {
-        self.sprites_mut()[which as usize]
+    pub fn GetSprite(&self, which: c_int) -> &sprite_t {
+        self.sprites()[which as usize]
     }
 
     pub fn sprites(&self) -> &[&sprite_t] {

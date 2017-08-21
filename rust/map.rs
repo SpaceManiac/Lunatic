@@ -1,6 +1,7 @@
 use libc::{c_int, c_char};
 use world::world_t;
 use mgldraw::MGLDraw;
+use monster::MonsterType;
 
 pub const MAX_LIGHT: i8 = 16;
 pub const MIN_LIGHT: i8 = -32;
@@ -132,7 +133,7 @@ pub struct mapTile_t {
 pub struct mapBadguy_t {
     pub x: u8,
     pub y: u8,
-    pub type_: u8,
+    pub type_: MonsterType,
 }
 
 #[repr(C)]
@@ -167,7 +168,7 @@ impl Map {
         })
     }
 
-    pub unsafe fn from_map(m: *const Map) -> *mut Map {
+    pub unsafe fn from_map(m: &Map) -> *mut Map {
         cpp!([m as "Map*"] -> *mut Map as "Map*" {
             return new Map(m);
         })
@@ -183,16 +184,18 @@ impl Map {
         cpp!([me as "Map*"] { delete me; });
     }
 
-    pub unsafe fn get_tile(&self, x: c_int, y: c_int) -> &mapTile_t {
+    pub fn get_tile(&self, x: c_int, y: c_int) -> &mapTile_t {
+        assert!(!self.map.is_null());
         assert!(x >= 0 && x < self.width);
         assert!(y >= 0 && y < self.height);
-        &*self.map.offset((x + y * self.width) as isize)
+        unsafe { &*self.map.offset((x + y * self.width) as isize) }
     }
 
-    pub unsafe fn get_tile_mut(&mut self, x: c_int, y: c_int) -> &mut mapTile_t {
+    pub fn get_tile_mut(&mut self, x: c_int, y: c_int) -> &mut mapTile_t {
+        assert!(!self.map.is_null());
         assert!(x >= 0 && x < self.width);
         assert!(y >= 0 && y < self.height);
-        &mut *self.map.offset((x + y * self.width) as isize)
+        unsafe { &mut *self.map.offset((x + y * self.width) as isize) }
     }
 
     pub unsafe fn Save(&mut self, f: *mut ::libc::FILE) {

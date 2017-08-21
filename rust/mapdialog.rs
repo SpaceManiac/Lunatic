@@ -140,7 +140,7 @@ pub unsafe extern fn MapDialogClick(msx: c_int, msy: c_int) -> u8 {
         }
         // copy
         if msx > 379 && msy > 60 && msx < 471 && msy < 60 + 15 {
-            world.map[world.numMaps as usize] = Map::from_map(world.map[mapNum as usize]);
+            world.map[world.numMaps as usize] = Map::from_map(&*world.map[mapNum as usize]);
             world.numMaps += 1;
         }
     }

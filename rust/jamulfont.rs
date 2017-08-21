@@ -7,23 +7,23 @@ pub const FONT_MAX_CHARS: usize = 128;
 #[repr(C)]
 pub struct mfont_t {
     /// # of characters in the font
-    pub numChars: u8,
+    numChars: u8,
     /// the first character's ASCII value (they ascend from there)
-    pub firstChar: u8,
+    firstChar: u8,
     /// height in pixels of the font
-    pub height: u8,
+    height: u8,
     /// # of pixels wide to make spaces
-    pub spaceSize: u8,
+    spaceSize: u8,
     /// # of pixels between adjacent letters
-    pub gapSize: u8,
+    gapSize: u8,
     /// # of pixels to descend for a carriage return
-    pub gapHeight: u8,
+    gapHeight: u8,
     /// the size in bytes of the data of the characters themselves
-    pub dataSize: usize,
+    dataSize: usize,
     // pointer to the character data
-    pub data: *mut u8,
+    data: *mut u8,
     /// pointers to each character's data (can't have more than FONT_MAX_CHARS)
-    pub chars: [*mut u8; FONT_MAX_CHARS],
+    chars: [*mut u8; FONT_MAX_CHARS],
 }
 
 // each character in the font is stored as:
@@ -144,7 +144,7 @@ unsafe fn print_char<F>(mut x: c_int, mut y: c_int, c: u8, font: &mfont_t, f: F)
 {
     let fontmgl = &mut *fontmgl_;
     let (scrWidth, scrHeight) = fontmgl.get_size();
-    let mut dst = fontmgl.GetScreen().offset(x as isize + y as isize * scrWidth as isize);
+    let mut dst = fontmgl.get_screen().as_mut_ptr().offset(x as isize + y as isize * scrWidth as isize);
     if c < font.firstChar || c >= (font.firstChar + font.numChars) {
         return; // unprintable
     }

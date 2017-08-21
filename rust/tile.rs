@@ -23,9 +23,7 @@ pub unsafe extern fn InitTiles(mgl: *mut MGLDraw) {
 #[no_mangle]
 pub extern fn ExitTiles() {}
 
-#[no_mangle]
-pub unsafe extern fn SetTiles(scrn: *const u8) {
-    let scrn = ::std::slice::from_raw_parts(scrn, 640 * 480);
+pub unsafe fn set_tiles(scrn: &[u8]) {
     let (mut x, mut y) = (0, 0);
     let (w, h) = (TILE_WIDTH as usize, TILE_HEIGHT as usize);
     for i in 0..NUMTILES {
@@ -39,6 +37,11 @@ pub unsafe extern fn SetTiles(scrn: *const u8) {
             y += h;
         }
     }
+}
+
+#[no_mangle]
+pub unsafe extern fn SetTiles(scrn: *const u8) {
+    set_tiles(::std::slice::from_raw_parts(scrn, 640 * 480));
 }
 
 #[no_mangle]
