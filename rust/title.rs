@@ -334,7 +334,7 @@ pub unsafe extern fn WorldPicker(mgl: &mut MGLDraw) -> u8 {
     mgl.Flip();
     let planetSpr = sprite_set_t::load("graphics/planet.jsp").unwrap();
     mgl.LoadBMP(cstr!("graphics/picker.bmp"));
-    let pickerFont = ::jamulfont::load_font(cstr!("graphics/gillsans4.jft")).ok().unwrap();
+    let pickerFont = mfont_t::load("graphics/gillsans4.jft").unwrap();
 
     pickerpos = 0;
     pickeroffset = 0;

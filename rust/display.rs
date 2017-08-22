@@ -56,14 +56,14 @@ pub unsafe extern fn InitDisplay(mainmgl: *mut MGLDraw) -> bool {
     if mgl.is_null() { return false; }
 
     FontInit(mgl);
-    gameFont[0] = Box::into_raw(match load_font(cstr!("graphics/girlsrweird.jft")) {
-        Ok(font) => font,
+    gameFont[0] = match mfont_t::load("graphics/girlsrweird.jft") {
+        Ok(font) => Box::into_raw(Box::new(font)),
         Err(_) => { return false; }
-    });
-    gameFont[1] = Box::into_raw(match load_font(cstr!("graphics/verdana.jft")) {
-        Ok(font) => font,
+    };
+    gameFont[1] = match mfont_t::load("graphics/verdana.jft") {
+        Ok(font) => Box::into_raw(Box::new(font)),
         Err(_) => { return false; }
-    });
+    };
 
     dispList = Box::into_raw(Box::new(DisplayList::new()));
     true
