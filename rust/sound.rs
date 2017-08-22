@@ -339,7 +339,7 @@ pub unsafe extern fn MakeSound(snd: Sound, mut x: c_int, mut y: c_int, flags: So
     let vol = -((x - cx)*(x - cx)+(y - cy)*(y - cy)) / 128;
     if vol < -5000 { return } // too quiet to play
     let vol = vol * 255 / 5000 + 255;
-    GoPlaySound(snd as c_int, pan, vol, flags.bits(), priority);
+    GoPlaySound(snd as c_int, pan, vol, flags, priority);
 }
 
 pub use self::MakeSound as make_sound;
@@ -348,7 +348,7 @@ pub use self::MakeSound as make_sound;
 pub unsafe extern fn MakeNormalSound(snd: Sound) {
     if !SOUND_AVAILABLE || !::options::opt.sound { return }
 
-    GoPlaySound(snd as c_int, 128, 255, (SND_MAXPRIORITY | SND_CUTOFF | SND_ONE).bits(), MAX_SNDPRIORITY);
+    GoPlaySound(snd as c_int, 128, 255, SND_MAXPRIORITY | SND_CUTOFF | SND_ONE, MAX_SNDPRIORITY);
 }
 
 pub use self::MakeNormalSound as make_normal_sound;

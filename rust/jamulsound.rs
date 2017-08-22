@@ -265,8 +265,6 @@ pub unsafe extern fn JamulSoundUpdate() {
 
 /// call this a lot, it plays sounds
 #[no_mangle]
-pub unsafe extern fn GoPlaySound(num: c_int, pan: c_int, vol: c_int, flags: u8, priority: c_int) {
-    SOUND.borrow_mut(|s| {
-        s.play(num, pan, vol, SoundFlags::from_bits_truncate(flags), priority);
-    });
+pub unsafe extern fn GoPlaySound(num: c_int, pan: c_int, vol: c_int, flags: SoundFlags, priority: c_int) {
+    SOUND.borrow_mut(|s| s.play(num, pan, vol, flags, priority));
 }
