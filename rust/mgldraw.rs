@@ -224,6 +224,18 @@ impl MGLDraw {
         }
     }
 
+    pub fn get_palette(&mut self, dest: &mut [palette_t]) {
+        assert_eq!(dest.len(), 256);
+        for (&c, p) in self.pal.iter().zip(dest.iter_mut()) {
+            *p = unsafe { palette_t {
+                alpha: geta(c) as u8,
+                red: getr(c) as u8,
+                blue: getb(c) as u8,
+                green: getg(c) as u8,
+            }};
+        }
+    }
+
     pub fn Box(&mut self, x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) {
         use std::cmp::{min, max};
 

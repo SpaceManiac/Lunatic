@@ -43,6 +43,10 @@ extern {
     pub fn destroy_bitmap(bitmap: *mut BITMAP);
     pub fn blit(source: *mut BITMAP, dest: *mut BITMAP, sx: c_int, sy: c_int, dx: c_int, dy: c_int, w: c_int, h: c_int);
     pub fn makecol(r: c_int, g: c_int, b: c_int) -> c_int;
+    pub fn getr(c: c_int) -> c_int;
+    pub fn getg(c: c_int) -> c_int;
+    pub fn getb(c: c_int) -> c_int;
+    pub fn geta(c: c_int) -> c_int;
     pub fn putpixel(bmp: *mut BITMAP, x: c_int, y: c_int, color: c_int);
     pub fn _putpixel32(bmp: *mut BITMAP, x: c_int, y: c_int, color: c_int);
 

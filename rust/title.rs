@@ -22,7 +22,6 @@ struct title_t {
 }
 
 extern {
-    pub fn SplashScreen(mgl: *mut MGLDraw, fname: *const c_char, delay: c_int, sound: u8);
     pub fn MainMenu(mgl: *mut MGLDraw) -> u8;
 
     #[link_name="title_oldc"]
@@ -456,6 +455,7 @@ pub unsafe extern fn ReScanWorldNames() {
             break
         }
     }
+    _findclose(hFile);
 
     // remove any that aren't valid
     for i in 5..MAX_CUSTOM {
@@ -543,10 +543,199 @@ pub unsafe extern fn VictoryText(mgl: &mut MGLDraw) {
     }
 }
 
-// SpecialLoadBMP
-// SpeedSplash
-// HelpScreens
-// SplashScreen
+unsafe fn SpeedSplash(mgl: &mut MGLDraw, fname: *const c_char) -> bool {
+    use control::*;
+    use mgldraw::palette_t;
+
+    mgl.LastKeyPressed();
+    oldc = GetControls() | GetArrows();
+
+    let mut curpal = [palette_t { alpha: 0, red: 0, green: 0, blue: 0 }; 256];
+    let mut desiredpal = curpal;
+    mgl.LoadBMP(fname);
+    mgl.get_palette(&mut desiredpal);
+    mgl.set_palette(&curpal);
+
+    let mut mode = 0;
+    let mut clock = 0;
+
+    loop {
+        mgl.Flip();
+        if !mgl.Process() {
+            return false;
+        }
+        let c = mgl.LastKeyPressed();
+        if c == 27 {
+            return false;
+        } else if c != 0 {
+            mode = 2;
+        }
+
+        ::game::HandleCDMusic();
+
+        let c = GetControls() | GetArrows();
+        if (c - oldc).intersects(CONTROL_B1 | CONTROL_B2) {
+            mode = 2;
+        }
+        oldc = c;
+
+        clock += 1;
+        match mode {
+            0 => { // fading in
+                for _ in 0..16 {
+                    for (cur, des) in curpal.iter_mut().zip(desiredpal.iter()) {
+                        if cur.red < des.red {
+                            cur.red += 1;
+                        }
+                        if cur.green < des.green {
+                            cur.green += 1;
+                        }
+                        if cur.blue < des.blue {
+                            cur.blue += 1;
+                        }
+                    }
+                }
+                mgl.set_palette(&curpal);
+                if clock > 16 {
+                    mode = 1;
+                    clock = 0;
+                }
+            }
+            1 => {} // sit around
+            2 => { // fading out
+                clock = 0;
+                for _ in 0..16 {
+                    for cur in curpal.iter_mut() {
+                        if cur.red > 0 {
+                            cur.red -= 1;
+                        } else {
+                            clock += 1;
+                        }
+                        if cur.green > 0 {
+                            cur.green -= 1;
+                        } else {
+                            clock += 1;
+                        }
+                        if cur.blue > 0 {
+                            cur.blue -= 1;
+                        } else {
+                            clock += 1;
+                        }
+                    }
+                }
+                mgl.set_palette(&curpal);
+                if clock == 256 * 3 * 16 {
+                    break;
+                }
+            }
+            _ => {}
+        }
+    }
+    mgl.ClearScreen();
+    mgl.Flip();
+    true
+}
+
+#[no_mangle]
+pub unsafe extern fn HelpScreens(mgl: &mut MGLDraw) {
+    let mut name = [0; 32];
+    for i in 1..6 {
+        sprintf!(name, "docs/help{}.bmp", i);
+        if !SpeedSplash(mgl, decay!(&name)) {
+            return;
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn SplashScreen(mgl: &mut MGLDraw, fname: *const c_char, delay: c_int, sound: u8) {
+    use control::*;
+    use mgldraw::palette_t;
+
+    mgl.LastKeyPressed();
+    oldc = GetControls() | GetArrows();
+
+    let mut curpal = [palette_t { alpha: 0, red: 0, green: 0, blue: 0 }; 256];
+    let mut desiredpal = curpal;
+    mgl.LoadBMP(fname);
+    mgl.get_palette(&mut desiredpal);
+    mgl.set_palette(&curpal);
+
+    let mut mode = 0;
+    let mut clock = 0;
+
+    loop {
+        mgl.Flip();
+        if !mgl.Process() {
+            return;
+        }
+        if mgl.LastKeyPressed() != 0 {
+            mode = 2;
+        }
+
+        clock += 1;
+        match mode {
+            0 => { // fading in
+                for _ in 0..8 {
+                    for (cur, des) in curpal.iter_mut().zip(desiredpal.iter()) {
+                        if cur.red < des.red {
+                            cur.red += 1;
+                        }
+                        if cur.green < des.green {
+                            cur.green += 1;
+                        }
+                        if cur.blue < des.blue {
+                            cur.blue += 1;
+                        }
+                    }
+                }
+                mgl.set_palette(&curpal);
+                if clock == 32 && sound == 2 {
+                    ::sound::MakeNormalSound(::sound::Sound::SND_HAMUMU);
+                }
+                if clock > 64 {
+                    mode = 1;
+                    clock = 0;
+                }
+            }
+            1 => {
+                if clock > delay {
+                    mode = 2;
+                    clock = 0;
+                }
+            }
+            2 => { // fading out
+                clock = 0;
+                for _ in 0..8 {
+                    for cur in curpal.iter_mut() {
+                        if cur.red > 0 {
+                            cur.red -= 1;
+                        } else {
+                            clock += 1;
+                        }
+                        if cur.green > 0 {
+                            cur.green -= 1;
+                        } else {
+                            clock += 1;
+                        }
+                        if cur.blue > 0 {
+                            cur.blue -= 1;
+                        } else {
+                            clock += 1;
+                        }
+                    }
+                }
+                mgl.set_palette(&curpal);
+                if clock == 256 * 3 * 8 {
+                    break;
+                }
+            }
+            _ => {}
+        }
+    }
+    mgl.ClearScreen();
+    mgl.Flip();
+}
 
 // once the credits have scrolled to END_OF_CREDITS pixels, they end
 const END_OF_CREDITS: c_int = 480 * 4 + 180;
