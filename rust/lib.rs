@@ -16,8 +16,8 @@ macro_rules! cstr {
     ($e1:expr, $($e2:expr),*$(,)*) => {
         [cstr!($e1), $(cstr!($e2),)*]
     };
-    ($e:expr) => { concat!($e, "\0").as_ptr() as *const _ };
-    () => { "\0".as_ptr() as *const _ };
+    ($e:expr) => { concat!($e, "\0") as *const str as *const _ };
+    () => { &0i8 as *const _ };
 }
 
 macro_rules! opaque {

@@ -24,8 +24,6 @@ struct title_t {
 extern {
     pub fn SplashScreen(mgl: *mut MGLDraw, fname: *const c_char, delay: c_int, sound: u8);
     pub fn MainMenu(mgl: *mut MGLDraw) -> u8;
-    pub fn VictoryText(mgl: &mut MGLDraw);
-    pub fn Credits(mgl: &mut MGLDraw);
 
     pub fn ScanWorldNames();
     pub fn ReScanWorldNames();
@@ -375,3 +373,232 @@ pub unsafe extern fn WorldPicker(mgl: &mut MGLDraw) -> u8 {
     ::mgldraw::MGL_srand(timeGetTime() as i32);
     return exitcode;
 }
+
+// ScanWorldNames
+// ReScanWorldNames
+
+// CommonMenuDisplay
+// MainMenuDisplay
+// MainMenuUpdate
+// MainMenu
+
+// GameSlotPickerDisplay
+// GameSlotPickerUpdate
+// InitGameSlotPicker
+// GameSlotPicker
+
+#[no_mangle]
+pub unsafe extern fn CreditsRender(mgl: &mut MGLDraw, y: c_int, document: &[*const c_char]) {
+    let mut i = 0;
+    let mut ypos = 0;
+
+    while i < document.len() && ypos - y < 480 {
+        let s = document[i];
+        if ypos - y > -60 {
+            if *s == b'@' as i8 {
+                ::display::CenterPrint(320, ypos - y, s.offset(1), 0, 0);
+            } else if *s == b'#' as i8 {
+                mgl.FillBox(320 - 200, ypos - y + 8, 320 + 200, ypos - y + 11, 255);
+            } else if *s == b'%' as i8 {
+                mgl.FillBox(320 - 70, ypos - y + 8, 320 + 70, ypos - y + 9, 255);
+            } else {
+                ::display::CenterPrint(320, ypos - y, s, 0, 1);
+            }
+        }
+        ypos += 20;
+        i += 1;
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn Credits(mgl: &mut MGLDraw) {
+    let mut y = -470;
+    let mut flip = false;
+
+    mgl.LastKeyPressed();
+    mgl.LoadBMP(cstr!("graphics/title.bmp"));
+    loop {
+        mgl.ClearScreen();
+        CreditsRender(mgl, y, CREDITS);
+
+        ::game::HandleCDMusic();
+
+        // only scroll every other frame
+        flip = !flip;
+        if flip { y += 1; }
+
+        mgl.Flip();
+        if !mgl.Process() || mgl.LastKeyPressed() != 0 || y >= END_OF_CREDITS {
+            break
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn VictoryText(mgl: &mut MGLDraw) {
+    let mut y = -470;
+
+    mgl.LastKeyPressed();
+    mgl.LoadBMP(cstr!("graphics/title.bmp"));
+    loop {
+        mgl.ClearScreen();
+        CreditsRender(mgl, y, VICTORY_TEXT);
+
+        ::game::HandleCDMusic();
+
+        y += 1;
+
+        mgl.Flip();
+        if !mgl.Process() || mgl.LastKeyPressed() == 27 || y >= END_OF_VICTORY {
+            break
+        }
+    }
+}
+
+// SpecialLoadBMP
+// SpeedSplash
+// HelpScreens
+// SplashScreen
+
+// once the credits have scrolled to END_OF_CREDITS pixels, they end
+const END_OF_CREDITS: c_int = 480 * 4 + 180;
+const END_OF_VICTORY: c_int = 480 * 2;
+
+// special codes in the credits:
+// @ = use GirlsRWeird font
+// # = draw a major horizontal line
+// % = draw a minor horizontal line
+// $ = last line of the whole deal
+
+const CREDITS: &[*const c_char] = &cstr![
+    "SPISPOPD II",
+    "@DR. LUNATIC",
+    "",
+    "",
+    "Copyright 1998-2011, Hamumu Software",
+    "#",
+    "Original Concept",
+    "Mike Hommel",
+    "%",
+    "Programming",
+    "Mike Hommel",
+    "Tad Hardesty",
+    "%",
+    "Character Design",
+    "Mike Hommel",
+    "%",
+    "Level Design",
+    "Mike Hommel",
+    "%",
+    "3D Graphics",
+    "Mike Hommel",
+    "%",
+    "2D Graphics",
+    "Mike Hommel",
+    "%",
+    "Sound Effects",
+    "Brent Christian",
+    "Mike Hommel",
+    "(Surprise!)",
+    "%",
+    "Music",
+    "Brent Christian",
+    "%",
+    "Producer/Designer/Director",
+    "Mike Hommel",
+    "%",
+    "Gaffer",
+    "Mike Hommel",
+    "%",
+    "QA Director",
+    "Angela Finer",
+    "%",
+    "Testing",
+    "Baba",
+    "Brent Christian",
+    "Jim Crawford",
+    "Chris Dillman",
+    "Angela Finer",
+    "Tim Finer",
+    "Dawn Genge",
+    "Mattie Goodman",
+    "Matt Guest",
+    "Suzanne Hommel",
+    "Solange Hunt",
+    "Brad Kasten",
+    "Geoff Michell",
+    "Britt Morris",
+    "Trevor Strohman",
+    "Peter Young",
+    "%",
+    "Ideas & Hamumu Theme",
+    "Mattie Goodman",
+    "%",
+    "Technical Assistance",
+    "Trevor Strohman",
+    "%",
+    "Special Thanks",
+    "Junebug Superspy &",
+    "Too Much Hot Sauce",
+    "All the SpisFans",
+    "(both of them that is)",
+    "Ketmany Bouapha (NO, Bouapha!)",
+    "Rinley \"Dirty\" Deeds",
+    "%",
+    "Henry G., wherefore art thou?",
+    "%",
+    "\"it's certainly pointless",
+    "and annoying, but i say you",
+    "should keep it anyways.\"",
+    "The words of a true SpisFan",
+    "%",
+    "#",
+    "Stop by www.hamumu.com!",
+    "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+    "@THE END",
+];
+
+const VICTORY_TEXT: &[*const c_char] = &cstr![
+    "@With Dr. Lunatic vanquished, the",
+    "",
+    "",
+    "@zombie menace was ended. Never again",
+    "",
+    "",
+    "@would someone take the brains out of",
+    "",
+    "",
+    "@zombies and put them into other",
+    "",
+    "",
+    "@zombies to create a race of super",
+    "",
+    "",
+    "@zombies.",
+    "",
+    "",
+    "#",
+    "",
+    "@Bouapha was the hero of the hour,",
+    "",
+    "",
+    "@loved and respected by all. There",
+    "",
+    "",
+    "@were parades and parties for days.",
+    "",
+    "",
+    "@Until the president got himself into",
+    "",
+    "",
+    "@another madcap scandal, and everyone",
+    "",
+    "",
+    "@forgot about Bouapha and the zombies",
+    "",
+    "",
+    "@altogether.",
+    "",
+    "",
+    "#",
+];

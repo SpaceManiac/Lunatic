@@ -72,12 +72,10 @@ pub unsafe extern fn InitDisplay(mainmgl: *mut MGLDraw) -> bool {
 #[no_mangle]
 pub unsafe extern fn ExitDisplay() {
     if !gameFont[0].is_null() {
-        FontFree(gameFont[0]);
         Box::from_raw(gameFont[0]);
         gameFont[0] = 0 as *mut _;
     }
     if !gameFont[1].is_null() {
-        FontFree(gameFont[1]);
         Box::from_raw(gameFont[1]);
         gameFont[1] = 0 as *mut _;
     }
