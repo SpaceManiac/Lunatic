@@ -25,9 +25,6 @@ extern {
     pub fn SplashScreen(mgl: *mut MGLDraw, fname: *const c_char, delay: c_int, sound: u8);
     pub fn MainMenu(mgl: *mut MGLDraw) -> u8;
 
-    pub fn ScanWorldNames();
-    pub fn ReScanWorldNames();
-
     #[link_name="title_oldc"]
     static mut oldc: ::control::Controls;
 }
@@ -374,8 +371,99 @@ pub unsafe extern fn WorldPicker(mgl: &mut MGLDraw) -> u8 {
     return exitcode;
 }
 
-// ScanWorldNames
-// ReScanWorldNames
+// rule out the regular game worlds, so they don't show up as custom worlds
+unsafe fn custom_world(fname: *const c_char) -> bool {
+    use libc::strcmp;
+    strcmp(fname, cstr!("forest.dlw")) != 0 &&
+        strcmp(fname, cstr!("desert.dlw")) != 0 &&
+        strcmp(fname, cstr!("icymount.dlw")) != 0 &&
+        strcmp(fname, cstr!("caverns.dlw")) != 0 &&
+        strcmp(fname, cstr!("asylum.dlw")) != 0 &&
+        strcmp(fname, cstr!("backup_load.dlw")) != 0 &&
+        strcmp(fname, cstr!("backup_exit.dlw")) != 0
+}
+
+#[no_mangle]
+pub unsafe extern fn ScanWorldNames() {
+    use ffi::win::{_finddata_t, _findfirst, _findnext, _findclose};
+    use libc::strncpy;
+
+    for i in 5..MAX_CUSTOM {
+        player.customName[i][0] = 0;
+    }
+
+    let mut filedata: _finddata_t = ::std::mem::zeroed();
+    let hFile = _findfirst(cstr!("worlds/*.dlw"), &mut filedata);
+    if hFile == -1 {
+        return;
+    }
+
+    // there's at least one
+    let mut index = 5;
+    if custom_world(filedata.name.as_ptr()) {
+        strncpy(player.customName[index].as_mut_ptr(), filedata.name.as_ptr(), 32);
+        index += 1;
+    }
+
+    while index < MAX_CUSTOM {
+        if _findnext(hFile, &mut filedata) != 0 {
+            break; // no more files
+        }
+        if custom_world(filedata.name.as_ptr()) {
+            strncpy(player.customName[index].as_mut_ptr(), filedata.name.as_ptr(), 32);
+            index += 1;
+        }
+    }
+
+    _findclose(hFile);
+}
+
+#[no_mangle]
+pub unsafe extern fn ReScanWorldNames() {
+    use ffi::win::{_finddata_t, _findfirst, _findnext, _findclose};
+    use libc::{strncpy, strcmp};
+
+    let mut okay = [false; MAX_CUSTOM];
+
+    for i in 5..MAX_CUSTOM {
+        okay[i] = player.customName[i][0] == 0;
+    }
+
+    let mut filedata: _finddata_t = ::std::mem::zeroed();
+    let hFile = _findfirst(cstr!("worlds/*.dlw"), &mut filedata);
+    while hFile != -1 { // there's at least one
+        if custom_world(filedata.name.as_ptr()) {
+            let mut found = false;
+            for i in 5..MAX_CUSTOM {
+                if strcmp(filedata.name.as_ptr(), player.customName[i].as_ptr()) == 0 {
+                    okay[i] = true;
+                    found = true;
+                    break;
+                }
+            }
+            if !found { // none of the files matched, this is a new one
+                // add it in, if there's room
+                for i in 5..MAX_CUSTOM {
+                    if player.customName[i][0] == 0 {
+                        strncpy(player.customName[i].as_mut_ptr(), filedata.name.as_ptr(), 32);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if _findnext(hFile, &mut filedata) != 0 {
+            break
+        }
+    }
+
+    // remove any that aren't valid
+    for i in 5..MAX_CUSTOM {
+        if !okay[i] {
+            player.customName[i][0] = 0;
+        }
+    }
+}
 
 // CommonMenuDisplay
 // MainMenuDisplay
