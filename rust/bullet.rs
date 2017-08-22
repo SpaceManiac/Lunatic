@@ -146,7 +146,7 @@ const SPR_ORBITER: c_int = 359;
 pub use self::FireBullet as fire_bullet;
 
 pub unsafe fn InitBullets() {
-    bulletSpr = sprite_set_t::from_fname(cstr!("graphics/bullets.jsp"));
+    bulletSpr = sprite_set_t::load_boxed("graphics/bullets.jsp");
     for b in bullet.iter_mut() {
         *b = ::std::mem::zeroed();
     }

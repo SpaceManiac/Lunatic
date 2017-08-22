@@ -142,6 +142,10 @@ impl sprite_t {
 }
 
 impl sprite_set_t {
+    pub unsafe fn load_boxed(fname: &str) -> *mut sprite_set_t {
+        Box::into_raw(Box::new(sprite_set_t::load(fname).unwrap()))
+    }
+
     pub unsafe fn from_fname(fname: *const c_char) -> *mut sprite_set_t {
         Box::into_raw(Box::new(sprite_set_t::load_unwrap(fname)))
     }

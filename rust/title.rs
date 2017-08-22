@@ -24,8 +24,6 @@ pub struct title_t {
     percent: [f32; 3],
 }
 
-static mut g_planetSpr: *const sprite_set_t = 0 as *const sprite_set_t;
-
 static mut numRunsToMakeUp: c_int = 0;
 static mut pickerpos: u8 = 0;
 static mut pickeroffset: i8 = 0;
@@ -488,7 +486,7 @@ unsafe fn CommonMenuUpdate(title: &mut title_t, bouapha: c_int, doctor: c_int) {
     }
 }
 
-unsafe fn CommonMenuDisplay(mgl: &mut MGLDraw, title: &title_t) {
+unsafe fn CommonMenuDisplay(mgl: &mut MGLDraw, title: &title_t, titleSpr: &sprite_set_t) {
     let mut color = 0;
     {
         let deltaColor = (12 * 65536) / (480 - title.blueY);
@@ -511,7 +509,6 @@ unsafe fn CommonMenuDisplay(mgl: &mut MGLDraw, title: &title_t) {
     }
 
     // draw Dr. L & Bouapha
-    let titleSpr = &*g_planetSpr; // x
     titleSpr.GetSprite(0).Draw(640 - title.doctorX, 480, mgl);
     titleSpr.GetSprite(1).Draw(title.bouaphaX, 480, mgl);
 
@@ -529,11 +526,10 @@ unsafe fn CommonMenuDisplay(mgl: &mut MGLDraw, title: &title_t) {
     ::display::Print(2, 466, COPYRIGHT, 0, 1);
 }
 
-unsafe fn MainMenuDisplay(mgl: &mut MGLDraw, title: &title_t) {
-    CommonMenuDisplay(mgl, title);
+unsafe fn MainMenuDisplay(mgl: &mut MGLDraw, title: &title_t, titleSpr: &sprite_set_t) {
+    CommonMenuDisplay(mgl, title, titleSpr);
 
     // now the menu options
-    let titleSpr = &*g_planetSpr; // x
     macro_rules! one {
         ($i:expr, $s:expr, $x:expr, $y:expr) => {
             titleSpr.GetSprite($s + if title.cursor == $i { 1 } else { 0 }).Draw($x, $y, mgl);
@@ -621,7 +617,6 @@ pub unsafe fn MainMenu(mgl: &mut MGLDraw) -> u8 {
     mgl.ClearScreen();
     oldc = ::control::CONTROL_B1 | ::control::CONTROL_B2;
     let titleSpr = sprite_set_t::load("graphics/titlespr.jsp").unwrap();
-    g_planetSpr = &titleSpr;
 
     let mut title = title_t {
         bouaphaX: -320,
@@ -641,7 +636,7 @@ pub unsafe fn MainMenu(mgl: &mut MGLDraw) -> u8 {
     while b == 0 {
         let runStart = timeGetTime();
         b = MainMenuUpdate(mgl, &mut title);
-        MainMenuDisplay(mgl, &title);
+        MainMenuDisplay(mgl, &title, &titleSpr);
         mgl.Flip();
         let diff = timeGetTime() - runStart;
 
@@ -654,7 +649,7 @@ pub unsafe fn MainMenu(mgl: &mut MGLDraw) -> u8 {
             return 255;
         }
         if b == 1 && title.cursor == 1 { // selected Load Game
-            if GameSlotPicker(mgl, &mut title) == 0 { // Pressed ESC on the slot picker
+            if GameSlotPicker(mgl, &mut title, &titleSpr) == 0 { // Pressed ESC on the slot picker
                 b = 0;
             }
             startTime = timeGetTime();
@@ -683,8 +678,8 @@ pub unsafe fn MainMenu(mgl: &mut MGLDraw) -> u8 {
     }
 }
 
-unsafe fn GameSlotPickerDisplay(mgl: &mut MGLDraw, title: &title_t) {
-    CommonMenuDisplay(mgl, title);
+unsafe fn GameSlotPickerDisplay(mgl: &mut MGLDraw, title: &title_t, titleSpr: &sprite_set_t) {
+    CommonMenuDisplay(mgl, title, titleSpr);
 
     // now the game slots
     let mut txt = [0; 18];
@@ -766,7 +761,7 @@ unsafe fn InitGameSlotPicker(mgl: &mut MGLDraw, title: &mut title_t) {
 }
 
 #[no_mangle] // x
-pub unsafe extern fn GameSlotPicker(mgl: &mut MGLDraw, title: &mut title_t) -> u8 {
+pub unsafe extern fn GameSlotPicker(mgl: &mut MGLDraw, title: &mut title_t, titleSpr: &sprite_set_t) -> u8 {
     use ffi::win::{timeGetTime, Sleep};
 
     title.savecursor = 0;
@@ -776,7 +771,7 @@ pub unsafe extern fn GameSlotPicker(mgl: &mut MGLDraw, title: &mut title_t) -> u
     while b == 0 {
         let start = timeGetTime();
         b = GameSlotPickerUpdate(mgl, title);
-        GameSlotPickerDisplay(mgl, title);
+        GameSlotPickerDisplay(mgl, title, titleSpr);
         mgl.Flip();
         let diff = timeGetTime() - start;
 

@@ -20,7 +20,7 @@ static mut itmLight: bool = false;
 
 #[no_mangle]
 pub unsafe extern fn InitItems() {
-    itmSpr = sprite_set_t::from_fname(cstr!("graphics/items.jsp"));
+    itmSpr = sprite_set_t::load_boxed("graphics/items.jsp");
     glowism = 0;
 }
 

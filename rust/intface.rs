@@ -29,7 +29,7 @@ static mut monsTimer: u16 = 0;
 
 #[no_mangle]
 pub unsafe extern fn InitInterface() {
-    intfaceSpr_ = sprite_set_t::from_fname(cstr!("graphics/intface.jsp"));
+    intfaceSpr_ = sprite_set_t::load_boxed("graphics/intface.jsp");
 }
 
 #[no_mangle]
