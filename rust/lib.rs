@@ -136,6 +136,19 @@ macro_rules! check_size {
     }
 }
 
+macro_rules! move_towards {
+    ($v:expr, $target:expr, $by:expr) => {{
+        let t = $target;
+        if t > $v {
+            $v = $v.saturating_add($by);
+            if t < $v { $v = t }
+        } else if t < $v {
+            $v = $v.saturating_sub($by);
+            if t > $v { $v = t }
+        }
+    }}
+}
+
 fn memset<T: Copy>(dest: &mut [T], val: T, len: usize) {
     for p in dest[..len].iter_mut() {
         *p = val;

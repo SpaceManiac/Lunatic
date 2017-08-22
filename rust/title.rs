@@ -7,8 +7,11 @@ use player::{player, MAX_CUSTOM};
 use game::TIME_PER_FRAME;
 use world::{GetWorldName, GetWorldPoints};
 
+const TAGLINE: *const c_char = cstr!("Version 3.1");
+const COPYRIGHT: *const c_char = cstr!("Copyright 1998-2011, Hamumu Software");
+
 #[repr(C)]
-struct title_t {
+pub struct title_t {
     bouaphaX: c_int,
     doctorX: c_int,
     blueY: c_int,
@@ -21,12 +24,7 @@ struct title_t {
     percent: [f32; 3],
 }
 
-extern {
-    pub fn MainMenu(mgl: *mut MGLDraw) -> u8;
-
-    #[link_name="title_oldc"]
-    static mut oldc: ::control::Controls;
-}
+static mut g_planetSpr: *const sprite_set_t = 0 as *const sprite_set_t;
 
 static mut numRunsToMakeUp: c_int = 0;
 static mut pickerpos: u8 = 0;
@@ -36,6 +34,8 @@ static mut curCustom: u8 = 0;
 
 static mut keyAnim: u8 = 0;
 static mut lvlName: [c_char; 32] = [0; 32];
+
+static mut oldc: ::control::Controls = ::control::EMPTY;
 
 static starColorTable: [u8; 9] = [214, 81, 63, 49, 33, 21, 32, 83, 93];
 
@@ -465,15 +465,340 @@ pub unsafe extern fn ReScanWorldNames() {
     }
 }
 
-// CommonMenuDisplay
-// MainMenuDisplay
-// MainMenuUpdate
-// MainMenu
+unsafe fn CommonMenuUpdate(title: &mut title_t, bouapha: c_int, doctor: c_int) {
+	title.titleBright += title.titleDir;
+	if title.titleBright > 31 {
+		title.titleDir = -1;
+		title.titleBright = 31;
+	}
+	if title.titleDir < 0 && title.titleBright == 0 {
+		title.titleDir = 0;
+    }
 
-// GameSlotPickerDisplay
-// GameSlotPickerUpdate
-// InitGameSlotPicker
-// GameSlotPicker
+    move_towards!(title.bouaphaX, bouapha, 8);
+    move_towards!(title.doctorX, doctor, 8);
+    move_towards!(title.blueY, 0, 8);
+
+	title.expando += title.dexpando as c_int;
+	if title.expando > 79 {
+		title.dexpando = (-title.dexpando as c_int * 13 / 16) as i8;
+		title.expando = 79;
+	} else {
+		title.dexpando += 1;
+    }
+}
+
+unsafe fn CommonMenuDisplay(mgl: &mut MGLDraw, title: &title_t) {
+    let mut color = 0;
+    {
+        let deltaColor = (12 * 65536) / (480 - title.blueY);
+        let mut scrn = mgl.get_screen();
+        if title.blueY > 0 {
+            let (init, rest) = {scrn}.split_at_mut(640 * title.blueY as usize);
+            for p in init.iter_mut() {
+                *p = 0;
+            }
+            scrn = rest;
+        }
+        for _ in title.blueY..480 {
+            let (init, rest) = {scrn}.split_at_mut(640);
+            for p in init.iter_mut() {
+                *p = (color / 65536 + 96) as u8;
+            }
+            scrn = rest;
+            color += deltaColor;
+        }
+    }
+
+    // draw Dr. L & Bouapha
+    let titleSpr = &*g_planetSpr; // x
+    titleSpr.GetSprite(0).Draw(640 - title.doctorX, 480, mgl);
+    titleSpr.GetSprite(1).Draw(title.bouaphaX, 480, mgl);
+
+    // draw the title parts
+    titleSpr.GetSprite(2).DrawBright(240, 30, mgl, title.titleBright); // SPISPOPD II:
+    titleSpr.GetSprite(3).DrawBright(290, 125, mgl, title.titleBright); // DR. LUNATIC
+
+    // LoonyMod and version number
+    ::display::CenterPrint(320, 120, cstr!("LoonyMod"), 0, 0);
+    ::display::CenterPrint(321, 171, TAGLINE, 1, 1);
+    ::display::CenterPrint(320, 170, TAGLINE, 0, 1);
+
+    // Copyright
+    ::display::Print(3, 467, COPYRIGHT, 1, 1);
+    ::display::Print(2, 466, COPYRIGHT, 0, 1);
+}
+
+unsafe fn MainMenuDisplay(mgl: &mut MGLDraw, title: &title_t) {
+    CommonMenuDisplay(mgl, title);
+
+    // now the menu options
+    let titleSpr = &*g_planetSpr; // x
+    macro_rules! one {
+        ($i:expr, $s:expr, $x:expr, $y:expr) => {
+            titleSpr.GetSprite($s + if title.cursor == $i { 1 } else { 0 }).Draw($x, $y, mgl);
+        }
+    }
+    one!(0, 9, 240, 270);
+    one!(1, 11, 260, 300);
+    one!(2, 13, 280, 330);
+    one!(3, 15, 300, 360);
+    one!(5, 19, 340, 420);
+    one!(6, 21, 360, 450);
+}
+
+unsafe fn MainMenuUpdate(mgl: &mut MGLDraw, title: &mut title_t) -> u8 {
+    use control::*;
+    use sound::*;
+
+    // update graphics
+    CommonMenuUpdate(title, 0, 0);
+
+    // now real updating
+    let c = GetControls() | GetArrows();
+
+    static mut reptCounter: u8 = 0;
+    reptCounter += 1;
+    if oldc.is_empty() || reptCounter > 10 {
+        reptCounter = 0;
+    }
+
+    if reptCounter == 0 {
+        if c.contains(CONTROL_UP) {
+            if title.cursor == 0 {
+                title.cursor = 6;
+            } else {
+                title.cursor -= 1;
+                #[cfg(not(feature="demo"))] {
+                    // ordering is not a viable option in the non-shareware
+                    if title.cursor == 4 {
+                        title.cursor = 3;
+                    }
+                }
+            }
+            MakeNormalSound(Sound::SND_MENUCLICK);
+        }
+        if c.contains(CONTROL_DN) {
+            title.cursor += 1;
+            if title.cursor == 7 {
+                title.cursor = 0;
+            }
+            #[cfg(not(feature="demo"))] {
+                // ordering is not a viable option in the non-shareware
+                if title.cursor == 4 {
+                    title.cursor = 5;
+                }
+            }
+            MakeNormalSound(Sound::SND_MENUCLICK);
+        }
+    }
+
+    if (c - oldc).intersects(CONTROL_B1 | CONTROL_B2) {
+        MakeNormalSound(Sound::SND_MENUSELECT);
+        return 1;
+    }
+    oldc = c;
+
+    if mgl.LastKeyPressed() == 27 {
+        MakeNormalSound(Sound::SND_MENUSELECT);
+        return 2;
+    }
+
+    ::game::HandleCDMusic();
+    0
+}
+
+pub unsafe fn MainMenu(mgl: &mut MGLDraw) -> u8 {
+    use ffi::win::{timeGetTime, Sleep};
+
+    if ::options::opt.music == ::options::Music::On {
+        ::music::CDPlay(2); // the title theme
+    }
+    ::music::CDNeedsUpdating();
+
+    mgl.LoadBMP(cstr!("graphics/title.bmp"));
+    mgl.LastKeyPressed();
+    mgl.ClearScreen();
+    oldc = ::control::CONTROL_B1 | ::control::CONTROL_B2;
+    let titleSpr = sprite_set_t::load("graphics/titlespr.jsp").unwrap();
+    g_planetSpr = &titleSpr;
+
+    let mut title = title_t {
+        bouaphaX: -320,
+        doctorX: -320,
+        titleBright: -32,
+        titleDir: 4,
+        cursor: 0,
+        blueY: 479,
+        expando: 0,
+        dexpando: 0,
+        savecursor: 0,
+        percent: [0.0; 3],
+    };
+
+    let mut startTime = timeGetTime();
+    let mut b = 0;
+    while b == 0 {
+        let runStart = timeGetTime();
+        b = MainMenuUpdate(mgl, &mut title);
+        MainMenuDisplay(mgl, &title);
+        mgl.Flip();
+        let diff = timeGetTime() - runStart;
+
+        if diff < 1000 / 50 {
+            Sleep(1000 / 50 - diff);
+        }
+
+        if !mgl.Process() {
+            ::music::CDStop();
+            return 255;
+        }
+        if b == 1 && title.cursor == 1 { // selected Load Game
+            if GameSlotPicker(mgl, &mut title) == 0 { // Pressed ESC on the slot picker
+                b = 0;
+            }
+            startTime = timeGetTime();
+        }
+        if b == 1 && title.cursor == 2 { // options
+            ::options::OptionsMenu(mgl);
+            startTime = timeGetTime();
+        }
+        if b == 1 && title.cursor == 5 { // help
+            HelpScreens(mgl);
+            startTime = timeGetTime();
+        }
+        if timeGetTime() - startTime > 1000 * 20 {
+            Credits(mgl);
+            startTime = timeGetTime();
+        }
+    }
+    if b == 1 { // something was selected
+        if title.cursor == 6 { // exit
+            255
+        } else {
+            title.cursor
+        }
+    } else {
+        255 // ESC was pressed
+    }
+}
+
+unsafe fn GameSlotPickerDisplay(mgl: &mut MGLDraw, title: &title_t) {
+    CommonMenuDisplay(mgl, title);
+
+    // now the game slots
+    let mut txt = [0; 18];
+    for i in 0..3 {
+        if title.percent[i] > 99.9 {
+            sprintf!(txt, "Slot {} - 100%", i + 1);
+        } else {
+            sprintf!(txt, "Slot {} - {:03.1}%", i + 1, title.percent[i]);
+        }
+
+        ::display::Print(180 + 30 * i as c_int, 220 + 70 * i as c_int, decay!(&txt),
+            -6 + if title.savecursor == i as u8 { 12 } else { 0 }, 0);
+    }
+}
+
+unsafe fn GameSlotPickerUpdate(mgl: &mut MGLDraw, title: &mut title_t) -> u8 {
+    use control::*;
+    use sound::*;
+
+    // update graphics
+    CommonMenuUpdate(title, -60, -40);
+
+    // now real updating
+    let c = GetControls() | GetArrows();
+
+    static mut reptCounter: u8 = 0;
+    reptCounter += 1;
+    if oldc.is_empty() || reptCounter > 10 {
+        reptCounter = 0;
+    }
+
+    if reptCounter == 0 {
+        if c.contains(CONTROL_UP) {
+            if title.savecursor == 0 {
+                title.savecursor = 2;
+            } else {
+                title.savecursor -= 1;
+            }
+            MakeNormalSound(Sound::SND_MENUCLICK);
+        }
+        if c.contains(CONTROL_DN) {
+            title.savecursor += 1;
+            if title.savecursor > 2 {
+                title.savecursor = 0;
+            }
+            MakeNormalSound(Sound::SND_MENUCLICK);
+        }
+    }
+    if (c - oldc).intersects(CONTROL_B1 | CONTROL_B2) {
+        MakeNormalSound(Sound::SND_MENUSELECT);
+        return 1;
+    }
+    oldc = c;
+
+    if mgl.LastKeyPressed() == 27 {
+        MakeNormalSound(Sound::SND_MENUSELECT);
+        return 2;
+    }
+
+    ::game::HandleCDMusic();
+    0
+}
+
+unsafe fn InitGameSlotPicker(mgl: &mut MGLDraw, title: &mut title_t) {
+    let f = ::mgldraw::AppdataOpen(cstr!("loony.sav"), cstr!("rb"));
+    if f.is_null() {
+        for pct in title.percent.iter_mut() {
+            *pct = 0.0;
+        }
+    } else {
+        let mut p: ::player::player_t = ::std::mem::zeroed();
+        for pct in title.percent.iter_mut() {
+            ::libc::fread(decay!(&mut p), szof!(::player::player_t), 1, f);
+            *pct = ::pause::CalcTotalPercent(&p) * 100.0;
+        }
+    }
+    mgl.LastKeyPressed();
+    oldc = ::control::CONTROL_B1 | ::control::CONTROL_B2;
+}
+
+#[no_mangle] // x
+pub unsafe extern fn GameSlotPicker(mgl: &mut MGLDraw, title: &mut title_t) -> u8 {
+    use ffi::win::{timeGetTime, Sleep};
+
+    title.savecursor = 0;
+    InitGameSlotPicker(mgl, title);
+
+    let mut b = 0;
+    while b == 0 {
+        let start = timeGetTime();
+        b = GameSlotPickerUpdate(mgl, title);
+        GameSlotPickerDisplay(mgl, title);
+        mgl.Flip();
+        let diff = timeGetTime() - start;
+
+        if diff < 1000 / 50 {
+            Sleep((1000 / 50) - diff);
+        }
+
+        if !mgl.Process() {
+            return 0;
+        }
+    }
+
+    if b == 1 { // something was selected
+        ::player::InitPlayer(::player::Init::Game, 0, 0);
+        ::player::PlayerLoadGame(title.savecursor);
+		// make it remember which was picked so the pause menu will start on the same
+		::pause::SetSubCursor(title.savecursor);
+        1
+    } else {
+        0
+    }
+}
 
 #[no_mangle]
 pub unsafe extern fn CreditsRender(mgl: &mut MGLDraw, y: c_int, document: &[*const c_char]) {

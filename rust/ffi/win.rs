@@ -4,6 +4,7 @@ use libc::*;
 // time
 extern "system" {
     pub fn timeGetTime() -> u32;
+    pub fn Sleep(t: u32);
 }
 
 // --------

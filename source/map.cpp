@@ -750,8 +750,8 @@ void Map::Render(world_t *world, int camX, int camY, byte flags)
 
 		for (i = 0; i < NUM_STARS; i++)
 		{
-			tx = (starX[i] + camX) / TILE_WIDTH;
-			ty = (starY[i] + camY) / TILE_HEIGHT;
+			tx = (starX[i] + camX) / TILE_WIDTH - (starX[i] + camX < 0);
+			ty = (starY[i] + camY) / TILE_HEIGHT - (starY[i] + camY < 0);
 
 			if (tx < 0 || ty < 0 || tx >= width || ty >= height)
 				continue;

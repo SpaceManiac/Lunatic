@@ -147,24 +147,11 @@ pub unsafe extern fn RenderInterface(
     use display::Print;
     use player::{PlayerKeys, PlayerKeyChain};
 
-    macro_rules! move_towards {
-        ($v:ident -> $target:expr, $by:expr) => {{
-            let t = $target;
-            if t > $v {
-                $v = $v.saturating_add($by);
-                if t < $v { $v = t }
-            } else if t < $v {
-                $v = $v.saturating_sub($by);
-                if t > $v { $v = t }
-            }
-        }}
-    }
-
     static mut flip: u8 = 0;
     flip = flip.wrapping_add(1);
 
-    move_towards!(curLife -> life, 4);
-    move_towards!(curBrains -> brains as u8, 2);
+    move_towards!(curLife, life, 4);
+    move_towards!(curBrains, brains as u8, 2);
 
     let intfaceSpr = &mut (*intfaceSpr_);
     intfaceSpr.GetSprite(SPR_LIFEMETER).Draw(5, 3, mgl);
@@ -198,7 +185,7 @@ pub unsafe extern fn RenderInterface(
     // Enemy life gauge
     if monsTimer > 0 {
         monsTimer -= 1;
-        move_towards!(curMonsLife -> monsHP, 4);
+        move_towards!(curMonsLife, monsHP, 4);
 
         intfaceSpr.GetSprite(SPR_LIFEMETER).Draw(6, 453, mgl);
         DrawLifeMeter(8, 458, curMonsLife as u8);
