@@ -226,9 +226,10 @@ impl Map {
         })
     }
 
-    pub unsafe fn MakeSmoothLighting(&mut self, beZero: bool, x: c_int, y: c_int) -> *mut c_char {
+    pub unsafe fn MakeSmoothLighting(&mut self, beZero: bool, x: c_int, y: c_int) -> *const [i8; 9] {
+        type T = *const [i8; 9]; // workaround for cpp! macro not acknowledging array types
         let me = self;
-        cpp!([me as "Map*", beZero as "bool", x as "int", y as "int"] -> *mut c_char as "char*" {
+        cpp!([me as "Map*", beZero as "bool", x as "int", y as "int"] -> T as "char*" {
             return me->MakeSmoothLighting(beZero, x, y);
         })
     }

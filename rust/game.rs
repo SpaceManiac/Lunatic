@@ -550,8 +550,15 @@ unsafe fn HandleKeyPresses() {
     }
 
     #[cfg(debug_assertions)] {
+        use options::opt;
         // can't show stats unless in debug mode
-        if lastKey == b's' {
+        if lastKey == b'1' {
+            opt.smoothLight = !opt.smoothLight;
+            lastKey = 0;
+        } else if lastKey == b'2' {
+            opt.discoMode = !opt.discoMode;
+            lastKey = 0;
+        } else if lastKey == b'3' {
             showStats = !showStats;
             lastKey = 0;
         }
