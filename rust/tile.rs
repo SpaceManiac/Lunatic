@@ -1,16 +1,17 @@
-use libc::{FILE, c_int, c_char, fread, fwrite};
+use libc::{FILE, c_int, fread, fwrite};
 use mgldraw::MGLDraw;
+use options::opt;
+use jamulspr::SprModifyLight;
 
 pub const TILE_WIDTH: c_int = 32;
 pub const TILE_HEIGHT: c_int = 24;
 pub const NUMTILES: usize = 400;
+const TILE_SZ: usize = TILE_WIDTH as usize * TILE_HEIGHT as usize;
 
-pub type tile_t = [u8; TILE_WIDTH as usize * TILE_HEIGHT as usize];
+pub type tile_t = [u8; TILE_SZ];
 
-extern {
-    static mut tiles: [tile_t; NUMTILES];
-    static mut tileMGL: *mut MGLDraw;
-}
+static mut tiles: [tile_t; NUMTILES] = [[0; TILE_SZ]; NUMTILES];
+static mut tileMGL: *mut MGLDraw = 0 as *mut MGLDraw;
 
 #[no_mangle]
 pub unsafe extern fn InitTiles(mgl: *mut MGLDraw) {
@@ -60,23 +61,134 @@ pub unsafe extern fn PlotStar(x: c_int, y: c_int, col: u8, tx: u8, ty: u8, tileN
 
 // Disco!
 
+unsafe fn ModifyDiscoColor(color: u8, disco: u8) -> u8 {
+    if !opt.discoMode { color } else { (color & 31) | disco }
+}
+
 fn PickDiscoColor() -> u8 {
     32 * [1, 3, 4, 5, 6, 7][unsafe {::libc::rand() % 6} as usize]
 }
 
 // Rendering for real!
 
-extern {
-    fn RenderFloorTile(x: c_int, y: c_int, t: c_int, light: i8);
-    fn RenderFloorTileShadow(x: c_int, y: c_int, t: c_int, light: i8);
-    fn RenderFloorTileUnlit(x: c_int, y: c_int, t: c_int);
-    fn RenderFloorTileTrans(x: c_int, y: c_int, t: c_int, light: i8);
+fn rect(x: c_int, y: c_int) -> (usize, usize, usize, usize) {
+    let (wid, mut dst_index, mut src_index);
+    if x < 0 {
+        wid = TILE_WIDTH + x;
+        dst_index = y * 640;
+        src_index = -x;
+    } else if x > 640 - TILE_WIDTH {
+        wid = 640 - x;
+        dst_index = x + y * 640;
+        src_index = 0;
+    } else {
+        wid = TILE_WIDTH;
+        dst_index = x + y * 640;
+        src_index = 0;
+    }
+    if wid <= 0 { return (0, 0, 0, 0); }
+
+    let hgt;
+    if y < 0 {
+        dst_index -= y * 640;
+        src_index -= y * TILE_WIDTH;
+        hgt = TILE_HEIGHT + y;
+    } else if y > 480 - TILE_HEIGHT {
+        hgt = 480 - y;
+    } else {
+        hgt = TILE_HEIGHT;
+    }
+
+    (wid as usize, hgt as usize, dst_index as usize, src_index as usize)
 }
 
-// RenderFloorTile
-// RenderFloorTileShadow
-// RenderFloorTileUnlit
-// RenderFloorTileTrans
+#[no_mangle]
+pub unsafe extern fn RenderFloorTile(x: c_int, y: c_int, t: c_int, light: i8) {
+    let screen = (*tileMGL).get_screen();
+    let tile = &tiles[t as usize];
+
+    if light == 0 && !opt.discoMode {
+        return RenderFloorTileUnlit(x, y, t);
+    }
+
+    let disco = PickDiscoColor();
+    let (wid, hgt, mut dst_index, mut src_index) = rect(x, y);
+    for _ in 0..hgt {
+        for (dst, &src) in screen[dst_index .. dst_index + wid].iter_mut()
+            .zip(&tile[src_index .. src_index + wid])
+        {
+            *dst = SprModifyLight(ModifyDiscoColor(src, disco), light);
+        }
+        dst_index += 640;
+        src_index += 32;
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn RenderFloorTileShadow(x: c_int, y: c_int, t: c_int, light: i8) {
+    let screen = (*tileMGL).get_screen();
+    let tile = &tiles[t as usize];
+
+    let disco = PickDiscoColor();
+    let (wid, hgt, mut dst_index, mut src_index) = rect(x, y);
+    let darkpart = if x < 0 {
+        ::std::cmp::max(0i32, TILE_WIDTH - 8 + x)
+    } else {
+        TILE_WIDTH - 8
+    } as usize;
+    if light < -28 {
+        // just render a black box
+        for _ in 0..hgt {
+            for p in screen[dst_index .. dst_index + wid].iter_mut() {
+                *p = 0;
+            }
+            dst_index += 640;
+        }
+    } else {
+        for _ in 0..hgt {
+            for (i, (dst, &src)) in screen[dst_index .. dst_index + wid].iter_mut()
+                .zip(&tile[src_index .. src_index + wid]).enumerate()
+            {
+                let light = light - if i >= darkpart { 4 } else { 0 };
+                *dst = SprModifyLight(ModifyDiscoColor(src, disco), light);
+            }
+            dst_index += 640;
+            src_index += 32;
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn RenderFloorTileUnlit(x: c_int, y: c_int, t: c_int) {
+    let screen = (*tileMGL).get_screen();
+    let tile = &tiles[t as usize];
+
+    let (wid, hgt, mut dst_index, mut src_index) = rect(x, y);
+    for _ in 0..hgt {
+        screen[dst_index .. dst_index + wid]
+            .copy_from_slice(&tile[src_index .. src_index + wid]);
+        dst_index += 640;
+        src_index += 32;
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn RenderFloorTileTrans(x: c_int, y: c_int, t: c_int, light: i8) {
+    let screen = (*tileMGL).get_screen();
+    let tile = &tiles[t as usize];
+
+    let disco = PickDiscoColor();
+    let (wid, hgt, mut dst_index, mut src_index) = rect(x, y);
+    for _ in 0..hgt {
+        for (dst, &src) in screen[dst_index .. dst_index + wid].iter_mut()
+            .zip(&tile[src_index .. src_index + wid])
+        {
+            if src != 0 { *dst = SprModifyLight(ModifyDiscoColor(src, disco), light); }
+        }
+        dst_index += 640;
+        src_index += 32;
+    }
+}
 
 // Gouraud!
 
@@ -132,6 +244,14 @@ fn gouraud_box(mgl: &mut MGLDraw, x: c_int, y: c_int, src: &[u8], light: [i8; 4]
     }
 }
 
+fn mean4(a: i8, b: i8, c: i8, d: i8) -> i8 {
+    ((a as i32 + b as i32 + c as i32 + d as i32) / 4) as i8
+}
+
+fn mean2(a: i8, b: i8) -> i8 {
+    ((a as i32 + b as i32) / 2) as i8
+}
+
 // 9 light values are passed in, taken directly from adjacent tiles:
 //   0  1  2
 //   3  4  5
@@ -139,8 +259,6 @@ fn gouraud_box(mgl: &mut MGLDraw, x: c_int, y: c_int, src: &[u8], light: [i8; 4]
 // Each is then averaged with #4 to form the 9 points within the current tile.
 
 unsafe fn render_tile(x: c_int, y: c_int, t: c_int, shadow: u8, wall: bool, trans: bool, theLight: &[i8; 9]) {
-    use options::opt;
-
     if x <= -TILE_WIDTH || y <= -TILE_HEIGHT || x >= 640 || y >= 480 {
         return; // no need to render
     }
@@ -158,9 +276,9 @@ unsafe fn render_tile(x: c_int, y: c_int, t: c_int, shadow: u8, wall: bool, tran
 
     let mut light = *theLight;
     if wall {
-        light[6] = (light[6] + light[4] + light[3] + light[7]) / 4;
-        light[8] = (light[8] + light[4] + light[7] + light[5]) / 4;
-        light[7] = (light[7] + light[4]) / 2;
+        light[6] = mean4(light[6], light[4], light[3], light[7]);
+        light[8] = mean4(light[8], light[4], light[7], light[5]);
+        light[7] = mean2(light[7], light[4]);
         light[3] = light[6];
         light[4] = light[7];
         light[5] = light[8];
@@ -168,14 +286,14 @@ unsafe fn render_tile(x: c_int, y: c_int, t: c_int, shadow: u8, wall: bool, tran
         light[1] = light[7];
         light[2] = light[8];
     } else {
-        light[0] = (light[0] + light[4] + light[3] + light[1]) / 4;
-        light[2] = (light[2] + light[4] + light[1] + light[5]) / 4;
-        light[6] = (light[6] + light[4] + light[3] + light[7]) / 4;
-        light[8] = (light[8] + light[4] + light[7] + light[5]) / 4;
-        light[1] = (light[1] + light[4]) / 2;
-        light[3] = (light[3] + light[4]) / 2;
-        light[5] = (light[5] + light[4]) / 2;
-        light[7] = (light[7] + light[4]) / 2;
+        light[0] = mean4(light[0], light[4], light[3], light[1]);
+        light[2] = mean4(light[2], light[4], light[1], light[5]);
+        light[6] = mean4(light[6], light[4], light[3], light[7]);
+        light[8] = mean4(light[8], light[4], light[7], light[5]);
+        light[1] = mean2(light[1], light[4]);
+        light[3] = mean2(light[3], light[4]);
+        light[5] = mean2(light[5], light[4]);
+        light[7] = mean2(light[7], light[4]);
     }
 
     if shadow == 0 && !opt.discoMode && light.iter().all(|&x| x == 0) {
