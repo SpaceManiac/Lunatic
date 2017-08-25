@@ -261,7 +261,7 @@ impl MGLDraw {
     pub fn FillBox(&mut self, x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) {
         use std::cmp::{min, max};
 
-        if x2 < 0 || y2 < 0 || y >= self.yRes { return; }
+        if x2 < 0 || y2 < 0 || x >= self.xRes || y >= self.yRes { return; }
         let x = max(0, min(self.xRes - 1, x));
         let y = max(0, min(self.yRes - 1, y));
         let x2 = min(self.xRes - 1, x2);
