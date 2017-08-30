@@ -284,7 +284,7 @@ unsafe fn PickerDraw(mgl: &mut MGLDraw, planet: &sprite_set_t, pickerFont: &mfon
     FontPrintString(2, if pickerpos == 5 { 440 } else { 460 }, worldname, &pickerFont);
 
     let world = if pickerpos < 5 { pickerpos } else { curCustom };
-    let f = ::player::PlayerGetPercent(pickerpos) * 100.0;
+    let f = ::player::PlayerGetPercent(world) * 100.0;
     if ::player::PlayerHasLunacyKey(world) {
         planet.GetSprite(24 + (keyAnim / 4) as c_int).Draw(570, 400, mgl);
     }
