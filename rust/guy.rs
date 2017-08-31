@@ -56,9 +56,20 @@ pub struct Guy {
     pub ID: u16,
 }
 
+cpp! {{
+    #include "guy.h"
+}}
+
 impl Guy {
     pub fn new() -> Guy {
         unsafe { ::std::mem::zeroed() }
+    }
+
+    pub unsafe fn CanWalk(&mut self, x: c_int, y: c_int, map: &mut Map, world: &mut world_t) -> bool {
+        let me = self;
+        cpp!([me as "Guy*", x as "int", y as "int", map as "Map*", world as "world_t*"] -> bool as "byte" {
+            return me->CanWalk(x, y, map, world);
+        })
     }
 }
 
@@ -68,6 +79,7 @@ extern {
     pub fn EditorUpdateGuys(map: &mut Map);
     pub fn UpdateGuys(map: &mut Map, world: *mut world_t);
     pub fn RenderGuys(light: bool);
+    pub fn AddGuy(x: c_int, y: c_int, z: c_int, type_: MonsterType) -> *mut Guy;
 
     static mut guys: *mut *mut Guy;
     static mut maxGuys: c_int;

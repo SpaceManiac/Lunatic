@@ -468,7 +468,127 @@ pub unsafe extern fn DoPlayerFacing(c: ::control::Controls, me: &mut Guy) {
     }
 }
 
-// PlayerFireWeapon
+#[no_mangle]
+pub unsafe extern fn PlayerFireWeapon(me: &mut Guy) {
+    use bullet::{FireBullet, Bullet};
+    use cossin::{Cosine, Sine};
+    use sound::*;
+
+    macro_rules! rapidfire {
+        ($a:expr, $b:expr) => ({
+            let c = ::control::GetControls();
+            if c.contains(::control::CONTROL_B2) { // fire is held
+                player.wpnReload = $a;
+                me.frmTimer = 0;
+            } else {
+                player.wpnReload = $b;
+            }
+            DoPlayerFacing(c, me);
+        })
+    }
+
+    if player.life == 0 || player.ammo == 0 {
+        return; // no shooting when you're dead
+    }
+
+    match player.weapon {
+        Weapon::WPN_NONE => {}
+        Weapon::WPN_PWRARMOR => {} // handled elsewhere
+        Weapon::WPN_MISSILES => {
+            FireBullet(me.x, me.y, me.facing, Bullet::BLT_MISSILE, 1);
+            player.wpnReload = 2;
+        }
+        Weapon::WPN_BOMBS => {
+            FireBullet(me.x, me.y, me.facing, Bullet::BLT_BOMB, 1);
+            player.wpnReload = 15;
+        }
+        Weapon::WPN_AK8087 => {
+            FireBullet(me.x, me.y, me.facing, Bullet::BLT_LASER, 1);
+            me.z += ::FIXAMT * ::mgldraw::MGL_random(4);
+            me.dx += ::FIXAMT / 2 - ::mgldraw::MGL_random(::FIXAMT);
+            me.dy += ::FIXAMT / 2 - ::mgldraw::MGL_random(::FIXAMT);
+            rapidfire!(1, 5);
+        }
+        Weapon::WPN_FLAME => {
+            FireBullet(me.x, me.y, me.facing, Bullet::BLT_FLAME, 1);
+            rapidfire!(1, 5);
+        }
+        Weapon::WPN_BIGAXE => {
+            FireBullet(me.x, me.y, me.facing, Bullet::BLT_BIGAXE, 1);
+            MakeSound(Sound::SND_BOMBTHROW, me.x, me.y, SND_CUTOFF, 1200);
+            player.wpnReload = 10;
+        }
+        Weapon::WPN_LIGHTNING => {
+            // fire lightning
+            FireBullet(me.x, me.y, me.facing, Bullet::BLT_LIGHTNING, 1);
+            rapidfire!(1, 5);
+        }
+        Weapon::WPN_SPEAR => {
+            MakeSound(Sound::SND_BOMBTHROW, me.x, me.y, SND_CUTOFF, 1200);
+            FireBullet(me.x, me.y, me.facing, Bullet::BLT_SPEAR, 1);
+            player.wpnReload = 5;
+        }
+        Weapon::WPN_MACHETE => {
+            MakeSound(Sound::SND_SLASH, me.x, me.y, SND_CUTOFF, 1200);
+            FireBullet(
+                me.x + Cosine(me.facing as c_int * 32) * 32,
+                me.y + Sine(me.facing as c_int * 32) * 32,
+                me.facing, Bullet::BLT_SLASH, 1);
+            player.wpnReload = 2;
+        }
+        Weapon::WPN_MINES => {
+            MakeSound(Sound::SND_MINELAY, me.x, me.y, SND_CUTOFF, 1200);
+            FireBullet(
+                me.x - Cosine(me.facing as c_int * 32) * 32,
+                me.y - Sine(me.facing as c_int * 32) * 32,
+                me.facing, Bullet::BLT_MINE, 1);
+            player.wpnReload = 15;
+        }
+        Weapon::WPN_TURRET => {
+            let g = ::guy::AddGuy(
+                me.x + Cosine(me.facing as c_int * 32) * 32,
+                me.y + Sine(me.facing as c_int * 32) * 32,
+                ::FIXAMT * 10,
+                ::monster::MonsterType::MONS_GOODTURRET);
+            if g.is_null() || !(*g).CanWalk((*g).x, (*g).y, ::game::GameCurrentMap(), &mut ::game::curWorld) {
+                MakeSound(Sound::SND_TURRETBZZT, me.x, me.y, SND_CUTOFF, 1200);
+                if !g.is_null() {
+                    (*g).type_ = ::monster::MonsterType::MONS_NONE;
+                }
+            } else {
+                MakeSound(Sound::SND_MINELAY, me.x, me.y, SND_CUTOFF, 1200);
+            }
+            player.wpnReload = 15;
+        }
+        Weapon::WPN_MINDCONTROL => {
+            MakeSound(Sound::SND_MINDWIPE, me.x, me.y, SND_CUTOFF, 1200);
+            FireBullet(
+                me.x + Cosine(me.facing as c_int * 32) * 32,
+                me.y + Sine(me.facing as c_int * 32) * 32,
+                me.facing, Bullet::BLT_MINDWIPE, 1);
+            player.wpnReload = 15;
+        }
+        Weapon::WPN_REFLECTOR => {
+            MakeSound(Sound::SND_LIGHTSON, me.x, me.y, SND_CUTOFF, 1200);
+            FireBullet(me.x, me.y, me.facing, Bullet::BLT_REFLECT, 1);
+            rapidfire!(0, 10);
+        }
+        Weapon::WPN_JETPACK => {
+            player.jetting = 5;
+            player.wpnReload = 3;
+        }
+        Weapon::WPN_SWAPGUN => {
+            MakeSound(Sound::SND_LIGHTSON, me.x, me.y, SND_CUTOFF, 1200);
+            FireBullet(me.x, me.y, me.facing, Bullet::BLT_SWAP, 1);
+            player.wpnReload = 10;
+        }
+    }
+
+    player.ammo -= 1;
+    if player.ammo == 0 {
+        player.weapon = Weapon::WPN_NONE;
+    }
+}
 
 #[no_mangle]
 pub unsafe extern fn PlayerFirePowerArmor(me: &mut Guy, mode: u8) {

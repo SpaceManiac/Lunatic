@@ -100,8 +100,8 @@ static mut idleGame: bool = false;
 
 /// replaces extern Map *curMap
 #[no_mangle]
-pub unsafe extern fn GameCurrentMap() -> *mut Map {
-    curMap
+pub unsafe extern fn GameCurrentMap<'a>() -> &'a mut Map {
+    &mut *curMap
 }
 
 // these are the major inits, just at the beginning and ending of a whole game
