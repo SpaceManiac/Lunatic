@@ -34,13 +34,11 @@ static mut message: message_t = message_t {
     priority: 0,
 };
 
-#[no_mangle]
-pub unsafe extern fn InitMessage() {
+pub unsafe fn InitMessage() {
     message.msg[0] = 0;
 }
 
-#[no_mangle]
-pub unsafe extern fn NewBigMessage(txt: *const c_char, time: c_int) {
+pub unsafe fn NewBigMessage(txt: *const c_char, time: c_int) {
     ::libc::strncpy(bigMessage.msg.as_mut_ptr(), txt, 32);
     bigMessage.x = 320 - ::display::GetStrLength(bigMessage.msg.as_ptr()) / 2;
     bigMessage.y = -100;
@@ -65,8 +63,7 @@ pub unsafe extern fn NewMessage(txt: *const c_char, time: c_int, priority: u8) {
     message.priority = priority;
 }
 
-#[no_mangle]
-pub unsafe extern fn UpdateMessage() {
+pub unsafe fn UpdateMessage() {
     UpdateBigMessage();
 
     message.y += message.dy;
@@ -151,8 +148,7 @@ pub unsafe extern fn NoRepeatNewMessage(txt: *const c_char, time: c_int, priorit
     ::sound::make_normal_sound(::sound::Sound::SND_MESSAGE);
 }
 
-#[no_mangle]
-pub unsafe extern fn RenderMessage() {
+pub unsafe fn RenderMessage() {
     use display::Print;
     Print(message.x, message.y, message.msg.as_ptr(), (message.bright / 2) as i8, 0);
     Print(bigMessage.x, bigMessage.y, bigMessage.msg.as_ptr(), (bigMessage.bright / 2) as i8, 0);

@@ -5,8 +5,7 @@ use player::{Weapon, player};
 
 static mut rageWpn: Weapon = Weapon::WPN_NONE;
 
-#[no_mangle]
-pub unsafe extern fn ShowRage(mgl: *mut MGLDraw) {
+pub unsafe fn ShowRage(mgl: *mut MGLDraw) {
     if player.rageClock > 10 {
         RenderRage(15 - player.rageClock, mgl);
     } else if player.rageClock < 6 {
@@ -18,8 +17,7 @@ pub unsafe extern fn ShowRage(mgl: *mut MGLDraw) {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn StartRaging() {
+pub unsafe fn StartRaging() {
     use player::Weapon::*;
 
     rageWpn = player.weapon;
@@ -43,8 +41,7 @@ pub unsafe extern fn StartRaging() {
     };
 }
 
-#[no_mangle]
-pub extern fn UpdateRage(_mgl: *mut MGLDraw) -> u8 {
+pub fn UpdateRage(_mgl: *mut MGLDraw) -> u8 {
     1
 }
 

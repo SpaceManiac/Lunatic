@@ -31,13 +31,11 @@ pub struct mfont_t {
 
 static mut fontmgl: *mut MGLDraw = 0 as *mut MGLDraw;
 
-#[no_mangle]
-pub unsafe extern fn FontInit(mgl: *mut MGLDraw) {
+pub unsafe fn FontInit(mgl: *mut MGLDraw) {
     fontmgl = mgl;
 }
 
-#[no_mangle]
-pub extern fn FontExit() {}
+pub fn FontExit() {}
 
 impl mfont_t {
     pub fn load(fname: &str) -> io::Result<mfont_t> {
@@ -134,18 +132,15 @@ fn print_char<F>(mgl: &mut MGLDraw, mut x: c_int, mut y: c_int, c: u8, font: &mf
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn FontPrintChar(x: c_int, y: c_int, c: u8, font: &mfont_t) {
+pub unsafe fn FontPrintChar(x: c_int, y: c_int, c: u8, font: &mfont_t) {
     print_char(&mut *fontmgl, x, y, c, font, |dst, src| *dst = src);
 }
 
-#[no_mangle]
-pub unsafe extern fn FontPrintCharSolid(x: c_int, y: c_int, c: u8, font: &mfont_t, color: u8) {
+pub unsafe fn FontPrintCharSolid(x: c_int, y: c_int, c: u8, font: &mfont_t, color: u8) {
     print_char(&mut *fontmgl, x, y, c, font, |dst, _| *dst = color);
 }
 
-#[no_mangle]
-pub unsafe extern fn FontPrintCharColor(x: c_int, y: c_int, c: u8, color: u8, font: &mfont_t) {
+pub unsafe fn FontPrintCharColor(x: c_int, y: c_int, c: u8, color: u8, font: &mfont_t) {
     let color = color * 32;
     print_char(&mut *fontmgl, x, y, c, font, |dst, src| {
         if (src >= 64 && src < 64 + 32) || (src >= 128 && src < 128 + 32) {
@@ -156,8 +151,7 @@ pub unsafe extern fn FontPrintCharColor(x: c_int, y: c_int, c: u8, color: u8, fo
     });
 }
 
-#[no_mangle]
-pub unsafe extern fn FontPrintCharBright(x: c_int, y: c_int, c: u8, bright: i8, font: &mfont_t) {
+pub unsafe fn FontPrintCharBright(x: c_int, y: c_int, c: u8, bright: i8, font: &mfont_t) {
     print_char(&mut *fontmgl, x, y, c, font, |dst, src| {
         *dst = (src as i8).wrapping_add(bright) as u8;
         if *dst > (src & !31) + 31 {
@@ -175,28 +169,23 @@ unsafe fn print_string<F: Fn(c_int, u8)>(mut x: c_int, s: *const c_char, font: &
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn FontPrintString(x: c_int, y: c_int, s: *const c_char, font: &mfont_t) {
+pub unsafe fn FontPrintString(x: c_int, y: c_int, s: *const c_char, font: &mfont_t) {
     print_string(x, s, font, |x, byte| FontPrintChar(x, y, byte, font));
 }
 
-#[no_mangle]
-pub unsafe extern fn FontPrintStringColor(x: c_int, y: c_int, s: *const c_char, font: &mfont_t, color: u8) {
+pub unsafe fn FontPrintStringColor(x: c_int, y: c_int, s: *const c_char, font: &mfont_t, color: u8) {
     print_string(x, s, font, |x, byte| FontPrintCharColor(x, y, byte, color, font));
 }
 
-#[no_mangle]
-pub unsafe extern fn FontPrintStringBright(x: c_int, y: c_int, s: *const c_char, font: &mfont_t, bright: i8) {
+pub unsafe fn FontPrintStringBright(x: c_int, y: c_int, s: *const c_char, font: &mfont_t, bright: i8) {
     print_string(x, s, font, |x, byte| FontPrintCharBright(x, y, byte, bright, font));
 }
 
-#[no_mangle]
-pub unsafe extern fn FontPrintStringSolid(x: c_int, y: c_int, s: *const c_char, font: &mfont_t, color: u8) {
+pub unsafe fn FontPrintStringSolid(x: c_int, y: c_int, s: *const c_char, font: &mfont_t, color: u8) {
     print_string(x, s, font, |x, byte| FontPrintCharSolid(x, y, byte, font, color));
 }
 
-#[no_mangle]
-pub unsafe extern fn FontPrintStringDropShadow(
+pub unsafe fn FontPrintStringDropShadow(
     mut x: c_int, y: c_int,
     s: *const c_char,
     font: &mfont_t,
@@ -210,8 +199,7 @@ pub unsafe extern fn FontPrintStringDropShadow(
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn FontStrLen(s: *const c_char, font: &mfont_t) -> c_int {
+pub unsafe fn FontStrLen(s: *const c_char, font: &mfont_t) -> c_int {
     CStr::from_ptr(s).to_bytes().iter().map(|&byte| {
         font.char_width(byte) as c_int + font.gapSize as c_int
     }).sum()

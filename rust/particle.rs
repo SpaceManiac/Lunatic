@@ -234,8 +234,7 @@ static mut snowCount: c_int = 0;
 static mut particleList: *mut *mut Particle = 1 as *mut *mut Particle;
 static mut maxParticles: c_int = 0;
 
-#[no_mangle]
-pub unsafe extern fn InitParticles(max: c_int) {
+pub unsafe fn InitParticles(max: c_int) {
     maxParticles = max;
 
     let mut vec = vec![Box::new(Particle::new()); max as usize];
@@ -243,14 +242,12 @@ pub unsafe extern fn InitParticles(max: c_int) {
     ::std::mem::forget(vec);
 }
 
-#[no_mangle]
-pub unsafe extern fn ExitParticles() {
+pub unsafe fn ExitParticles() {
     let len = maxParticles as usize;
     Vec::from_raw_parts(particleList as *mut Box<Particle>, len, len);
 }
 
-#[no_mangle]
-pub unsafe extern fn UpdateParticles(map: &mut Map) {
+pub unsafe fn UpdateParticles(map: &mut Map) {
     snowCount = 0;
     for particle in particle_list() {
         particle.Update(map);
@@ -360,8 +357,7 @@ pub unsafe fn RenderLightningParticle(
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn RenderParticles() {
+pub unsafe fn RenderParticles() {
     for p in particle_list() {
         use display::*;
         use bullet::{RenderSmoke, RenderBoom, RenderStinky};
@@ -473,8 +469,7 @@ pub unsafe extern fn GlassShatter(x: c_int, y: c_int, x2: c_int, y2: c_int, z: c
     })
 }
 
-#[no_mangle]
-pub unsafe extern fn SpurtParticles(type_: ParticleType, left: bool, mut x: c_int, mut y: c_int, z: c_int, angle: u8, force: u8) {
+pub unsafe fn SpurtParticles(type_: ParticleType, left: bool, mut x: c_int, mut y: c_int, z: c_int, angle: u8, force: u8) {
     x += Cosine(angle as c_int) * 10;
     y += Sine(angle as c_int) * 10;
     let ang2 = angle.wrapping_add(if left { 64 } else { 128 + 64 }) as c_int;
@@ -494,8 +489,7 @@ pub unsafe extern fn ExplodeParticles2(type_: ParticleType, x: c_int, y: c_int, 
     make_particle(num, |p| p.GoRandom(type_, x, y, z, force));
 }
 
-#[no_mangle]
-pub unsafe extern fn MakeItSnow(_: &mut Map) {
+pub unsafe fn MakeItSnow(_: &mut Map) {
     // only 25% of particles may be snowflakes
     if MGL_random(100) > 30 || snowCount > maxParticles / 4 {
         return;

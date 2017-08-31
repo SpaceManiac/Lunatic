@@ -172,12 +172,10 @@ pub unsafe extern fn InitPlayer(initWhat: Init, world: u8, level: u8) {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn ExitPlayer() {
+pub fn ExitPlayer() {
 }
 
-#[no_mangle]
-pub unsafe extern fn PlayerLoadGame(which: u8) {
+pub unsafe fn PlayerLoadGame(which: u8) {
     let f = ::mgldraw::AppdataOpen(cstr!("loony.sav"), cstr!("rb"));
     if f.is_null() {
         InitPlayer(Init::Game, 0, 0);
@@ -188,8 +186,7 @@ pub unsafe extern fn PlayerLoadGame(which: u8) {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn PlayerSaveGame(which: u8) {
+pub unsafe fn PlayerSaveGame(which: u8) {
     use mgldraw::AppdataOpen;
 
     let mut p: [player_t; 3] = ::std::mem::zeroed();
@@ -214,13 +211,11 @@ pub unsafe extern fn PlayerSaveGame(which: u8) {
     fclose(f);
 }
 
-#[no_mangle]
-pub unsafe extern fn PlayerSetWorldWorth(world: u8, amt: c_int) {
+pub unsafe fn PlayerSetWorldWorth(world: u8, amt: c_int) {
     player.totalCompletion[world as usize] = amt;
 }
 
-#[no_mangle]
-pub unsafe extern fn PlayerRenderInterface(mgl: &mut MGLDraw) {
+pub unsafe fn PlayerRenderInterface(mgl: &mut MGLDraw) {
     let mut b = ::map::TotalBrains();
     if b != 0 {
         b = 128 - (player.brains * 128 / b);
@@ -230,18 +225,15 @@ pub unsafe extern fn PlayerRenderInterface(mgl: &mut MGLDraw) {
         player.ammo, player.hamSpeed, mgl);
 }
 
-#[no_mangle]
-pub unsafe extern fn SetCustomName(name: *const c_char) {
+pub unsafe fn SetCustomName(name: *const c_char) {
     strncpy(player.customName[player.worldNum as usize].as_mut_ptr(), name, 32);
 }
 
-#[no_mangle]
-pub unsafe extern fn GetCustomName() -> *mut c_char {
+pub unsafe fn GetCustomName() -> *mut c_char {
     player.customName[player.worldNum as usize].as_mut_ptr()
 }
 
-#[no_mangle]
-pub unsafe extern fn PlayerGetPercent(world: u8) -> f32 {
+pub unsafe fn PlayerGetPercent(world: u8) -> f32 {
     if player.totalCompletion[world as usize] == 0 {
         1.0
     } else {
@@ -249,8 +241,7 @@ pub unsafe extern fn PlayerGetPercent(world: u8) -> f32 {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn PlayerGetGamePercent() -> f32 {
+pub unsafe fn PlayerGetGamePercent() -> f32 {
     let (mut amt, mut total) = (0, 0);
     for i in 0..5 {
         total += player.totalCompletion[i];
@@ -264,8 +255,7 @@ pub unsafe extern fn PlayerShield() -> u8 {
     player.shield
 }
 
-#[no_mangle]
-pub unsafe extern fn PlayerHasHammer() -> bool {
+pub unsafe fn PlayerHasHammer() -> bool {
     player.hammers > 0
 }
 
@@ -282,8 +272,7 @@ pub unsafe extern fn PoisonVictim(me: *mut Guy, amt: u8) {
     (*me).poison = (*me).poison.saturating_add(amt);
 }
 
-#[no_mangle]
-pub unsafe extern fn PlayerResetScore() {
+pub unsafe fn PlayerResetScore() {
     player.score = player.prevScore;
 }
 
@@ -292,8 +281,7 @@ pub unsafe extern fn PlayerPassedLevel(world: u8, map: u8) -> u8 {
     player.levelPassed[world as usize][map as usize]
 }
 
-#[no_mangle]
-pub unsafe extern fn PlayerWinLevel(w: u8, l: u8, isSecret: bool) {
+pub unsafe fn PlayerWinLevel(w: u8, l: u8, isSecret: bool) {
     use options::{opt, SaveOptions};
 
     if player.levelPassed[w as usize][l as usize] == 0 {
@@ -344,8 +332,7 @@ pub unsafe extern fn KeyChainAllCheck() {
 
 // PlayerGetItem
 
-#[no_mangle]
-pub unsafe extern fn ToggleWaterwalk() {
+pub unsafe fn ToggleWaterwalk() {
     player.hammerFlags ^= ::bullet::HMR_WATERWALK;
 }
 
@@ -407,8 +394,7 @@ pub unsafe extern fn PlayerGetMusicSettings() -> ::options::Music {
     player.musicSettings
 }
 
-#[no_mangle]
-pub unsafe extern fn PlayerSetMusicSettings(m: ::options::Music) {
+pub unsafe fn PlayerSetMusicSettings(m: ::options::Music) {
     if ::music::CDLoaded() != 0 {
         player.musicSettings = m;
     } else {

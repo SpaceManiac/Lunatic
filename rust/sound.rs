@@ -311,18 +311,15 @@ pub enum Sound {
 
 static mut SOUND_AVAILABLE: bool = false;
 
-#[no_mangle]
-pub unsafe extern fn SoundSystemExists() {
+pub unsafe fn SoundSystemExists() {
     SOUND_AVAILABLE = true;
 }
 
-#[no_mangle]
-pub unsafe extern fn InitSound() {
+pub fn InitSound() {
     JamulSoundPurge();
 }
 
-#[no_mangle]
-pub unsafe extern fn ExitSound() {
+pub fn ExitSound() {
     // don't need to do nothing, it's handled by jamulsoundexit
 }
 

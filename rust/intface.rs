@@ -27,25 +27,21 @@ static mut monsName: [c_char; 32] = [0; 32];
 static mut monsHP: c_int = 0;
 static mut monsTimer: u16 = 0;
 
-#[no_mangle]
-pub unsafe extern fn InitInterface() {
+pub unsafe fn InitInterface() {
     intfaceSpr_ = sprite_set_t::load_boxed("graphics/intface.jsp");
 }
 
-#[no_mangle]
-pub unsafe extern fn ExitInterface() {
+pub unsafe fn ExitInterface() {
     sprite_set_t::delete(intfaceSpr_);
 }
 
-#[no_mangle]
-pub unsafe extern fn ResetInterface() {
+pub unsafe fn ResetInterface() {
     curLife = 0;
     monsTimer = 0;
     curBrains = 0;
 }
 
-#[no_mangle]
-pub unsafe extern fn RenderRage(size: u8, mgl: *mut MGLDraw) {
+pub unsafe fn RenderRage(size: u8, mgl: *mut MGLDraw) {
     let mgl = &mut *mgl;
     (*intfaceSpr_).GetSprite(SPR_RAGE + size as c_int).Draw(320, 240, mgl);
 }
@@ -138,8 +134,7 @@ unsafe fn DrawLitGauge(x: c_int, y: c_int, c: u8) {
     mgl.FillBox(x + 3, y + 1, x + 3, y + 12, c - 4);
 }
 
-#[no_mangle]
-pub unsafe extern fn RenderInterface(
+pub unsafe fn RenderInterface(
     life: u8, rage: u8, hmrFlags: ::bullet::HammerFlags, hammers: u8,
     brains: c_int, score: c_int, wpn: u8, ammo: c_int,
     hamSpeed: u8, mgl: &mut MGLDraw,

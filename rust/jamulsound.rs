@@ -215,25 +215,21 @@ impl Drop for JamulSound {
 
 global!(static SOUND: JamulSound);
 
-#[no_mangle]
-pub unsafe extern fn JamulSoundInit(numBuffers: c_int) -> bool {
+pub fn JamulSoundInit(numBuffers: c_int) -> bool {
     SOUND.init(|| JamulSound::new(numBuffers as usize));
     true
 }
 
-#[no_mangle]
-pub unsafe extern fn JamulSoundDestroyBuffer(which: usize) {
+pub fn JamulSoundDestroyBuffer(which: usize) {
     SOUND.borrow_mut(|s| s.destroy_buffer(which));
 }
 
-#[no_mangle]
-pub unsafe extern fn JamulSoundExit() {
+pub extern fn JamulSoundExit() {
     SOUND.destroy();
 }
 
 /// call this to wipe the sounds from memory
-#[no_mangle]
-pub unsafe extern fn JamulSoundPurge() {
+pub fn JamulSoundPurge() {
     SOUND.borrow_mut(JamulSound::purge);
 }
 
@@ -264,7 +260,6 @@ pub unsafe extern fn JamulSoundUpdate() {
 }
 
 /// call this a lot, it plays sounds
-#[no_mangle]
-pub unsafe extern fn GoPlaySound(num: c_int, pan: c_int, vol: c_int, flags: SoundFlags, priority: c_int) {
+pub unsafe fn GoPlaySound(num: c_int, pan: c_int, vol: c_int, flags: SoundFlags, priority: c_int) {
     SOUND.borrow_mut(|s| s.play(num, pan, vol, flags, priority));
 }

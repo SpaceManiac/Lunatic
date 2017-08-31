@@ -105,8 +105,7 @@ pub unsafe extern fn GameCurrentMap() -> *mut Map {
 }
 
 // these are the major inits, just at the beginning and ending of a whole game
-#[no_mangle]
-pub unsafe extern fn LunaticInit(mgl: *mut MGLDraw) {
+pub unsafe fn LunaticInit(mgl: *mut MGLDraw) {
     gamemgl = mgl;
 
     logFile = ::mgldraw::AppdataOpen(cstr!("loonylog.txt"), cstr!("wt"));
@@ -126,8 +125,7 @@ pub unsafe extern fn LunaticInit(mgl: *mut MGLDraw) {
     msgFromOtherModules = Message::None;
 }
 
-#[no_mangle]
-pub unsafe extern fn LunaticExit() {
+pub unsafe fn LunaticExit() {
     ::music::MusicExit();
     ::items::ExitItems();
     ::sound::ExitSound();
@@ -139,8 +137,7 @@ pub unsafe extern fn LunaticExit() {
     ::libc::fclose(logFile);
 }
 
-#[no_mangle]
-pub unsafe extern fn GetCurSong() -> u8 {
+pub unsafe fn GetCurSong() -> u8 {
     if curMap.is_null() {
         3
     } else {
@@ -215,19 +212,16 @@ unsafe fn ExitLevel() {
     ::monster::PurgeMonsterSprites();
 }
 
-#[no_mangle]
-pub unsafe extern fn SetGameIdle(b: bool) {
+pub unsafe fn SetGameIdle(b: bool) {
     idleGame = b;
 }
 
-#[no_mangle]
-pub unsafe extern fn GetGameIdle() -> bool {
+pub unsafe fn GetGameIdle() -> bool {
     idleGame
 }
 
 /// this is run whenever the game is swapped away from
-#[no_mangle]
-pub unsafe extern fn GameIdle() {
+pub unsafe fn GameIdle() {
     let start = timeGetTime();
     while idleGame {
         HandleCDMusic();
@@ -239,8 +233,7 @@ pub unsafe extern fn GameIdle() {
     player.boredom = 0;
 }
 
-#[no_mangle]
-pub unsafe extern fn EnterPictureDisplay() {
+pub unsafe fn EnterPictureDisplay() {
     gameMode = GameMode::Pic;
     ::control::GetTaps(); // clear the key tap buffer
 }
@@ -401,8 +394,7 @@ unsafe fn LunaticRun(lastTime: &mut u32) -> LevelOutcome {
     LevelOutcome::Playing
 }
 
-#[no_mangle]
-pub unsafe extern fn HandleCDMusic() {
+pub unsafe fn HandleCDMusic() {
     let start = timeGetTime();
     ::music::CDPlayerUpdate(match ::player::PlayerGetMusicSettings() {
         ::options::Music::Off => ::music::AudioMode::Off,
@@ -572,7 +564,6 @@ unsafe fn HandleKeyPresses() {
     }
 }
 
-#[no_mangle]
 pub unsafe fn PlayALevel(map: u8) -> LevelOutcome {
     if !InitLevel(map) {
         mapToGoTo = 255;
@@ -614,8 +605,7 @@ pub unsafe fn PlayALevel(map: u8) -> LevelOutcome {
     exitcode
 }
 
-#[no_mangle]
-pub unsafe extern fn LunaticWorld(world: u8, worldName: *const c_char) -> WorldOutcome {
+pub unsafe fn LunaticWorld(world: u8, worldName: *const c_char) -> WorldOutcome {
     ::player::InitPlayer(::player::Init::World, world, 0);
     if ::world::LoadWorld(&mut curWorld, worldName) == 0 {
         return WorldOutcome::Abort;
@@ -660,8 +650,7 @@ pub unsafe extern fn LunaticWorld(world: u8, worldName: *const c_char) -> WorldO
     WorldOutcome::Abort
 }
 
-#[no_mangle]
-pub unsafe extern fn LunaticGame(mgl: &mut MGLDraw, load: bool) {
+pub unsafe fn LunaticGame(mgl: &mut MGLDraw, load: bool) {
     let mut custName = [0; 64];
     let mut worldResult = if load { // continuing a saved game
         WorldOutcome::Load

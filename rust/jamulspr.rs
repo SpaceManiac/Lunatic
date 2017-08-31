@@ -232,26 +232,22 @@ impl sprite_set_t {
     }
 }
 
-#[no_mangle]
-pub extern fn SprModifyColor(color: u8, hue: u8) -> u8 {
+pub fn SprModifyColor(color: u8, hue: u8) -> u8 {
     (hue << 5) | (color & 31)
 }
 
-#[no_mangle]
-pub extern fn SprGetColor(color: u8) -> u8 {
+pub fn SprGetColor(color: u8) -> u8 {
     color >> 5
 }
 
-#[no_mangle]
-pub extern fn SprModifyLight(color: u8, bright: i8) -> u8 {
+pub fn SprModifyLight(color: u8, bright: i8) -> u8 {
     let mut value = (color & 31).wrapping_add(bright as u8);
     if value > 128 { value = 0; } // since byte is unsigned...
     else if value > 31 { value = 31; }
     (color & !31) | value
 }
 
-#[no_mangle]
-pub extern fn SprModifyGhost(src: u8, dst: u8, bright: i8) -> u8 {
+pub fn SprModifyGhost(src: u8, dst: u8, bright: i8) -> u8 {
     if src < 31 {
         SprModifyLight(dst, src as i8)
     } else {
@@ -259,8 +255,7 @@ pub extern fn SprModifyGhost(src: u8, dst: u8, bright: i8) -> u8 {
     }
 }
 
-#[no_mangle]
-pub extern fn SprModifyGlow(src: u8, dst: u8, bright: i8) -> u8 {
+pub fn SprModifyGlow(src: u8, dst: u8, bright: i8) -> u8 {
     SprModifyLight(src, (dst & 31) as i8 + bright)
 }
 

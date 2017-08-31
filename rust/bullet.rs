@@ -173,22 +173,19 @@ pub extern fn OffScreenBulletDie(me: &mut bullet_t, map: &Map) {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn RenderSmoke(x: c_int, y: c_int, z: c_int, bright: i8, frm: u8) {
+pub unsafe fn RenderSmoke(x: c_int, y: c_int, z: c_int, bright: i8, frm: u8) {
     ::display::SprDraw(x, y, z, 255, bright - 64,
         (*bulletSpr).GetSprite(SPR_SMOKE + frm as c_int),
         ::display::DISPLAY_DRAWME | ::display::DISPLAY_GHOST);
 }
 
-#[no_mangle]
-pub unsafe extern fn RenderBoom(x: c_int, y: c_int, z: c_int, bright: i8, frm: u8) {
+pub unsafe fn RenderBoom(x: c_int, y: c_int, z: c_int, bright: i8, frm: u8) {
     ::display::SprDraw(x, y, z, 255, bright - 64,
         (*bulletSpr).GetSprite(SPR_BOOM + frm as c_int),
         ::display::DISPLAY_DRAWME | ::display::DISPLAY_GLOW);
 }
 
-#[no_mangle]
-pub unsafe extern fn RenderStinky(x: c_int, y: c_int, z: c_int, bright: i8, frm: u8) {
+pub unsafe fn RenderStinky(x: c_int, y: c_int, z: c_int, bright: i8, frm: u8) {
     ::display::SprDraw(x, y, z, 255, bright - 64,
         (*bulletSpr).GetSprite(SPR_STINKY + frm as c_int),
         ::display::DISPLAY_DRAWME | ::display::DISPLAY_GHOST);

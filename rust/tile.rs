@@ -13,13 +13,11 @@ pub type tile_t = [u8; TILE_SZ];
 static mut tiles: [tile_t; NUMTILES] = [[0; TILE_SZ]; NUMTILES];
 static mut tileMGL: *mut MGLDraw = 0 as *mut MGLDraw;
 
-#[no_mangle]
-pub unsafe extern fn InitTiles(mgl: *mut MGLDraw) {
+pub unsafe fn InitTiles(mgl: *mut MGLDraw) {
     tileMGL = mgl;
 }
 
-#[no_mangle]
-pub extern fn ExitTiles() {}
+pub fn ExitTiles() {}
 
 pub unsafe fn set_tiles(scrn: &[u8]) {
     let (mut x, mut y) = (0, 0);
@@ -42,13 +40,11 @@ pub unsafe extern fn SetTiles(scrn: *const u8) {
     set_tiles(::std::slice::from_raw_parts(scrn, 640 * 480));
 }
 
-#[no_mangle]
-pub unsafe extern fn LoadTiles(f: *mut FILE) {
+pub unsafe fn LoadTiles(f: *mut FILE) {
     fread(decay!(&mut tiles), NUMTILES, szof!(tile_t), f);
 }
 
-#[no_mangle]
-pub unsafe extern fn SaveTiles(f: *mut FILE) {
+pub unsafe fn SaveTiles(f: *mut FILE) {
     fwrite(decay!(&tiles), NUMTILES, szof!(tile_t), f);
 }
 
@@ -124,8 +120,7 @@ pub unsafe extern fn RenderFloorTile(x: c_int, y: c_int, t: c_int, light: i8) {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn RenderFloorTileShadow(x: c_int, y: c_int, t: c_int, light: i8) {
+pub unsafe fn RenderFloorTileShadow(x: c_int, y: c_int, t: c_int, light: i8) {
     let screen = (*tileMGL).get_screen();
     let tile = &tiles[t as usize];
 
@@ -172,8 +167,7 @@ pub unsafe extern fn RenderFloorTileUnlit(x: c_int, y: c_int, t: c_int) {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn RenderFloorTileTrans(x: c_int, y: c_int, t: c_int, light: i8) {
+pub unsafe fn RenderFloorTileTrans(x: c_int, y: c_int, t: c_int, light: i8) {
     let screen = (*tileMGL).get_screen();
     let tile = &tiles[t as usize];
 
@@ -356,12 +350,10 @@ pub unsafe extern fn RenderFloorTileFancy(x: c_int, y: c_int, t: c_int, shadow: 
     render_tile(x, y, t, shadow, false, false, theLight);
 }
 
-#[no_mangle]
-pub unsafe extern fn RenderWallTileFancy(x: c_int, y: c_int, t: c_int, theLight: &[i8; 9]) {
+pub unsafe fn RenderWallTileFancy(x: c_int, y: c_int, t: c_int, theLight: &[i8; 9]) {
     render_tile(x, y, t, 0, true, false, theLight);
 }
 
-#[no_mangle]
-pub unsafe extern fn RenderRoofTileFancy(x: c_int, y: c_int, t: c_int, trans: bool, _: u8, theLight: &[i8; 9]) {
+pub unsafe fn RenderRoofTileFancy(x: c_int, y: c_int, t: c_int, trans: bool, _: u8, theLight: &[i8; 9]) {
     render_tile(x, y, t, 0, false, trans, theLight);
 }

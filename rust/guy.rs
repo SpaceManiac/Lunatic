@@ -132,8 +132,7 @@ pub unsafe extern fn GetGuy(w: u16) -> *mut Guy {
     guy_list()[w as usize]
 }
 
-#[no_mangle]
-pub unsafe extern fn HealGoodguy(amt: u8) {
+pub unsafe fn HealGoodguy(amt: u8) {
     if goodguy.is_null() { return }
 
     (*goodguy).hp = ::std::cmp::min(128, (*goodguy).hp + amt as c_int);

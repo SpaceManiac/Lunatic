@@ -50,8 +50,7 @@ pub unsafe fn get_camera() -> (c_int, c_int) {
     (scrx, scry)
 }
 
-#[no_mangle]
-pub unsafe extern fn InitDisplay(mainmgl: *mut MGLDraw) -> bool {
+pub unsafe fn InitDisplay(mainmgl: *mut MGLDraw) -> bool {
     mgl = mainmgl;
     if mgl.is_null() { return false; }
 
@@ -69,8 +68,7 @@ pub unsafe extern fn InitDisplay(mainmgl: *mut MGLDraw) -> bool {
     true
 }
 
-#[no_mangle]
-pub unsafe extern fn ExitDisplay() {
+pub unsafe fn ExitDisplay() {
     if !gameFont[0].is_null() {
         Box::from_raw(gameFont[0]);
         gameFont[0] = 0 as *mut _;
@@ -82,19 +80,16 @@ pub unsafe extern fn ExitDisplay() {
     Box::from_raw(dispList);
 }
 
-#[no_mangle] // iffy
-pub unsafe extern fn GetDisplayMGL<'a>() -> &'a mut MGLDraw {
+pub unsafe fn GetDisplayMGL<'a>() -> &'a mut MGLDraw {
     assert!(!mgl.is_null());
     &mut *mgl
 }
 
-#[no_mangle]
-pub unsafe extern fn GetGamma() -> u8 {
+pub unsafe fn GetGamma() -> u8 {
     gammaCorrection
 }
 
-#[no_mangle]
-pub unsafe extern fn SetGamma(g: u8) {
+pub unsafe fn SetGamma(g: u8) {
     gammaCorrection = g;
 }
 
@@ -115,8 +110,7 @@ pub unsafe extern fn PutCamera(x: c_int, y: c_int) {
     scry = rscry >> ::FIXSHIFT;
 }
 
-#[no_mangle]
-pub unsafe extern fn GetStrLength(s: *const c_char) -> c_int {
+pub unsafe fn GetStrLength(s: *const c_char) -> c_int {
     FontStrLen(s, &*gameFont[0])
 }
 
@@ -140,8 +134,7 @@ pub unsafe extern fn Print(x: c_int, y: c_int, s: *const c_char, bright: i8, fon
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn CenterPrint(x: c_int, y: c_int, s: *const c_char, bright: c_char, font: u8) {
+pub unsafe fn CenterPrint(x: c_int, y: c_int, s: *const c_char, bright: c_char, font: u8) {
     if font == 0 {
         let x = x - FontStrLen(s, &*gameFont[0]) / 2;
         FontPrintStringBright(x, y, s, &*gameFont[0], bright);
@@ -163,13 +156,11 @@ pub unsafe extern fn ShakeScreen(howlong: u8) {
     shakeTimer = howlong;
 }
 
-#[no_mangle]
-pub unsafe extern fn DrawBox(x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) {
+pub unsafe fn DrawBox(x: c_int, y: c_int, x2: c_int, y2: c_int, c: u8) {
     (*mgl).Box(x, y, x2, y2, c);
 }
 
-#[no_mangle]
-pub unsafe extern fn DrawDebugBox(x: c_int, y: c_int, x2: c_int, y2: c_int) {
+pub unsafe fn DrawDebugBox(x: c_int, y: c_int, x2: c_int, y2: c_int) {
     let x = x - scrx + 320;
     let y = y - scry + 240;
     let x2 = x2 - scrx + 320;
@@ -356,13 +347,11 @@ pub unsafe extern fn RoofDraw(x: c_int, y: c_int, roof: u8, map: *mut Map, flags
     (*dispList).DrawSprite(x, y, TILE_HEIGHT, 0, roof, 0, map as *mut sprite_t, flags);
 }
 
-#[no_mangle]
-pub unsafe extern fn ParticleDraw(x: c_int, y: c_int, z: c_int, color: u8, size: u8, flags: DisplayFlags) {
+pub unsafe fn ParticleDraw(x: c_int, y: c_int, z: c_int, color: u8, size: u8, flags: DisplayFlags) {
     (*dispList).DrawSprite(x, y, z, 0, color, size as i8, 1 as *mut sprite_t, flags);
 }
 
-#[no_mangle]
-pub unsafe extern fn LightningDraw(x: c_int, y: c_int, x2: c_int, y2: c_int, bright: u8, range: i8) {
+pub unsafe fn LightningDraw(x: c_int, y: c_int, x2: c_int, y2: c_int, bright: u8, range: i8) {
     (*dispList).DrawSprite(x, y, x2, y2, bright, range, 1 as *mut sprite_t, DISPLAY_DRAWME | DISPLAY_LIGHTNING);
 }
 

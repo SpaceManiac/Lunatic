@@ -29,8 +29,7 @@ static mut giveUp: GiveUp = GiveUp::WorldSelect;
 
 static mut lastKey: u8 = 0;
 
-#[no_mangle]
-pub unsafe extern fn InitPauseMenu() {
+pub unsafe fn InitPauseMenu() {
     lastKey = 0;
     subMode = Submode::None;
 
@@ -48,19 +47,16 @@ pub unsafe extern fn InitPauseMenu() {
     ::sound::make_normal_sound(::sound::Sound::SND_PAUSE);
 }
 
-#[no_mangle]
-pub unsafe extern fn SetSubCursor(s: u8) {
+pub unsafe fn SetSubCursor(s: u8) {
     subcursor = s;
 }
 
-#[no_mangle]
-pub unsafe extern fn HandlePauseKeyPresses(mgl: &mut MGLDraw) {
+pub unsafe fn HandlePauseKeyPresses(mgl: &mut MGLDraw) {
     let k = mgl.LastKeyPressed();
     if k != 0 { lastKey = k }
 }
 
-#[no_mangle]
-pub extern fn CalcTotalPercent(p: &player_t) -> c_float {
+pub fn CalcTotalPercent(p: &player_t) -> c_float {
     let (mut amt, mut total) = (0, 0);
     for i in 0..5 { // only the default five worlds
         total += p.totalCompletion[i];
@@ -69,8 +65,7 @@ pub extern fn CalcTotalPercent(p: &player_t) -> c_float {
     (amt as f32) / (total as f32)
 }
 
-#[no_mangle]
-pub unsafe extern fn RenderPauseMenu() {
+pub unsafe fn RenderPauseMenu() {
     let mgl = GetDisplayMGL();
     mgl.Box(208, 44, 432, 422, 128 + 10);
     mgl.Box(209, 45, 431, 421, 128 + 16);
@@ -100,8 +95,7 @@ pub unsafe extern fn RenderPauseMenu() {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn RenderSlotPickMenu() {
+pub unsafe fn RenderSlotPickMenu() {
     let mgl = GetDisplayMGL();
     mgl.Box(258, 104, 492, 294, 128 + 10);
     mgl.Box(259, 105, 491, 293, 128 + 16);
@@ -119,13 +113,11 @@ pub unsafe extern fn RenderSlotPickMenu() {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn SetGiveUpText(gu: GiveUp) {
+pub unsafe fn SetGiveUpText(gu: GiveUp) {
     giveUp = gu;
 }
 
-#[no_mangle]
-pub unsafe extern fn UpdatePauseMenu(mgl: &mut MGLDraw) -> u8 {
+pub unsafe fn UpdatePauseMenu(mgl: &mut MGLDraw) -> u8 {
     use control::*;
     use sound::*;
 

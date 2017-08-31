@@ -134,8 +134,7 @@ pub unsafe extern fn FreeWorld(world: *mut world_t) {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn InitWorld(world: &mut world_t, worldNum: u8) {
+pub unsafe fn InitWorld(world: &mut world_t, worldNum: u8) {
     let mut complete = 0;
     for &map in world.map[1..].iter() {
         if !map.is_null() {
@@ -147,8 +146,7 @@ pub unsafe extern fn InitWorld(world: &mut world_t, worldNum: u8) {
     world.totalPoints = complete;
 }
 
-#[no_mangle]
-pub unsafe extern fn GetWorldName(fname: *const c_char, buf: *mut c_char) {
+pub unsafe fn GetWorldName(fname: *const c_char, buf: *mut c_char) {
     if *fname == 0 { return; }
 
     let mut fname2 = [0; 60];
@@ -168,8 +166,7 @@ pub unsafe extern fn GetWorldName(fname: *const c_char, buf: *mut c_char) {
     fclose(f);
 }
 
-#[no_mangle]
-pub unsafe extern fn GetWorldPoints(fname: *const c_char) -> c_int {
+pub unsafe fn GetWorldPoints(fname: *const c_char) -> c_int {
     if *fname == 0 { return 100; }
 
     let mut fname2 = [0; 60];

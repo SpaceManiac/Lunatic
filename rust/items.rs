@@ -18,14 +18,12 @@ static mut itmSpr: *mut sprite_set_t = 0 as *mut sprite_set_t;
 static mut glowism: u8 = 0;
 static mut itmLight: bool = false;
 
-#[no_mangle]
-pub unsafe extern fn InitItems() {
+pub unsafe fn InitItems() {
     itmSpr = sprite_set_t::load_boxed("graphics/items.jsp");
     glowism = 0;
 }
 
-#[no_mangle]
-pub unsafe extern fn ExitItems() {
+pub unsafe fn ExitItems() {
     sprite_set_t::delete(itmSpr);
 }
 
@@ -34,8 +32,7 @@ pub unsafe extern fn DrawRedX(x: c_int, y: c_int, mgl: &mut MGLDraw) {
     (*itmSpr).GetSprite(8).Draw(x, y, mgl);
 }
 
-#[no_mangle]
-pub unsafe extern fn ItemLightUp() {
+pub unsafe fn ItemLightUp() {
     itmLight = !itmLight;
 }
 

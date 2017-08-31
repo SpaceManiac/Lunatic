@@ -69,8 +69,7 @@ unsafe fn NextLegal(mut now: u8, dir: u8) -> u8 {
     now
 }
 
-#[no_mangle] // x
-pub unsafe extern fn PickerRun(lastTime: &mut u32, mgl: &mut MGLDraw) -> u8 {
+unsafe fn PickerRun(lastTime: &mut u32, mgl: &mut MGLDraw) -> u8 {
     use control::*;
     use sound::*;
 
@@ -313,8 +312,7 @@ unsafe fn PickerDraw(mgl: &mut MGLDraw, planet: &sprite_set_t, pickerFont: &mfon
     mgl.Flip();
 }
 
-#[no_mangle]
-pub unsafe extern fn WorldPicker(mgl: &mut MGLDraw) -> u8 {
+pub unsafe fn WorldPicker(mgl: &mut MGLDraw) -> u8 {
     use control::*;
 
     let mut exitcode = 254;
@@ -380,8 +378,7 @@ unsafe fn custom_world(fname: *const c_char) -> bool {
         strcmp(fname, cstr!("backup_exit.dlw")) != 0
 }
 
-#[no_mangle]
-pub unsafe extern fn ScanWorldNames() {
+pub unsafe fn ScanWorldNames() {
     use ffi::win::{_finddata_t, _findfirst, _findnext, _findclose};
     use libc::strncpy;
 
@@ -415,8 +412,7 @@ pub unsafe extern fn ScanWorldNames() {
     _findclose(hFile);
 }
 
-#[no_mangle]
-pub unsafe extern fn ReScanWorldNames() {
+pub unsafe fn ReScanWorldNames() {
     use ffi::win::{_finddata_t, _findfirst, _findnext, _findclose};
     use libc::{strncpy, strcmp};
 
@@ -760,8 +756,7 @@ unsafe fn InitGameSlotPicker(mgl: &mut MGLDraw, title: &mut title_t) {
     oldc = ::control::CONTROL_B1 | ::control::CONTROL_B2;
 }
 
-#[no_mangle] // x
-pub unsafe extern fn GameSlotPicker(mgl: &mut MGLDraw, title: &mut title_t, titleSpr: &sprite_set_t) -> u8 {
+unsafe fn GameSlotPicker(mgl: &mut MGLDraw, title: &mut title_t, titleSpr: &sprite_set_t) -> u8 {
     use ffi::win::{timeGetTime, Sleep};
 
     title.savecursor = 0;
@@ -795,8 +790,7 @@ pub unsafe extern fn GameSlotPicker(mgl: &mut MGLDraw, title: &mut title_t, titl
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn CreditsRender(mgl: &mut MGLDraw, y: c_int, document: &[*const c_char]) {
+unsafe fn CreditsRender(mgl: &mut MGLDraw, y: c_int, document: &[*const c_char]) {
     let mut i = 0;
     let mut ypos = 0;
 
@@ -818,8 +812,7 @@ pub unsafe extern fn CreditsRender(mgl: &mut MGLDraw, y: c_int, document: &[*con
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn Credits(mgl: &mut MGLDraw) {
+pub unsafe fn Credits(mgl: &mut MGLDraw) {
     let mut y = -470;
     let mut flip = false;
 
@@ -842,8 +835,7 @@ pub unsafe extern fn Credits(mgl: &mut MGLDraw) {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn VictoryText(mgl: &mut MGLDraw) {
+pub unsafe fn VictoryText(mgl: &mut MGLDraw) {
     let mut y = -470;
 
     mgl.LastKeyPressed();
@@ -956,8 +948,7 @@ unsafe fn SpeedSplash(mgl: &mut MGLDraw, fname: *const c_char) -> bool {
     true
 }
 
-#[no_mangle]
-pub unsafe extern fn HelpScreens(mgl: &mut MGLDraw) {
+pub unsafe fn HelpScreens(mgl: &mut MGLDraw) {
     let mut name = [0; 32];
     for i in 1..6 {
         sprintf!(name, "docs/help{}.bmp", i);
@@ -967,8 +958,7 @@ pub unsafe extern fn HelpScreens(mgl: &mut MGLDraw) {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn SplashScreen(mgl: &mut MGLDraw, fname: *const c_char, delay: c_int, sound: u8) {
+pub unsafe fn SplashScreen(mgl: &mut MGLDraw, fname: *const c_char, delay: c_int, sound: u8) {
     use control::*;
     use mgldraw::palette_t;
 

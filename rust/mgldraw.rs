@@ -12,8 +12,7 @@ pub struct palette_t {
 }
 
 /// For appdata storage of stuff
-#[no_mangle]
-pub unsafe extern fn AppdataOpen(file: *const c_char, mode: *const c_char) -> *mut ::libc::FILE {
+pub unsafe fn AppdataOpen(file: *const c_char, mode: *const c_char) -> *mut ::libc::FILE {
     use libc::{mkdir, strlen, fopen};
     use std::ptr::null_mut;
     use ffi::win::{SHGetFolderPath, CSIDL_APPDATA};
@@ -43,8 +42,7 @@ use std::cell::RefCell;
 
 thread_local!(static mersenne: RefCell<MT19937_64> = RefCell::new(MT19937_64::new_unseeded()));
 
-#[no_mangle]
-pub extern fn MGL_srand(seed: c_int) {
+pub fn MGL_srand(seed: c_int) {
     mersenne.with(|m| m.borrow_mut().reseed(seed as u64));
 }
 

@@ -18,15 +18,13 @@ const CHEAT_CODES: &[&[u8]] = &[
 
 static mut lastKeys: [u8; 16] = [0; 16]; // the last 16 letter keys pressed
 
-#[no_mangle]
-pub unsafe extern fn InitCheater() {
+pub unsafe fn InitCheater() {
     for ch in lastKeys.iter_mut() {
         *ch = 0;
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn CheatKey(c: u8) {
+pub unsafe fn CheatKey(c: u8) {
     // scoot the existing letters over 1
     for i in 0..15 {
         lastKeys[i] = lastKeys[i + 1];
@@ -43,8 +41,7 @@ pub unsafe extern fn CheatKey(c: u8) {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn DoCheat(w: u8) {
+pub unsafe fn DoCheat(w: u8) {
     use sound::make_normal_sound;
     use mgldraw::MGL_random;
     use message::NewMessage;

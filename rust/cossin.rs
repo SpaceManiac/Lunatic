@@ -14,8 +14,7 @@ thread_local!(static TABLES: ([c_int; DEGREES], [c_int; DEGREES]) = {
     (costab, sintab)
 });
 
-#[no_mangle]
-pub extern fn InitCosSin() {
+pub fn InitCosSin() {
     TABLES.with(|_| {});
 }
 

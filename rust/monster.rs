@@ -249,8 +249,7 @@ extern {
     static mut monsType: [monsterType_t; NUM_MONSTERS];
 }
 
-#[no_mangle]
-pub unsafe extern fn InitMonsters() {
+pub unsafe fn InitMonsters() {
     for ty in monsType.iter_mut() {
         ty.spr = ::std::ptr::null_mut();
     }
@@ -259,8 +258,7 @@ pub unsafe extern fn InitMonsters() {
     bouapha.spr = sprite_set_t::from_fname(&bouapha.sprName[0]);
 }
 
-#[no_mangle]
-pub unsafe extern fn ExitMonsters() {
+pub unsafe fn ExitMonsters() {
     PurgeMonsterSprites();
     sprite_set_t::delete(monsType[MonsterType::MONS_BOUAPHA as usize].spr);
 }

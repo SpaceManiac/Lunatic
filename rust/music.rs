@@ -22,15 +22,13 @@ static mut stream: *mut LOGG_Stream = 0 as *mut LOGG_Stream;
 static mut isPlaying: bool = false;
 static mut trackNum: c_int = 0;
 
-#[no_mangle]
-pub unsafe extern fn MusicInit() -> u8 {
+pub unsafe fn MusicInit() -> u8 {
     currentMode = AudioMode::Off;
     stream = ptr::null_mut();
     1
 }
 
-#[no_mangle]
-pub unsafe extern fn MusicExit() {
+pub unsafe fn MusicExit() {
     CDStop();
 }
 
@@ -48,8 +46,7 @@ pub unsafe extern fn CDPlay(track: c_int) {
     stream = logg_get_stream(buf.as_ptr() as *const _, 128, 128, 0);
 }
 
-#[no_mangle]
-pub unsafe extern fn CDPlayerUpdate(mode: AudioMode) {
+pub unsafe fn CDPlayerUpdate(mode: AudioMode) {
     isPlaying = false;
     if !stream.is_null() {
         isPlaying = logg_update_stream(stream) != 0;
@@ -81,8 +78,7 @@ pub unsafe extern fn CDPlayerUpdate(mode: AudioMode) {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn CDNeedsUpdating() {}
+pub unsafe fn CDNeedsUpdating() {}
 
 #[no_mangle]
 pub unsafe extern fn CDStop() {
@@ -93,7 +89,6 @@ pub unsafe extern fn CDStop() {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn CDLoaded() -> u8 {
+pub unsafe fn CDLoaded() -> u8 {
     1
 }

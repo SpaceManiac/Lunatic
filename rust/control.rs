@@ -48,8 +48,7 @@ static mut lastScanCode: u8 = 0;
 static mut kb: [[u8; 4]; 8] = [[0; 4]; 8];
 static mut joyBtn: [u32; 2] = [0; 2];
 
-#[no_mangle]
-pub unsafe extern fn InitControls() {
+pub unsafe fn InitControls() {
     lastScanCode = 0;
     keyState = EMPTY;
     keyTap = EMPTY;
@@ -74,8 +73,7 @@ pub unsafe extern fn InitControls() {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn ControlKeyDown(k: u8) {
+pub unsafe fn ControlKeyDown(k: u8) {
     lastScanCode = k;
 
     for i in 0..4 {
@@ -111,8 +109,7 @@ pub unsafe extern fn ControlKeyDown(k: u8) {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn ControlKeyUp(k: u8) {
+pub unsafe fn ControlKeyUp(k: u8) {
     for i in 0..4 {
         let mut bit = 1;
         for j in 0..8 {
@@ -133,8 +130,7 @@ pub unsafe extern fn ControlKeyUp(k: u8) {
     };
 }
 
-#[no_mangle]
-pub unsafe extern fn GetJoyState() -> Controls {
+pub unsafe fn GetJoyState() -> Controls {
     let mut joyInfo: JOYINFOEX = mem::zeroed();
     joyInfo.dwSize = szof!(JOYINFOEX) as u32;
     joyInfo.dwFlags = JOY_RETURNBUTTONS | JOY_RETURNX | JOY_RETURNY;
@@ -179,8 +175,7 @@ pub unsafe extern fn GetJoyState() -> Controls {
     joyState
 }
 
-#[no_mangle]
-pub unsafe extern fn GetJoyButtons() -> u32 {
+pub unsafe fn GetJoyButtons() -> u32 {
     if !joystickOn {
         return 0;
     }
@@ -200,8 +195,7 @@ pub unsafe extern fn GetControls() -> Controls {
     (keyState | if joystickOn { GetJoyState() } else { EMPTY })
 }
 
-#[no_mangle]
-pub unsafe extern fn GetTaps() -> Controls {
+pub unsafe fn GetTaps() -> Controls {
     if joystickOn {
         GetJoyState();
     }
@@ -211,23 +205,19 @@ pub unsafe extern fn GetTaps() -> Controls {
     tapState
 }
 
-#[no_mangle]
-pub unsafe extern fn GetArrows() -> Controls {
+pub unsafe fn GetArrows() -> Controls {
     arrowState
 }
 
-#[no_mangle]
-pub unsafe extern fn LastScanCode() -> u8 {
+pub unsafe fn LastScanCode() -> u8 {
     mem::replace(&mut lastScanCode, 0)
 }
 
-#[no_mangle]
-pub unsafe extern fn JoystickAvailable() -> u8 {
+pub unsafe fn JoystickAvailable() -> u8 {
     if joystickOn { 1 } else { 0 }
 }
 
-#[no_mangle]
-pub unsafe extern fn ApplyControlSettings() {
+pub unsafe fn ApplyControlSettings() {
     use options::opt;
 
     for i in 0..6 {
@@ -240,8 +230,7 @@ pub unsafe extern fn ApplyControlSettings() {
     joyBtn[1] = 1 << opt.joyCtrl[1];
 }
 
-#[no_mangle]
-pub unsafe extern fn SetKeys(keys: [u8; 8]) {
+pub unsafe fn SetKeys(keys: [u8; 8]) {
     // memcpy(kb, keys, 8
     kb[0][0] = keys[0];
     kb[0][1] = keys[1];
@@ -253,8 +242,7 @@ pub unsafe extern fn SetKeys(keys: [u8; 8]) {
     kb[4][0] = keys[7];
 }
 
-#[no_mangle]
-pub extern fn ScanCodeText(s: u8) -> *const c_char {
+pub fn ScanCodeText(s: u8) -> *const c_char {
     // text strings corresponding to scan codes 0-88
     let scancodes = cstr! {
         // 0

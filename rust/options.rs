@@ -109,8 +109,7 @@ enum OptMode {
     JoyPress,
 }
 
-#[no_mangle]
-pub unsafe extern fn LoadOptions() {
+pub unsafe fn LoadOptions() {
     let f = ::mgldraw::AppdataOpen(cstr!("lunatic.cfg"), cstr!("rb"));
     if f.is_null() {
         opt = DEFAULT_OPTIONS;
@@ -121,8 +120,7 @@ pub unsafe extern fn LoadOptions() {
     ::control::ApplyControlSettings();
 }
 
-#[no_mangle]
-pub unsafe extern fn SaveOptions() {
+pub unsafe fn SaveOptions() {
     let f = AppdataOpen(cstr!("lunatic.cfg"), cstr!("wb"));
     assert!(!f.is_null());
     fwrite(decay!(&opt), szof!(options_t), 1, f);
@@ -391,8 +389,7 @@ unsafe fn RenderControls(x: c_int, y: c_int, mgl: &mut MGLDraw) {
     }
 }
 
-#[no_mangle]
-pub unsafe extern fn OptionsMenu(mgl: &mut MGLDraw) {
+pub unsafe fn OptionsMenu(mgl: &mut MGLDraw) {
     // InitOptionsMenu
     oldc = ::control::Controls::all();
     controlX = 10;
